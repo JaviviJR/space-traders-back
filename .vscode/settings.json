@@ -1,0 +1,14 @@
+{
+  // Config local para trabajar SIN abrir el proyecto dentro del devcontainer.
+  // "php" se redirige al contenedor ebook-cli via bin/php-docker (docker compose exec).
+  // Si abres el proyecto con "Reopen in Container", estos valores se sobreescriben
+  // por los de .devcontainer/devcontainer.json (rutas dentro del contenedor).
+  "php.executablePath": "bin/php-docker",
+  "php.validate.executablePath": "bin/php-docker",
+  "symfony-vscode.phpExecutablePath": "bin/php-docker",
+  "intelephense.environment.phpVersion": "8.4.0",
+  "search.exclude": {
+    "**/vendor": true,
+    "**/var": true
+  }
+}

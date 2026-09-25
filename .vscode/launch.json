@@ -1,0 +1,17 @@
+{
+  // Con el proyecto abierto en el host (sin devcontainer), Xdebug reporta rutas
+  // del contenedor, asi que hay que mapearlas a las locales.
+  // Dentro del devcontainer las rutas coinciden y el mapeo es inocuo.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Escuchar Xdebug",
+      "type": "php",
+      "request": "launch",
+      "port": 9004,
+      "pathMappings": {
+        "/home/developer/app": "${workspaceFolder}"
+      }
+    }
+  ]
+}
