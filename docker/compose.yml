@@ -1,0 +1,31 @@
+name: space-trader-backend
+services:
+  php:
+    build:
+      context: ./php
+      target: ${PHP_ENV:-dev}
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: php
+    mem_limit: 2g
+    user: "developer:developer"
+    environment:
+      GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME}
+      GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL}
+      GIT_COMMITTER_NAME: ${GIT_COMMITTER_NAME}
+      GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL}
+    volumes:
+      - ${APP_DIR}:/home/developer/app
+    working_dir: /home/developer/app
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    depends_on:
+      - php
+    volumes:
+      - ./nginx/etc/nginx/conf.d/vhost.conf:/etc/nginx/conf.d/vhost.conf
+      - ${APP_DIR}:/home/developer/app:ro
+    working_dir: /home/developer/app
+    ports:
+      - ${APP_PORT}:80
