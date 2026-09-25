@@ -29,6 +29,7 @@ case "$cmd" in
 	build) "${COMPOSE[@]}" build "$@" ;;
 	sh) "${COMPOSE[@]}" exec php bash ;;
 	sh-root) "${COMPOSE[@]}" exec -u root php bash ;;
+    logs) "${COMPOSE[@]}" logs -f "$@" ;;
 	""|help|-h|--help) usage ;;
-	*) "${COMPOSE[@]}" "$cmd" "$@" ;;
+    *) "${COMPOSE[@]}" "$cmd" "$@" ;;
 esac

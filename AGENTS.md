@@ -63,8 +63,10 @@ Three specifics worth spelling out, because they are easy to get wrong:
 
 ## Everyday workflow
 
-- Run the app with `symfony serve -d`, and commands with `symfony console ...`
-  (or `bin/console` when the Symfony CLI isn't available).
+- The development environment is executed under Docker containers.
+  To run the app, containers defined in docker/compose must be running
+  If containers are stopped, run them.
+- Run commands inside the php container with commands with `symfony console ...`
 - When something fails, read `var/log/dev.log` and the web profiler
   (`/_profiler`) before changing code.
 - If `maker-bundle` is installed, prefer `bin/console make:*` with every argument
@@ -74,6 +76,7 @@ Three specifics worth spelling out, because they are easy to get wrong:
 - If Doctrine ORM is installed, schema changes go through migrations
   (`bin/console make:migration`, then `doctrine:migrations:migrate`), never
   `doctrine:schema:update` or hand-written SQL.
+- Don't execute migrations without ask permission
 - `.env` is committed and holds defaults only. Real secrets belong in `.env.local`
   (git-ignored) or the secrets vault (`bin/console secrets:set`), read via
   `%env(...)%`.
