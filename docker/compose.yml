@@ -21,6 +21,7 @@ services:
     build: ./nginx
     depends_on:
       - php
+      - postgres
     volumes:
       - ./nginx/etc/nginx/conf.d/vhost.conf:/etc/nginx/conf.d/vhost.conf
       - ${APP_DIR}:/home/developer/app:ro
@@ -33,10 +34,20 @@ services:
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - 5432:5432
     volumes:
       - ./db-data:/var/lib/postgresql
+
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "1025"
+      - "8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
   pgadmin4:
     image: dpage/pgadmin4:latest
