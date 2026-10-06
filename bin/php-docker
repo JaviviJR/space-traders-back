@@ -9,4 +9,4 @@ cd "$DOCKER_DIR"
 
 #docker compose up -d php >/dev/null
 
-exec docker compose exec -T php php "$@"
+exec docker compose exec -T -e XDEBUG_MODE=off php php "$@"

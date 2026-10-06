@@ -1,8 +1,6 @@
 {
-  // Config local para trabajar SIN abrir el proyecto dentro del devcontainer.
-  // "php" se redirige al contenedor ebook-cli via bin/php-docker (docker compose exec).
-  // Si abres el proyecto con "Reopen in Container", estos valores se sobreescriben
-  // por los de .devcontainer/devcontainer.json (rutas dentro del contenedor).
+  // Config local para trabajar SIN abrir el proyecto dentro de un devcontainer.
+  // "php" se redirige al contenedor php via bin/php-docker (docker compose exec).
   "php.executablePath": "bin/php-docker",
   "php.validate.executablePath": "bin/php-docker",
   "symfony-vscode.phpExecutablePath": "bin/php-docker",
@@ -10,5 +8,12 @@
   "search.exclude": {
     "**/vendor": true,
     "**/var": true
-  }
+  },
+  "php.suggest.basic": false,
+  // PHPStan (SanderRonde.phpstan-vscode) ejecutado en el contenedor php via bin/phpstan-docker.
+  "phpstan.binCommand": ["${workspaceFolder}/bin/phpstan-docker"],
+  "phpstan.paths": { "${workspaceFolder}": "/home/developer/app" },
+  "phpstan.configFile": "phpstan.dist.neon",
+  "phpstan.showTypeOnHover": true,
+  "phpstan.dockerContainerName": "space-trader-backend-php"
 }
