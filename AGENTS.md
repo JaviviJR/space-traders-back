@@ -95,6 +95,17 @@ Symfony's coding standard, the `@Symfony` php-cs-fixer ruleset (a PSR-12-derived
 superset). Run `vendor/bin/php-cs-fixer fix` if `friendsofphp/php-cs-fixer` is
 installed; it isn't part of the skeleton by default.
 
+## Static analysis
+
+- PHPStan runs at level 9 over `bin/`, `config/`, `public/`, `src/` and `tests/`
+  (config in `phpstan.dist.neon`). Run it inside the php container:
+  `./dev.sh exec php composer phpstan`.
+- A code change isn't done until PHPStan reports no errors. Fix the cause; don't
+  add `@phpstan-ignore` or `ignoreErrors` entries without asking first.
+- The Symfony extension reads `var/cache/dev/App_KernelDevDebugContainer.xml`. If
+  PHPStan complains about unknown services, regenerate the dev cache
+  (`./dev.sh exec php bin/console cache:warmup`) before changing code.
+
 ## Discover, don't guess
 
 Framework APIs change between versions and your training data may be stale. Look
