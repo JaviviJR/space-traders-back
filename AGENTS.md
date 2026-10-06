@@ -61,6 +61,26 @@ Three specifics worth spelling out, because they are easy to get wrong:
 - Use `symfony/lock` (`LockFactory`) for mutual exclusion. A hand-built flag or
   lock file looks fine in review and is usually wrong under concurrency.
 
+## Design principles
+
+Write code that follows SOLID. Concretely:
+
+- **Single responsibility.** A class has one reason to change. Controllers
+  only translate HTTP to a service call; business rules live in services.
+- **Open/closed.** Add behaviour by adding a class, not by editing a switch.
+  Use tagged iterators or `#[AsTaggedItem]` for strategies and handlers.
+- **Liskov substitution.** Implementations honour their interface contract.
+  No new exceptions or stricter preconditions in a subtype.
+- **Interface segregation.** Keep interfaces small and role-specific. Don't
+  force a class to implement methods it doesn't use.
+- **Dependency inversion.** Depend on abstractions, injected through the
+  constructor. Let autowiring resolve them; use `#[Target]` or `#[Autowire]`
+  when the type alone is ambiguous.
+
+Don't introduce an interface for a class with a single implementation unless
+it's a boundary to an external system or a seam needed for tests. Prefer the
+smallest design that satisfies these principles.
+
 ## Everyday workflow
 
 - The development environment is executed under Docker containers.
@@ -120,3 +140,15 @@ things up in the project instead of relying on memory:
 - Read the installed source and docblocks under `vendor/`.
 - Docs: https://symfony.com/doc/current/ (switch to the version matching
   `composer.json` if it differs).
+
+## Architecture decisions
+
+Read these before designing or generating code that touches their area. They
+record decisions already made; don't re-open them without asking.
+
+- `doc/architecture.md`: BFF role, SpaceTraders vs back-only endpoints, response
+  contract and headers.
+- `doc/authentication.md`: JWT auth (Lexik access token, custom refresh token
+  rotation), token storage, firewall rules.
+
+When a decision changes, update the relevant file in the same change.
