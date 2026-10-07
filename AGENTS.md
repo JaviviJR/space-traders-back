@@ -152,3 +152,8 @@ record decisions already made; don't re-open them without asking.
   rotation), token storage, firewall rules.
 
 When a decision changes, update the relevant file in the same change.
+
+## Working agreements
+
+How the user wants to work with Claude (confirmations, proposals, installs,
+language). Read `doc/workflow.md` at the start of every session.
