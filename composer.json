@@ -90,11 +90,13 @@
             "@auto-scripts"
         ],
         "phpstan": "phpstan analyse --memory-limit=1G",
-        "test": "phpunit"
+        "test": "phpunit",
+        "test-coverage": "XDEBUG_MODE=coverage phpunit"
     },
     "scripts-descriptions": {
         "phpstan": "Analisis estatico con PHPStan (nivel 9)",
-        "test": "Ejecuta la suite de PHPUnit"
+        "test": "Ejecuta la suite de PHPUnit",
+        "test-coverage": "Ejecuta PHPUnit con cobertura de codigo (HTML en var/coverage/html y resumen en consola)"
     },
     "conflict": {
         "symfony/symfony": "*"
