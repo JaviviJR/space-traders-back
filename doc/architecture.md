@@ -35,6 +35,46 @@ connection between the back and SpaceTraders: hop-by-hop headers (RFC 7230
 The front's `Authorization` header is never forwarded; the back uses the agent
 token instead.
 
+A user can link several agents (see [authentication.md](authentication.md)).
+The front selects which one a SpaceTraders-proxied request acts on via a
+custom `X-Agent-Id` header. The back resolves it to an `Agent` owned by the
+authenticated user (404 if it doesn't exist, 403 if it belongs to someone
+else) before forwarding anything.
+
+#### Proxy design
+
+One catch-all route handles every SpaceTraders endpoint
+(`/api/spacetraders/{path}`). Per-endpoint logic is opt-in, added without
+touching the controller or any other endpoint's code (Strategy pattern):
+
+- **`SpaceTradersRouteHookInterface`**: `supports(Request): bool`,
+  `beforeForward(Request, Agent): ?Response` (returning a `Response` short-
+  circuits — SpaceTraders is never called), `afterForward(Request, Agent,
+  ResponseInterface): void` (side effects only; the return value is ignored).
+- **`afterForward` returns `void` on purpose.** It lets the type system
+  enforce "the back never changes a SpaceTraders response shape" instead of
+  relying on each hook author remembering the rule. A hook can react (persist
+  something, dispatch an event) but cannot alter what the front receives.
+- **`SpaceTradersResponseRelay`**: the single place that turns a SpaceTraders
+  `ResponseInterface` into the Symfony `Response` sent to the front (status,
+  body, the header-filtering rule above). Used for every request, with or
+  without a hook, so pass-through and "with logic" endpoints share the exact
+  same conversion path.
+- **`SpaceTradersProxyService`**: orchestrates one forwarded request — picks
+  the first hook whose `supports()` matches (or none), runs
+  `beforeForward`/`afterForward` around the call to SpaceTraders, decrypts the
+  agent's token to call it, and relays the response.
+- **Registering a hook**: implement the interface and it's auto-tagged
+  (`#[Autoconfigure(tags: [...])]` on the interface itself) — no edits
+  elsewhere. The service receives all hooks as a tagged iterator.
+
+**If a hook ever needs to actually change the response shape** (e.g.
+enriching `GET /my/ships` with a computed field), that is a deliberate
+decision, not something that should happen by accident: widen
+`afterForward(...): void` to `afterForward(...): ?Response` (`null` = no
+change, a `Response` = override), update this file to say so, and only then
+implement it. Don't build that capability before a real endpoint needs it.
+
 ### Back-only endpoints
 
 Endpoints that do not reach SpaceTraders (registration, login, token refresh,
