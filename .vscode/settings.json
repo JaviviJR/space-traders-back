@@ -15,5 +15,7 @@
   "phpstan.paths": { "${workspaceFolder}": "/home/developer/app" },
   "phpstan.configFile": "phpstan.dist.neon",
   "phpstan.showTypeOnHover": true,
-  "phpstan.dockerContainerName": "space-trader-backend-php"
+  "phpstan.dockerContainerName": "space-trader-backend-php",
+  "phpstan.singleFileMode": true,
+  "phpstan.tmpDir": "${workspaceFolder}/var/phpstan-vscode"
 }

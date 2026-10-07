@@ -17,3 +17,10 @@
 ###> phpstan/phpstan ###
 phpstan.neon
 ###< phpstan/phpstan ###
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+# Dedicated, non-secret keypair used only in the test environment (see .env.test).
+!/config/jwt/private-test.pem
+!/config/jwt/public-test.pem
+###< lexik/jwt-authentication-bundle ###
