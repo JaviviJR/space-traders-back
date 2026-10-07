@@ -41,6 +41,23 @@ custom `X-Agent-Id` header. The back resolves it to an `Agent` owned by the
 authenticated user (404 if it doesn't exist, 403 if it belongs to someone
 else) before forwarding anything.
 
+`X-Agent-Id` is optional, not required. Some SpaceTraders endpoints don't
+take an agent at all (e.g. server status). If the header is absent, the back
+forwards without substituting any `Authorization`. The back doesn't keep its
+own list of which SpaceTraders endpoints need an agent — SpaceTraders is the
+authority on that, and duplicating it here would drift out of sync.
+
+#### Rate limiting (pending)
+
+SpaceTraders rate-limits requests per agent. Every call this back makes to
+SpaceTraders — through the catch-all proxy, or from any other service like
+agent registration — must go through one shared, rate-limited gateway
+(`symfony/rate-limiter`), not call `HttpClientInterface` directly. Otherwise
+a call outside the proxy (e.g. agent registration) escapes the limit and
+SpaceTraders can throttle or ban us without our own guard ever seeing it.
+Not implemented yet; build it together with the catch-all proxy below, and
+move `AgentRegistrationService`'s SpaceTraders call onto it at the same time.
+
 #### Proxy design
 
 One catch-all route handles every SpaceTraders endpoint
@@ -77,9 +94,30 @@ implement it. Don't build that capability before a real endpoint needs it.
 
 ### Back-only endpoints
 
-Endpoints that do not reach SpaceTraders (registration, login, token refresh,
-logout) are defined by this back. They use the same envelope as SpaceTraders:
-`{ "data": ... }`.
+Endpoints whose contract the back owns, instead of relaying SpaceTraders'
+contract unchanged. This is the deciding question, not whether SpaceTraders
+gets called over the network: user registration, login, token refresh and
+logout never touch SpaceTraders. Agent registration (`POST /api/agents`)
+does call `POST /register` on SpaceTraders internally, but still belongs
+here, because the back must never forward SpaceTraders' raw response: it
+contains the agent token, which this back never exposes to the front (see
+[Context](#context)).
+
+**Current implementation is a known simplification, to revisit.** Today
+`AgentController` hand-builds a small response (`id`, `symbol`, `faction`,
+`createdAt`) instead of relaying SpaceTraders' real response with just the
+`token` field redacted. The latter is the better design — the front gets
+every field SpaceTraders returns (starting contract, ships, faction detail)
+without us mirroring each one by hand — but it needs the rate-limited
+gateway above and isn't worth building before that exists. When the catch-all
+proxy is built, change `AgentRegistrationService` to: call SpaceTraders
+through the shared gateway, persist the encrypted token as a side effect,
+and relay the same SpaceTraders response to the front with `data.token`
+removed. This doesn't go through the catch-all's hook mechanism itself —
+there's no existing `Agent` to resolve via `X-Agent-Id`, and SpaceTraders'
+register endpoint takes no agent token — it's `AgentRegistrationService`
+calling the shared gateway directly, the same way any other service would.
+They use the same envelope as SpaceTraders: `{ "data": ... }`.
 
 ## Errors
 
@@ -96,3 +134,7 @@ Later, a few e2e tests will run against the real back for critical flows.
 
 - Errors (see above).
 - Base URL of the back for the front (`VITE_API_URL`) and the Vite dev proxy.
+- SpaceTraders rate limiting (see "Rate limiting" above).
+- Rework `AgentRegistrationService`/`AgentController` to relay SpaceTraders'
+  real response (redacting `token`) through the shared gateway, instead of
+  the hand-built response they return today (see "Back-only endpoints").

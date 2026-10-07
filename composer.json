@@ -32,6 +32,7 @@
         "symfony/yaml": "8.1.*"
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.6",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.3",
         "phpstan/phpstan-doctrine": "^2.0",
@@ -88,10 +89,12 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
-        "phpstan": "phpstan analyse --memory-limit=1G"
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "test": "phpunit"
     },
     "scripts-descriptions": {
-        "phpstan": "Analisis estatico con PHPStan (nivel 9)"
+        "phpstan": "Analisis estatico con PHPStan (nivel 9)",
+        "test": "Ejecuta la suite de PHPUnit"
     },
     "conflict": {
         "symfony/symfony": "*"

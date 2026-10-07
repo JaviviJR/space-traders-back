@@ -35,6 +35,35 @@ How the user works with Claude on this project. Applies to every session.
 - Never run package installs (composer, npm, editor extensions). Give the exact
   command and wait for the result, then verify it by reading files.
 
+## Subagents
+
+- Never launch a subagent (the `Agent` tool, any `subagent_type`) without asking
+  first and getting an explicit yes/no. This applies even when the task looks
+  like a good fit for one; the user has no prior experience judging that
+  tradeoff and wants to decide every time.
+- The ask must let the user pick one of:
+  - Approve launching the subagent as proposed.
+  - Ask why a subagent is needed for this step, before deciding.
+  - Do the work themselves (run the command, read the file, etc.) and paste the
+    result back, instead of a subagent doing it.
+- State plainly what the subagent would do and why delegating it helps (e.g.
+  keeps noisy tool output out of the main context), so the user can make an
+  informed choice or do it manually instead.
+- When proposing a subagent, also propose a model for it, based on how much
+  judgment the task needs:
+  - Cheap model (haiku): the task has a closed, verifiable outcome and no
+    design decisions — searching for a file/symbol, reading and summarizing a
+    log or long file, running a command and reporting its output, mechanical
+    multi-file edits (rename, reformat), checking whether something exists.
+  - Default/stronger model: the task requires architecture or design choices,
+    debugging with a non-obvious cause, reviewing code for subtle bugs, writing
+    real business logic, or touches anything hard to undo (migrations,
+    security, auth) where a near-correct answer could lead to a costly wrong
+    decision.
+  - Rule of thumb: if the expected result can be stated as one closed,
+    checkable sentence, the cheap model is enough; if the subagent has to
+    resolve ambiguity or make a design call, use the default model.
+
 ## Language
 
 - Chat with the user in Spanish. Project documentation (`doc/*.md`, `AGENTS.md`)

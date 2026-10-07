@@ -26,17 +26,14 @@ final class RefreshTokenService
     public function issue(User $user): RefreshTokenPair
     {
         $plaintext = bin2hex(random_bytes(32));
+        $expiresAt = new \DateTimeImmutable(self::TOKEN_TTL);
 
-        $refreshToken = new RefreshToken(
-            $user,
-            $this->hash($plaintext),
-            new \DateTimeImmutable(self::TOKEN_TTL),
-        );
+        $refreshToken = new RefreshToken($user, $this->hash($plaintext), $expiresAt);
 
         $this->entityManager->persist($refreshToken);
         $this->entityManager->flush();
 
-        return new RefreshTokenPair($this->createAccessToken($user), $plaintext);
+        return new RefreshTokenPair($this->createAccessToken($user), $plaintext, $expiresAt);
     }
 
     /**

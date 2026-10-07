@@ -9,6 +9,7 @@ final readonly class RefreshTokenPair
     public function __construct(
         public string $accessToken,
         public string $refreshToken,
+        public \DateTimeImmutable $refreshTokenExpiresAt,
     ) {
     }
 }

@@ -21,3 +21,13 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    services:
+        # Rebind SpaceTradersClientInterface to a test double so no test ever
+        # calls the real SpaceTraders API. Resolved by interface, so the
+        # container never constructs the real SpaceTradersClient in test env.
+        App\Tests\SpaceTraders\FakeSpaceTradersClient:
+            public: true
+
+        App\SpaceTraders\SpaceTradersClientInterface: '@App\Tests\SpaceTraders\FakeSpaceTradersClient'
