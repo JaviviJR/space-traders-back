@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller\Agent;
 
 use App\Entity\Agent;
+use App\Factory\UserFactory;
 use App\Repository\UserRepository;
 use App\Tests\Support\AuthenticatesClient;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,10 +23,12 @@ final class AgentControllerTest extends WebTestCase
         // WebTestCase only supports booting one kernel per test anyway.
         $client = static::createClient();
 
-        $this->registerAndLogin($client, 'agent-owner@example.com');
+        UserFactory::createOne(['email' => 'agent-owner@example.com']);
+        $this->login($client, 'agent-owner@example.com');
         $this->persistAgentFor('agent-owner@example.com', 'OWNER-AGENT');
 
-        $otherToken = $this->registerAndLogin($client, 'agent-other@example.com');
+        UserFactory::createOne(['email' => 'agent-other@example.com']);
+        $otherToken = $this->login($client, 'agent-other@example.com');
         $this->persistAgentFor('agent-other@example.com', 'OTHER-AGENT');
 
         $client->jsonRequest('GET', '/api/agents', [], ['HTTP_AUTHORIZATION' => 'Bearer '.$otherToken]);

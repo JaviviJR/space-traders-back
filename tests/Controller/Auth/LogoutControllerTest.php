@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Auth;
 
+use App\Factory\UserFactory;
 use App\Tests\Support\AuthenticatesClient;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -20,7 +21,8 @@ final class LogoutControllerTest extends WebTestCase
         $email = 'logout-two-sessions@example.com';
         $client = static::createClient();
 
-        $this->registerAndLogin($client, $email);
+        UserFactory::createOne(['email' => $email]);
+        $this->login($client, $email);
         $cookieA = $client->getCookieJar()->get('refresh_token', '/auth');
         self::assertNotNull($cookieA);
 

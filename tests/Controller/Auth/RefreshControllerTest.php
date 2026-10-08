@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Auth;
 
+use App\Factory\UserFactory;
 use App\Tests\Support\AuthenticatesClient;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -14,7 +15,8 @@ final class RefreshControllerTest extends WebTestCase
     public function testRefreshWithAValidCookieReturnsANewAccessToken(): void
     {
         $client = static::createClient();
-        $this->registerAndLogin($client, 'refresh-happy@example.com');
+        UserFactory::createOne(['email' => 'refresh-happy@example.com']);
+        $this->login($client, 'refresh-happy@example.com');
 
         // The refresh token is not rotating: the same cookie keeps working.
         $client->jsonRequest('POST', '/auth/refresh');
