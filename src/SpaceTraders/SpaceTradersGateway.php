@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\SpaceTraders;
+
+use App\SpaceTraders\Exception\SpaceTradersApiException;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+
+final class SpaceTradersGateway implements SpaceTradersGatewayInterface
+{
+    private const BASE_URL = 'https://api.spacetraders.io/v2';
+
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+    ) {
+    }
+
+    public function request(string $method, string $path, array $options = []): ResponseInterface
+    {
+        try {
+            return $this->httpClient->request($method, self::BASE_URL.'/'.ltrim($path, '/'), $options);
+        } catch (TransportExceptionInterface $exception) {
+            throw new SpaceTradersApiException(0, $exception->getMessage(), $exception);
+        }
+    }
+}

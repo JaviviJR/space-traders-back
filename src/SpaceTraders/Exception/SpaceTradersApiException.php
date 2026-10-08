@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders\Exception;
 
-final class SpaceTradersRegistrationException extends \RuntimeException
+final class SpaceTradersApiException extends \RuntimeException
 {
     public function __construct(
         private readonly int $statusCode,
@@ -12,7 +12,7 @@ final class SpaceTradersRegistrationException extends \RuntimeException
         ?\Throwable $previous = null,
     ) {
         parent::__construct(
-            sprintf('SpaceTraders agent registration failed with status %d.', $statusCode),
+            sprintf('SpaceTraders API call failed with status %d.', $statusCode),
             0,
             $previous,
         );

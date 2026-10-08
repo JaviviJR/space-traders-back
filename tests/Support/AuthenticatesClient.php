@@ -10,6 +10,9 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
  * Shared helpers for functional tests that need a registered and/or
  * logged-in user. Used via `self::assert*` from WebTestCase's assertion
  * traits, so it only applies to test classes extending it.
+ *
+ * @method static void assertResponseStatusCodeSame(int $expectedCode, string $message = '', ?bool $verbose = null)
+ * @method static void assertResponseIsSuccessful(string $message = '', ?bool $verbose = null)
  */
 trait AuthenticatesClient
 {
