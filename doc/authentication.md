@@ -12,6 +12,19 @@ SpaceTraders requests pick which agent to act on.
 The SpaceTraders agent token is stored only in the back, encrypted. The front
 never sees it.
 
+A new `User` has `isVerified = false`. Registration triggers
+`RegistrationConfirmationMailer` (`src/Security/Email/RegistrationConfirmationMailer.php`),
+which uses `symfonycasts/verify-email-bundle`'s `VerifyEmailHelperInterface`
+to generate a signed confirmation link, then rebuilds it to point at
+`{FRONT_URL}/confirm-email?<signature query>` instead of the bundle's own
+backend route. `FRONT_URL` is an env var (e.g. `http://localhost:5173`).
+
+`POST /auth/login` returns **403** (`AccessDeniedHttpException`, raised as
+`EmailNotVerifiedException`) when the credentials are correct but
+`!isVerified` — deliberately different from the **401**
+(`UnauthorizedHttpException`) used for bad credentials, so the front can
+tell the two cases apart.
+
 ## Tokens
 
 | Token | Format | Lifetime | Client side | Server side |
@@ -48,7 +61,8 @@ out.
 
 - `stateless: true`, with the Lexik JWT authenticator.
 - Public (no JWT required): `/auth/register`, `/auth/login`, `/auth/refresh`,
-  `/auth/logout`. Everything else requires `ROLE_USER`.
+  `/auth/logout`, `/auth/confirm-email` (POST), `/auth/resend-confirmation`
+  (POST). Everything else requires `ROLE_USER`.
 
 ## Testing
 
