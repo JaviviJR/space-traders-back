@@ -9,10 +9,10 @@
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^3.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
-        "doctrine/orm": "^3.7",
+        "doctrine/orm": "^3.7.4",
         "lexik/jwt-authentication-bundle": "^3.2",
         "phpdocumentor/reflection-docblock": "^6.0",
-        "phpstan/phpdoc-parser": "^2.3",
+        "phpstan/phpdoc-parser": "^2.3.6",
         "stof/doctrine-extensions-bundle": "^1.15",
         "symfony/console": "8.1.*",
         "symfony/dotenv": "8.1.*",
@@ -36,9 +36,9 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.3",
         "phpstan/phpstan-doctrine": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.1",
+        "phpstan/phpstan-phpunit": "^2.1.1",
         "phpstan/phpstan-symfony": "^2.1",
-        "phpunit/phpunit": "^13.3",
+        "phpunit/phpunit": "^13.4.1",
         "symfony/browser-kit": "8.1.*",
         "symfony/css-selector": "8.1.*",
         "symfony/debug-bundle": "8.1.*",
@@ -91,7 +91,7 @@
         ],
         "phpstan": "phpstan analyse --memory-limit=1G",
         "test": "phpunit",
-        "test-coverage": "XDEBUG_MODE=coverage phpunit"
+        "test-coverage": "XDEBUG_MODE=coverage phpunit -c phpunit.coverage.xml"
     },
     "scripts-descriptions": {
         "phpstan": "Analisis estatico con PHPStan (nivel 9)",

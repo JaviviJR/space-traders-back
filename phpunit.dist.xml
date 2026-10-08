@@ -42,11 +42,4 @@
     <extensions>
         <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension" />
     </extensions>
-
-    <coverage>
-        <report>
-            <html outputDirectory="var/coverage/html" />
-            <text outputFile="php://stdout" showUncoveredFiles="false" />
-        </report>
-    </coverage>
 </phpunit>
