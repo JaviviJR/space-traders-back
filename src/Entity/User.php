@@ -33,6 +33,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Gedmo\Timestampable(on: 'create')]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\Column]
+    private bool $isVerified;
+
     public function __construct(string $email, string $password)
     {
         if ('' === $email) {
@@ -42,6 +45,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $email;
         $this->password = $password;
         $this->roles = ['ROLE_USER'];
+        $this->isVerified = false;
     }
 
     public function getId(): ?int
@@ -83,6 +87,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function verify(): void
+    {
+        $this->isVerified = true;
     }
 
     public function eraseCredentials(): void

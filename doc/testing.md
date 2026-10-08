@@ -18,11 +18,16 @@ Run it inside the php container:
 composer test-coverage
 ```
 
+## Model factories
+
+[Foundry](https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html)
+(`zenstruck/foundry`) is installed (`require-dev`) for test model factories,
+instead of building entities by hand or reaching into the `EntityManager`
+from tests.
+
 ## TODO
 
-- Integrate [Foundry](https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html)
-  (`zenstruck/foundry`) into the project for test model factories, instead of
-  building entities by hand or reaching into the `EntityManager` from tests.
+- Write the first Foundry factories and start using them in tests.
 - If the suite grows and per-run coverage becomes slow, switch to
   [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for coverage.
   PCOV only instruments coverage (no step debugging, no profiling), which
