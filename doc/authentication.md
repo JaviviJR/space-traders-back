@@ -58,9 +58,15 @@ purpose — not secrets, just fixtures, so tests run without any local setup
 (`.env.local` isn't loaded in the `test` environment by Symfony convention).
 Never reuse these values outside tests.
 
-## Pending
+## TODO
 
 - Authentication error format (fixed by the back's general error-format
   decision, still open — see `doc/architecture.md`).
 - Login rate limiting / brute-force protection (password policy itself is
   decided: minimum 8 characters, enforced by `RegisterUserDto`).
+- Login bypasses Symfony's authenticator system entirely (`LoginService`
+  validates credentials by hand, no `Passport`/`AuthenticatorManager`). This
+  means `UserCheckerInterface` and other authenticator-level extension points
+  don't apply to login. Migrate login to a proper Symfony `Authenticator`
+  instead of hand-rolling credential checks — don't reinvent what the
+  framework already provides.

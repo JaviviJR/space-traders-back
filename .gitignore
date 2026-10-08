@@ -24,3 +24,5 @@ phpstan.neon
 !/config/jwt/private-test.pem
 !/config/jwt/public-test.pem
 ###< lexik/jwt-authentication-bundle ###
+
+/doc/prompts/

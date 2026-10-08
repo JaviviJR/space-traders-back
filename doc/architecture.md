@@ -136,7 +136,7 @@ the mocks follow this back's contract. Keep the contract stable and documented.
 
 Later, a few e2e tests will run against the real back for critical flows.
 
-## Pending
+## TODO
 
 - Errors (see above).
 - Base URL of the back for the front (`VITE_API_URL`) and the Vite dev proxy.

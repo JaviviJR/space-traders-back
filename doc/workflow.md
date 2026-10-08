@@ -41,6 +41,9 @@ How the user works with Claude on this project. Applies to every session.
   them.
 - Never run package installs (composer, npm, editor extensions). Give the exact
   command and wait for the result, then verify it by reading files.
+- When asked to split a plan into sequential blocks, reorder the explanations
+  already given as-is into blocks — don't compress or re-summarize them into
+  shorter bullets.
 
 ## Subagents
 

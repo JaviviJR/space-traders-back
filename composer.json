@@ -29,7 +29,8 @@
         "symfony/serializer": "8.1.*",
         "symfony/string": "8.1.*",
         "symfony/validator": "8.1.*",
-        "symfony/yaml": "8.1.*"
+        "symfony/yaml": "8.1.*",
+        "symfonycasts/verify-email-bundle": "^1.18"
     },
     "require-dev": {
         "dama/doctrine-test-bundle": "^8.6",
