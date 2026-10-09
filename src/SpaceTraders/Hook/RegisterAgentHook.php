@@ -7,7 +7,10 @@ namespace App\SpaceTraders\Hook;
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Security\AgentTokenCipherInterface;
+use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\SpaceTradersProxyResponseData;
+use App\SpaceTraders\SpaceTradersResponseAugmentation;
+use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,9 +22,16 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  * confirms the registration. The response (including the raw agent token)
  * is relayed to the front unchanged for now — redacting it is a known
  * simplification to revisit, see doc/architecture.md.
+ *
+ * $registeredAgent carries the newly persisted agent from afterForward to
+ * augment(), which the proxy service calls right after. Safe to keep as
+ * instance state: this service lives for a single request (classic PHP-FPM
+ * lifecycle, one container per request), never reused across requests.
  */
-final class RegisterAgentHook implements SpaceTradersRouteHookInterface
+final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface
 {
+    private ?Agent $registeredAgent = null;
+
     public function __construct(
         private readonly AgentTokenCipherInterface $agentTokenCipher,
         private readonly EntityManagerInterface $entityManager,
@@ -69,6 +79,19 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface
         $this->entityManager->persist($newAgent);
         $this->entityManager->flush();
 
+        $this->registeredAgent = $newAgent;
+
         return null;
+    }
+
+    public function augment(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersResponseAugmentation
+    {
+        $agentId = $this->registeredAgent?->getId();
+
+        if (null === $agentId) {
+            return null;
+        }
+
+        return new SpaceTradersResponseAugmentation(new RegisterAgentAugmentationData($agentId));
     }
 }

@@ -14,9 +14,18 @@ final class EnvelopeResponseFactory
     ) {
     }
 
-    public function success(ResponseData $data, int $status = 200): JsonResponse
+    /**
+     * @param ResponseData|ResponseData[] $data
+     */
+    public function success(ResponseData|array $data, int $status = 200, ?Meta $meta = null): JsonResponse
     {
-        $json = $this->serializer->serialize(['data' => $data], 'json');
+        $payload = ['data' => $data];
+
+        if (null !== $meta) {
+            $payload['meta'] = $meta;
+        }
+
+        $json = $this->serializer->serialize($payload, 'json');
 
         return JsonResponse::fromJsonString($json, $status);
     }

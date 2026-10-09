@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Agent\Dto;
 
-final readonly class AgentResponseData
+use App\Http\ResponseData;
+
+final readonly class AgentResponseData implements ResponseData
 {
     public function __construct(
         public ?int $id,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders;
 
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -30,13 +31,27 @@ final readonly class SpaceTradersProxyResponseData
      * SpaceTraders' own top-level keys (data, error, ...) always win on
      * collision, so they're never overridden by $augmentation->extra.
      */
-    public static function fromSpaceTradersResponse(ResponseInterface $spaceTradersResponse, ?SpaceTradersResponseAugmentation $augmentation = null): self
+    public static function fromSpaceTradersResponse(ResponseInterface $spaceTradersResponse, ?SpaceTradersResponseAugmentation $augmentation, SerializerInterface $serializer): self
     {
         $decoded = json_decode($spaceTradersResponse->getContent(false), true);
-        $extra = null !== $augmentation ? $augmentation->extra : [];
+        $extra = self::normalizeExtra($augmentation?->extra, $serializer);
         $headers = null !== $augmentation ? $augmentation->headers : [];
         $body = (\is_array($decoded) ? $decoded : []) + $extra;
 
         return new self($spaceTradersResponse->getStatusCode(), $body, $headers);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function normalizeExtra(?SpaceTradersAugmentationData $extra, SerializerInterface $serializer): array
+    {
+        if (null === $extra) {
+            return [];
+        }
+
+        $decoded = json_decode($serializer->serialize($extra, 'json'), true);
+
+        return \is_array($decoded) ? $decoded : [];
     }
 }

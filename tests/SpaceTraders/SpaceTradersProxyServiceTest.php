@@ -17,6 +17,10 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class SpaceTradersProxyServiceTest extends TestCase
@@ -33,6 +37,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $agentTokenCipher,
+            $this->createStub(SerializerInterface::class),
             [],
         );
 
@@ -79,6 +84,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $agentRepository,
             $agentTokenCipher,
+            $this->createStub(SerializerInterface::class),
             [],
         );
 
@@ -101,6 +107,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             new FakeSpaceTradersGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
+            $this->createStub(SerializerInterface::class),
             [],
         );
 
@@ -125,6 +132,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             new FakeSpaceTradersGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
+            $this->createStub(SerializerInterface::class),
             [],
         );
 
@@ -166,6 +174,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
+            $this->createStub(SerializerInterface::class),
             [$hook],
         );
 
@@ -205,6 +214,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
+            $this->createStub(SerializerInterface::class),
             [$hook],
         );
 
@@ -218,7 +228,20 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $gateway = new FakeSpaceTradersGateway();
         $gateway->willReturn('{"data":{"foo":"bar"}}', 200);
 
-        $hook = new class implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface {
+        $extraData = new class implements \App\SpaceTraders\SpaceTradersAugmentationData {
+            /**
+             * @param array<string, string> $meta
+             */
+            public function __construct(public array $meta = ['tampered' => 'nope'])
+            {
+            }
+        };
+
+        $hook = new class($extraData) implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface {
+            public function __construct(private readonly \App\SpaceTraders\SpaceTradersAugmentationData $extraData)
+            {
+            }
+
             public function supports(Request $request, string $path): bool
             {
                 return 'my/ships' === $path;
@@ -237,7 +260,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             public function augment(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): SpaceTradersResponseAugmentation
             {
                 return new SpaceTradersResponseAugmentation(
-                    extra: ['meta' => ['tampered' => 'nope']],
+                    extra: $this->extraData,
                     headers: ['X-Agent-Id' => '42'],
                 );
             }
@@ -247,6 +270,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
+            $this->objectSerializer(),
             [$hook],
         );
 
@@ -254,5 +278,10 @@ final class SpaceTradersProxyServiceTest extends TestCase
 
         self::assertSame(['data' => ['foo' => 'bar'], 'meta' => ['tampered' => 'nope']], $result->body);
         self::assertSame(['X-Agent-Id' => '42'], $result->headers);
+    }
+
+    private function objectSerializer(): SerializerInterface
+    {
+        return new Serializer([new ObjectNormalizer()], ['json' => new JsonEncoder()]);
     }
 }

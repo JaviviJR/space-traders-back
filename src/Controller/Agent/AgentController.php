@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Agent;
 
-use App\Agent\Dto\AgentListResponseData;
 use App\Agent\Dto\AgentResponseData;
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
+use App\Http\Meta;
 use App\Repository\AgentRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,8 +32,9 @@ final class AgentController extends AbstractController
             fn (Agent $agent): AgentResponseData => $this->toResponseData($agent),
             $this->agentRepository->findAllForUser($user),
         );
+        $total = \count($agents);
 
-        return $this->envelope->success(new AgentListResponseData($agents));
+        return $this->envelope->success($agents, meta: new Meta($total, 1, $total));
     }
 
     private function toResponseData(Agent $agent): AgentResponseData

@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Serializer\SerializerInterface;
 
 final class SpaceTradersProxyService
 {
@@ -22,6 +23,7 @@ final class SpaceTradersProxyService
         private readonly SpaceTradersGatewayInterface $gateway,
         private readonly AgentRepository $agentRepository,
         private readonly AgentTokenCipherInterface $agentTokenCipher,
+        private readonly SerializerInterface $serializer,
         #[AutowireIterator('app.space_traders_route_hook')]
         private readonly iterable $hooks,
     ) {
@@ -69,7 +71,7 @@ final class SpaceTradersProxyService
             ? $hook->augment($request, $path, $agent, $user, $spaceTradersResponse)
             : null;
 
-        return SpaceTradersProxyResponseData::fromSpaceTradersResponse($spaceTradersResponse, $augmentation);
+        return SpaceTradersProxyResponseData::fromSpaceTradersResponse($spaceTradersResponse, $augmentation, $this->serializer);
     }
 
     private function resolveAgent(Request $request, User $user): ?Agent
