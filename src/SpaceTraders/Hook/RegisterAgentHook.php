@@ -7,10 +7,10 @@ namespace App\SpaceTraders\Hook;
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Security\AgentTokenCipherInterface;
+use App\SpaceTraders\SpaceTradersProxyResponseData;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -33,12 +33,12 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface
         return 'register' === $path && $request->isMethod('POST');
     }
 
-    public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?Response
+    public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?SpaceTradersProxyResponseData
     {
         return null;
     }
 
-    public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?Response
+    public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersProxyResponseData
     {
         if ($spaceTradersResponse->getStatusCode() >= 300) {
             return null;

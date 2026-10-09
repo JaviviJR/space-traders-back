@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Agent;
 
+use App\Agent\Dto\AgentListResponseData;
+use App\Agent\Dto\AgentResponseData;
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
@@ -27,23 +29,20 @@ final class AgentController extends AbstractController
     public function list(#[CurrentUser] User $user): JsonResponse
     {
         $agents = array_map(
-            fn (Agent $agent): array => $this->toArray($agent),
+            fn (Agent $agent): AgentResponseData => $this->toResponseData($agent),
             $this->agentRepository->findAllForUser($user),
         );
 
-        return $this->envelope->success($agents);
+        return $this->envelope->success(new AgentListResponseData($agents));
     }
 
-    /**
-     * @return array{id: ?int, symbol: string, faction: string, createdAt: ?string}
-     */
-    private function toArray(Agent $agent): array
+    private function toResponseData(Agent $agent): AgentResponseData
     {
-        return [
-            'id' => $agent->getId(),
-            'symbol' => $agent->getSymbol(),
-            'faction' => $agent->getFaction(),
-            'createdAt' => $agent->getCreatedAt()?->format(\DATE_ATOM),
-        ];
+        return new AgentResponseData(
+            $agent->getId(),
+            $agent->getSymbol(),
+            $agent->getFaction(),
+            $agent->getCreatedAt()?->format(\DATE_ATOM),
+        );
     }
 }

@@ -8,12 +8,13 @@ use App\Entity\Agent;
 use App\Entity\User;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
+use App\SpaceTraders\SpaceTradersProxyResponseData;
 use App\SpaceTraders\SpaceTradersProxyService;
-use App\SpaceTraders\SpaceTradersResponseRelay;
+use App\SpaceTraders\SpaceTradersResponseAugmentation;
+use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -32,14 +33,13 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $agentTokenCipher,
-            new SpaceTradersResponseRelay(),
             [],
         );
 
-        $response = $service->handle(Request::create('/api/spacetraders/systems', 'GET'), 'systems', new User('no-agent@example.com', 'hash'));
+        $result = $service->handle(Request::create('/api/spacetraders/systems', 'GET'), 'systems', new User('no-agent@example.com', 'hash'));
 
-        self::assertSame(200, $response->getStatusCode());
-        self::assertSame('{"data":{"foo":"bar"}}', $response->getContent());
+        self::assertSame(200, $result->statusCode);
+        self::assertSame(['data' => ['foo' => 'bar']], $result->body);
     }
 
     public function testSubstitutesTheResolvedAgentsTokenAsAuthorization(): void
@@ -79,7 +79,6 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $agentRepository,
             $agentTokenCipher,
-            new SpaceTradersResponseRelay(),
             [],
         );
 
@@ -102,7 +101,6 @@ final class SpaceTradersProxyServiceTest extends TestCase
             new FakeSpaceTradersGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
-            new SpaceTradersResponseRelay(),
             [],
         );
 
@@ -127,7 +125,6 @@ final class SpaceTradersProxyServiceTest extends TestCase
             new FakeSpaceTradersGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
-            new SpaceTradersResponseRelay(),
             [],
         );
 
@@ -143,9 +140,9 @@ final class SpaceTradersProxyServiceTest extends TestCase
     {
         $gateway = new FakeSpaceTradersGateway();
 
-        $shortCircuitResponse = new Response('{"data":{"short":"circuit"}}', 200);
-        $hook = new class($shortCircuitResponse) implements SpaceTradersRouteHookInterface {
-            public function __construct(private readonly Response $response)
+        $shortCircuitResult = new SpaceTradersProxyResponseData(200, ['data' => ['short' => 'circuit']]);
+        $hook = new class($shortCircuitResult) implements SpaceTradersRouteHookInterface {
+            public function __construct(private readonly SpaceTradersProxyResponseData $result)
             {
             }
 
@@ -154,12 +151,12 @@ final class SpaceTradersProxyServiceTest extends TestCase
                 return 'register' === $path;
             }
 
-            public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): Response
+            public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): SpaceTradersProxyResponseData
             {
-                return $this->response;
+                return $this->result;
             }
 
-            public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?Response
+            public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersProxyResponseData
             {
                 return null;
             }
@@ -169,23 +166,22 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
-            new SpaceTradersResponseRelay(),
             [$hook],
         );
 
-        $response = $service->handle(Request::create('/api/spacetraders/register', 'POST'), 'register', new User('short-circuit@example.com', 'hash'));
+        $result = $service->handle(Request::create('/api/spacetraders/register', 'POST'), 'register', new User('short-circuit@example.com', 'hash'));
 
-        self::assertSame($shortCircuitResponse, $response);
+        self::assertSame($shortCircuitResult, $result);
     }
 
-    public function testAHookCanOverrideTheRelayedResponse(): void
+    public function testAHookCanOverrideTheBuiltResponse(): void
     {
         $gateway = new FakeSpaceTradersGateway();
         $gateway->willReturn('{"data":{"token":"secret"}}', 201);
 
-        $overrideResponse = new Response('{"data":{"redacted":true}}', 201);
-        $hook = new class($overrideResponse) implements SpaceTradersRouteHookInterface {
-            public function __construct(private readonly Response $response)
+        $overrideResult = new SpaceTradersProxyResponseData(201, ['data' => ['redacted' => true]]);
+        $hook = new class($overrideResult) implements SpaceTradersRouteHookInterface {
+            public function __construct(private readonly SpaceTradersProxyResponseData $result)
             {
             }
 
@@ -194,14 +190,14 @@ final class SpaceTradersProxyServiceTest extends TestCase
                 return 'register' === $path;
             }
 
-            public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?Response
+            public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?SpaceTradersProxyResponseData
             {
                 return null;
             }
 
-            public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): Response
+            public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): SpaceTradersProxyResponseData
             {
-                return $this->response;
+                return $this->result;
             }
         };
 
@@ -209,12 +205,54 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
-            new SpaceTradersResponseRelay(),
             [$hook],
         );
 
-        $response = $service->handle(Request::create('/api/spacetraders/register', 'POST'), 'register', new User('override@example.com', 'hash'));
+        $result = $service->handle(Request::create('/api/spacetraders/register', 'POST'), 'register', new User('override@example.com', 'hash'));
 
-        self::assertSame($overrideResponse, $response);
+        self::assertSame($overrideResult, $result);
+    }
+
+    public function testAnAugmenterHookAddsExtraFieldsAndHeadersWithoutOverridingSpaceTradersKeys(): void
+    {
+        $gateway = new FakeSpaceTradersGateway();
+        $gateway->willReturn('{"data":{"foo":"bar"}}', 200);
+
+        $hook = new class implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface {
+            public function supports(Request $request, string $path): bool
+            {
+                return 'my/ships' === $path;
+            }
+
+            public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?SpaceTradersProxyResponseData
+            {
+                return null;
+            }
+
+            public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersProxyResponseData
+            {
+                return null;
+            }
+
+            public function augment(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): SpaceTradersResponseAugmentation
+            {
+                return new SpaceTradersResponseAugmentation(
+                    extra: ['meta' => ['tampered' => 'nope']],
+                    headers: ['X-Agent-Id' => '42'],
+                );
+            }
+        };
+
+        $service = new SpaceTradersProxyService(
+            $gateway,
+            $this->createStub(AgentRepository::class),
+            $this->createStub(AgentTokenCipherInterface::class),
+            [$hook],
+        );
+
+        $result = $service->handle(Request::create('/api/spacetraders/my/ships', 'GET'), 'my/ships', new User('augmented@example.com', 'hash'));
+
+        self::assertSame(['data' => ['foo' => 'bar'], 'meta' => ['tampered' => 'nope']], $result->body);
+        self::assertSame(['X-Agent-Id' => '42'], $result->headers);
     }
 }

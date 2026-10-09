@@ -10,7 +10,6 @@ use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -23,13 +22,12 @@ final class SpaceTradersProxyService
         private readonly SpaceTradersGatewayInterface $gateway,
         private readonly AgentRepository $agentRepository,
         private readonly AgentTokenCipherInterface $agentTokenCipher,
-        private readonly SpaceTradersResponseRelay $relay,
         #[AutowireIterator('app.space_traders_route_hook')]
         private readonly iterable $hooks,
     ) {
     }
 
-    public function handle(Request $request, string $path, User $user): Response
+    public function handle(Request $request, string $path, User $user): SpaceTradersProxyResponseData
     {
         $agent = $this->resolveAgent($request, $user);
         $hook = $this->findHook($request, $path);
@@ -67,7 +65,11 @@ final class SpaceTradersProxyService
             }
         }
 
-        return $this->relay->toSymfonyResponse($spaceTradersResponse);
+        $augmentation = $hook instanceof SpaceTradersResponseAugmenterInterface
+            ? $hook->augment($request, $path, $agent, $user, $spaceTradersResponse)
+            : null;
+
+        return SpaceTradersProxyResponseData::fromSpaceTradersResponse($spaceTradersResponse, $augmentation);
     }
 
     private function resolveAgent(Request $request, User $user): ?Agent

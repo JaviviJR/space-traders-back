@@ -25,14 +25,12 @@ Requests that target SpaceTraders are forwarded by the back. Each one is either:
 - **Pass-through:** forwarded without changes. This is the default.
 - **With logic:** the back runs its own logic before and/or after forwarding.
 
-In both cases the request and response shapes are exactly the ones documented
-by SpaceTraders. The back does not add, remove or rename fields. Changing this
-is a deliberate, documented decision.
-
-The back returns the SpaceTraders status code and body to the front unchanged.
-Response headers are forwarded too, except transport headers that belong to the
-connection between the back and SpaceTraders: hop-by-hop headers (RFC 7230
-§6.1), `Content-Length` and `Content-Encoding`, which Symfony recalculates.
+The back relays SpaceTraders' status code unchanged. The top-level keys
+SpaceTraders put in its own response body (`data` on success, `error` on
+failure) are never touched — not removed, not renamed, not overridden. Beyond
+that one guarantee, the back is free to shape the response: add sibling
+top-level fields, or set its own response headers. SpaceTraders' response
+headers are not forwarded at all; the front must not depend on them.
 
 The front's `Authorization` header is never forwarded; the back uses the agent
 token instead.
@@ -72,29 +70,43 @@ whole, not just for some endpoints — resolution can legitimately produce no
 agent. Per-endpoint logic is opt-in, added without touching the controller
 or any other endpoint's code (Strategy pattern):
 
+Nothing in this chain builds a Symfony `Response` except the controller.
+Hooks and the service pass around `SpaceTradersProxyResponseData` (status
+code + body + headers); `SpaceTradersProxyController` is the only place that
+turns that into a `JsonResponse`.
+
 - **`SpaceTradersRouteHookInterface`**: `supports(Request, string $path):
-  bool`, `beforeForward(Request, string $path, ?Agent, User): ?Response`
-  (returning a `Response` short-circuits — SpaceTraders is never called),
-  `afterForward(Request, string $path, ?Agent, User, ResponseInterface):
-  ?Response` (`null` = relay the SpaceTraders response unchanged, a
-  `Response` = override what the front receives; side effects — persisting
-  something, dispatching an event — belong here either way). `$agent` is
-  `null` whenever the request has no `X-Agent-Id` (public endpoints,
-  registration). `$user` is the authenticated back user (the proxy route
-  requires `ROLE_USER` like everything else outside the public auth
-  endpoints), needed by hooks that must act on the user even without an
-  `Agent` yet, like registration.
-- **`SpaceTradersResponseRelay`**: the single place that turns a SpaceTraders
-  `ResponseInterface` into the Symfony `Response` sent to the front (status,
-  body, the header-filtering rule above). Used for every request, with or
-  without a hook, so pass-through and "with logic" endpoints share the exact
-  same conversion path.
+  bool`, `beforeForward(Request, string $path, ?Agent, User):
+  ?SpaceTradersProxyResponseData` (non-null short-circuits — SpaceTraders is
+  never called), `afterForward(Request, string $path, ?Agent, User,
+  ResponseInterface): ?SpaceTradersProxyResponseData` (`null` = build the
+  response from SpaceTraders' own reply, non-null = override it entirely;
+  side effects — persisting something, dispatching an event — belong here
+  either way). `$agent` is `null` whenever the request has no `X-Agent-Id`
+  (public endpoints, registration). `$user` is the authenticated back user
+  (the proxy route requires `ROLE_USER` like everything else outside the
+  public auth endpoints), needed by hooks that must act on the user even
+  without an `Agent` yet, like registration.
+- **`SpaceTradersResponseAugmenterInterface`**: opt-in, on top of
+  `SpaceTradersRouteHookInterface`, for the common case of adding to the
+  response instead of replacing it. `augment(Request, string $path, ?Agent,
+  User, ResponseInterface): ?SpaceTradersResponseAugmentation` is called only
+  when the hook didn't short-circuit or override; it returns extra top-level
+  body fields and/or extra response headers (e.g. echoing `X-Agent-Id` back),
+  or `null` to add nothing. Most hooks don't implement this.
+- **`SpaceTradersProxyResponseData`**: `statusCode`, `body`, `headers`. Its
+  named constructor `fromSpaceTradersResponse()` builds the body from
+  SpaceTraders' own decoded JSON merged with an augmentation's `extra`
+  (SpaceTraders' own keys always win on collision, so `data`/`error` can't be
+  overridden this way).
 - **`SpaceTradersProxyService`**: orchestrates one forwarded request —
   resolves `?Agent` from `X-Agent-Id` if present (404/403 as described
   above), picks the first hook whose `supports()` matches (or none), runs
   `beforeForward`/`afterForward` around the call to the gateway (substituting
   `Authorization` with the resolved agent's decrypted token only when there
-  is one), and relays the response unless a hook overrode it.
+  is one), and, if nothing short-circuited or overrode the response, asks the
+  hook for an augmentation (when it implements that interface) before
+  building the final `SpaceTradersProxyResponseData`.
 - **Registering a hook**: implement the interface and it's auto-tagged
   (`#[Autoconfigure(tags: ['app.space_traders_route_hook'])]` on the
   interface itself) — no edits elsewhere. The service receives all hooks via

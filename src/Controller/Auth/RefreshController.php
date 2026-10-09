@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Security\Dto\AccessTokenResponseData;
 use App\Security\Exception\InvalidRefreshTokenException;
 use App\Security\RefreshTokenCookieFactory;
 use App\Security\RefreshTokenService;
@@ -42,6 +43,6 @@ final class RefreshController extends AbstractController
 
         $accessToken = $this->refreshTokenService->createAccessToken($user);
 
-        return $this->envelope->success(['accessToken' => $accessToken]);
+        return $this->envelope->success(new AccessTokenResponseData($accessToken));
     }
 }

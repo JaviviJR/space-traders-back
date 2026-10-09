@@ -8,7 +8,6 @@ use App\Entity\Agent;
 use App\Entity\User;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
@@ -25,14 +24,17 @@ interface SpaceTradersRouteHookInterface
     public function supports(Request $request, string $path): bool;
 
     /**
-     * Returning a Response short-circuits the call: SpaceTraders is never reached.
+     * Returning a SpaceTradersProxyResponseData short-circuits the call:
+     * SpaceTraders is never reached.
      */
-    public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?Response;
+    public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?SpaceTradersProxyResponseData;
 
     /**
-     * Returning a Response overrides what the front receives; null relays
-     * $spaceTradersResponse unchanged. Side effects (persisting something,
-     * dispatching an event) belong here regardless of the return value.
+     * Returning a SpaceTradersProxyResponseData overrides what the front
+     * receives; null relays $spaceTradersResponse unchanged (optionally
+     * enriched via SpaceTradersResponseAugmenterInterface). Side effects
+     * (persisting something, dispatching an event) belong here regardless
+     * of the return value.
      */
-    public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?Response;
+    public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersProxyResponseData;
 }
