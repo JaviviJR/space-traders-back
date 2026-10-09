@@ -12,6 +12,19 @@ SpaceTraders requests pick which agent to act on.
 The SpaceTraders agent token is stored only in the back, encrypted. The front
 never sees it.
 
+A new `User` has `isVerified = false`. Registration triggers
+`RegistrationConfirmationMailer` (`src/Security/Email/RegistrationConfirmationMailer.php`),
+which uses `symfonycasts/verify-email-bundle`'s `VerifyEmailHelperInterface`
+to generate a signed confirmation link, then rebuilds it to point at
+`{FRONT_URL}/confirm-email?<signature query>` instead of the bundle's own
+backend route. `FRONT_URL` is an env var (e.g. `http://localhost:5173`).
+
+`POST /auth/login` returns **403** (`AccessDeniedHttpException`, raised as
+`EmailNotVerifiedException`) when the credentials are correct but
+`!isVerified` — deliberately different from the **401**
+(`UnauthorizedHttpException`) used for bad credentials, so the front can
+tell the two cases apart.
+
 ## Tokens
 
 | Token | Format | Lifetime | Client side | Server side |
@@ -48,7 +61,8 @@ out.
 
 - `stateless: true`, with the Lexik JWT authenticator.
 - Public (no JWT required): `/auth/register`, `/auth/login`, `/auth/refresh`,
-  `/auth/logout`. Everything else requires `ROLE_USER`.
+  `/auth/logout`, `/auth/confirm-email` (POST), `/auth/resend-confirmation`
+  (POST). Everything else requires `ROLE_USER`.
 
 ## Testing
 
@@ -58,9 +72,15 @@ purpose — not secrets, just fixtures, so tests run without any local setup
 (`.env.local` isn't loaded in the `test` environment by Symfony convention).
 Never reuse these values outside tests.
 
-## Pending
+## TODO
 
 - Authentication error format (fixed by the back's general error-format
   decision, still open — see `doc/architecture.md`).
 - Login rate limiting / brute-force protection (password policy itself is
   decided: minimum 8 characters, enforced by `RegisterUserDto`).
+- Login bypasses Symfony's authenticator system entirely (`LoginService`
+  validates credentials by hand, no `Passport`/`AuthenticatorManager`). This
+  means `UserCheckerInterface` and other authenticator-level extension points
+  don't apply to login. Migrate login to a proper Symfony `Authenticator`
+  instead of hand-rolling credential checks — don't reinvent what the
+  framework already provides.

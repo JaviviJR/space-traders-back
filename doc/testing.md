@@ -18,10 +18,26 @@ Run it inside the php container:
 composer test-coverage
 ```
 
-**Pending decision:** if the suite grows and per-run coverage becomes slow,
-switch to [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for
-coverage. PCOV only instruments coverage (no step debugging, no profiling),
-which makes it faster than Xdebug for this specific job, at the cost of one
-more extension to install and maintain alongside Xdebug in
-`docker/php/Dockerfile`. Not needed today; revisit if coverage runs become a
-bottleneck.
+## Model factories
+
+[Foundry](https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html)
+(`zenstruck/foundry`) is installed (`require-dev`) for test model factories,
+instead of building entities by hand or reaching into the `EntityManager`
+from tests.
+
+## Test factories
+
+`UserFactory` (`src/Factory/UserFactory.php`) is the first Foundry factory;
+it defaults `isVerified` to `true`, so factory-made users don't need manual
+verification in tests. New entities that need test fixtures should get
+their own Foundry factory too, for consistency.
+
+## TODO
+
+- If the suite grows and per-run coverage becomes slow, switch to
+  [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for coverage.
+  PCOV only instruments coverage (no step debugging, no profiling), which
+  makes it faster than Xdebug for this specific job, at the cost of one more
+  extension to install and maintain alongside Xdebug in
+  `docker/php/Dockerfile`. Not needed today; revisit if coverage runs become
+  a bottleneck.

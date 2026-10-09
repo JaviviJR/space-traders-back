@@ -50,74 +50,80 @@ authority on that, and duplicating it here would drift out of sync.
 #### Rate limiting (pending)
 
 SpaceTraders rate-limits requests per agent. Every call this back makes to
-SpaceTraders — through the catch-all proxy, or from any other service like
-agent registration — must go through one shared, rate-limited gateway
-(`symfony/rate-limiter`), not call `HttpClientInterface` directly. Otherwise
-a call outside the proxy (e.g. agent registration) escapes the limit and
-SpaceTraders can throttle or ban us without our own guard ever seeing it.
-Not implemented yet; build it together with the catch-all proxy below, and
-move `AgentRegistrationService`'s SpaceTraders call onto it at the same time.
+SpaceTraders — through the catch-all proxy, or from any other service —
+goes through the one shared gateway below (`SpaceTradersGatewayInterface`),
+not `HttpClientInterface` directly, so there is a single choke point to add
+rate limiting to. Not implemented yet (`symfony/rate-limiter` isn't
+installed): the gateway today only centralizes the SpaceTraders base URL and
+translates transport-level failures. Build the actual per-agent limiting
+once the proxy has run for a while and the real call patterns are visible.
 
 #### Proxy design
 
 One catch-all route handles every SpaceTraders endpoint
-(`/api/spacetraders/{path}`). Per-endpoint logic is opt-in, added without
-touching the controller or any other endpoint's code (Strategy pattern):
+(`/api/spacetraders/{path}`), including ones that don't act on an agent at
+all: public SpaceTraders data (server status, systems/waypoints/factions,
+public agent listing — no token required) and `POST /register` (takes an
+`AccountToken`, not an `AgentToken`, and creates the agent this back doesn't
+have yet). Because of that, `X-Agent-Id` is optional for the proxy as a
+whole, not just for some endpoints — resolution can legitimately produce no
+agent. Per-endpoint logic is opt-in, added without touching the controller
+or any other endpoint's code (Strategy pattern):
 
-- **`SpaceTradersRouteHookInterface`**: `supports(Request): bool`,
-  `beforeForward(Request, Agent): ?Response` (returning a `Response` short-
-  circuits — SpaceTraders is never called), `afterForward(Request, Agent,
-  ResponseInterface): void` (side effects only; the return value is ignored).
-- **`afterForward` returns `void` on purpose.** It lets the type system
-  enforce "the back never changes a SpaceTraders response shape" instead of
-  relying on each hook author remembering the rule. A hook can react (persist
-  something, dispatch an event) but cannot alter what the front receives.
+- **`SpaceTradersRouteHookInterface`**: `supports(Request, string $path):
+  bool`, `beforeForward(Request, string $path, ?Agent, User): ?Response`
+  (returning a `Response` short-circuits — SpaceTraders is never called),
+  `afterForward(Request, string $path, ?Agent, User, ResponseInterface):
+  ?Response` (`null` = relay the SpaceTraders response unchanged, a
+  `Response` = override what the front receives; side effects — persisting
+  something, dispatching an event — belong here either way). `$agent` is
+  `null` whenever the request has no `X-Agent-Id` (public endpoints,
+  registration). `$user` is the authenticated back user (the proxy route
+  requires `ROLE_USER` like everything else outside the public auth
+  endpoints), needed by hooks that must act on the user even without an
+  `Agent` yet, like registration.
 - **`SpaceTradersResponseRelay`**: the single place that turns a SpaceTraders
   `ResponseInterface` into the Symfony `Response` sent to the front (status,
   body, the header-filtering rule above). Used for every request, with or
   without a hook, so pass-through and "with logic" endpoints share the exact
   same conversion path.
-- **`SpaceTradersProxyService`**: orchestrates one forwarded request — picks
-  the first hook whose `supports()` matches (or none), runs
-  `beforeForward`/`afterForward` around the call to SpaceTraders, decrypts the
-  agent's token to call it, and relays the response.
+- **`SpaceTradersProxyService`**: orchestrates one forwarded request —
+  resolves `?Agent` from `X-Agent-Id` if present (404/403 as described
+  above), picks the first hook whose `supports()` matches (or none), runs
+  `beforeForward`/`afterForward` around the call to the gateway (substituting
+  `Authorization` with the resolved agent's decrypted token only when there
+  is one), and relays the response unless a hook overrode it.
 - **Registering a hook**: implement the interface and it's auto-tagged
-  (`#[Autoconfigure(tags: [...])]` on the interface itself) — no edits
-  elsewhere. The service receives all hooks as a tagged iterator.
-
-**If a hook ever needs to actually change the response shape** (e.g.
-enriching `GET /my/ships` with a computed field), that is a deliberate
-decision, not something that should happen by accident: widen
-`afterForward(...): void` to `afterForward(...): ?Response` (`null` = no
-change, a `Response` = override), update this file to say so, and only then
-implement it. Don't build that capability before a real endpoint needs it.
+  (`#[Autoconfigure(tags: ['app.space_traders_route_hook'])]` on the
+  interface itself) — no edits elsewhere. The service receives all hooks via
+  `#[AutowireIterator]`.
+- **`SpaceTradersGatewayInterface`** / `SpaceTradersGateway`: wraps
+  `HttpClientInterface`. Pass-through means a 4xx/5xx from SpaceTraders is
+  relayed as-is, not translated — the gateway only translates genuine
+  transport failures (timeout, DNS, connection) into
+  `SpaceTradersApiException`. Has an interface, despite a single
+  implementation, because it's the test seam `SpaceTradersProxyService` and
+  hook tests fake against instead of spinning up `MockHttpClient` each time.
 
 ### Back-only endpoints
 
 Endpoints whose contract the back owns, instead of relaying SpaceTraders'
 contract unchanged. This is the deciding question, not whether SpaceTraders
 gets called over the network: user registration, login, token refresh and
-logout never touch SpaceTraders. Agent registration (`POST /api/agents`)
-does call `POST /register` on SpaceTraders internally, but still belongs
-here, because the back must never forward SpaceTraders' raw response: it
-contains the agent token, which this back never exposes to the front (see
-[Context](#context)).
+logout never touch SpaceTraders — their contract is entirely ours.
 
-**Current implementation is a known simplification, to revisit.** Today
-`AgentController` hand-builds a small response (`id`, `symbol`, `faction`,
-`createdAt`) instead of relaying SpaceTraders' real response with just the
-`token` field redacted. The latter is the better design — the front gets
-every field SpaceTraders returns (starting contract, ships, faction detail)
-without us mirroring each one by hand — but it needs the rate-limited
-gateway above and isn't worth building before that exists. When the catch-all
-proxy is built, change `AgentRegistrationService` to: call SpaceTraders
-through the shared gateway, persist the encrypted token as a side effect,
-and relay the same SpaceTraders response to the front with `data.token`
-removed. This doesn't go through the catch-all's hook mechanism itself —
-there's no existing `Agent` to resolve via `X-Agent-Id`, and SpaceTraders'
-register endpoint takes no agent token — it's `AgentRegistrationService`
-calling the shared gateway directly, the same way any other service would.
-They use the same envelope as SpaceTraders: `{ "data": ... }`.
+`GET /api/agents` is also back-only: it lists the authenticated user's
+linked agents straight from this back's DB (`id`, `symbol`, `faction`,
+`createdAt`), no SpaceTraders call involved.
+
+**Agent registration (`POST /api/spacetraders/register`) is not back-only.**
+It goes through the catch-all proxy like any other SpaceTraders endpoint
+(see "Proxy design" above) — the front talks to SpaceTraders' real
+`/register` contract directly, this back doesn't hand-build or reshape the
+response; the only back-side behavior is a hook persisting the new `Agent`
+with its encrypted token as a side effect. **Known simplification:**
+SpaceTraders' raw response, including the plaintext agent token, currently
+reaches the front unredacted — see "Pending" below.
 
 ## Errors
 
@@ -130,11 +136,10 @@ the mocks follow this back's contract. Keep the contract stable and documented.
 
 Later, a few e2e tests will run against the real back for critical flows.
 
-## Pending
+## TODO
 
 - Errors (see above).
 - Base URL of the back for the front (`VITE_API_URL`) and the Vite dev proxy.
 - SpaceTraders rate limiting (see "Rate limiting" above).
-- Rework `AgentRegistrationService`/`AgentController` to relay SpaceTraders'
-  real response (redacting `token`) through the shared gateway, instead of
-  the hand-built response they return today (see "Back-only endpoints").
+- Redact `data.token` from the agent registration response instead of
+  relaying it to the front unchanged (see "Back-only endpoints" above).

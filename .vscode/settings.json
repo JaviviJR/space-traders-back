@@ -1,9 +1,12 @@
 {
   // Config local para trabajar SIN abrir el proyecto dentro de un devcontainer.
-  // "php" se redirige al contenedor php via bin/php-docker (docker compose exec).
-  "php.executablePath": "bin/php-docker",
-  "php.validate.executablePath": "bin/php-docker",
-  "symfony-vscode.phpExecutablePath": "bin/php-docker",
+  // Linter PHP built-in desactivado: Intelephense no necesita binario PHP real,
+  // y así evitamos depender de una ruta de host hacia el contenedor.
+  "php.validate.enable": false,
+  // Symfony for VSCode ejecuta sus comandos de consola dentro del contenedor
+  // via "docker exec", sin depender de ninguna ruta de host.
+  "symfony-vscode.shellExecutable": "/bin/bash",
+  "symfony-vscode.shellCommand": "docker exec space-trader-backend-php php \"$@\"",
   "intelephense.environment.phpVersion": "8.4.0",
   "search.exclude": {
     "**/vendor": true,

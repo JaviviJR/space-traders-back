@@ -4,8 +4,9 @@ How the user works with Claude on this project. Applies to every session.
 
 ## Confirmations
 
-- Ask explicit confirmation before writing files tracked by git, or running
-  commands that change state. Files outside git can be written without asking.
+- Ask explicit confirmation before writing any file, or running commands that
+  change state. This applies regardless of whether the file is tracked by
+  git.
 - Option answers are not approval. Approval for one change does not extend to
   the next.
 - Related changes may be grouped into one proposal, provided each change is
@@ -13,16 +14,22 @@ How the user works with Claude on this project. Applies to every session.
 
 ## Proposals
 
-- New file: don't paste its content in chat, before or after writing it.
-  Explain what it does and why, then write it. The user reviews the content in
-  the editor or with `git diff`.
-- Existing file, small change: show a diff (`-`/`+` lines with a bit of
-  context), not the full document.
-- Existing file, large rewrite: a diff would cost more tokens than it saves.
-  Explain what's changing instead of pasting a diff or the full content. The
-  user reviews the result in the editor or with `git diff`.
-- For code changes, the same rules apply: describe responsibility, public
-  signatures and what changed; never paste the full code in chat.
+- File changes: never show a diff or pasted content in chat, regardless of
+  whether it's a new file, a small edit or a large rewrite. Explain what
+  changed and why, listing every file affected, so the user knows what to
+  review. The user reviews the actual change with `git diff` in VSCode.
+- Design rationale: when a change is driven by a design pattern, a SOLID
+  principle, an architecture decision or a code-quality improvement — however
+  small, including a rename or extracting a method — split the explanation in
+  two: what the change does (functional effect) and why this design
+  specifically — what coupling, responsibility or extensibility problem it
+  solves, or which principle it applies, and why a simpler alternative wasn't
+  enough. Always explicit, even for small changes. A proposal without the
+  second part is incomplete.
+  - Revisit note: tried as "always explicit" starting 2026-10-08. After a few
+    sessions, consider switching to "only for structural changes
+    (interfaces, patterns, layers)" if "always" turns out noisy for trivial
+    changes.
 - When a decision is closed, write it to the relevant `doc/*.md` file and reply
   with a one-line summary.
 
@@ -34,6 +41,9 @@ How the user works with Claude on this project. Applies to every session.
   them.
 - Never run package installs (composer, npm, editor extensions). Give the exact
   command and wait for the result, then verify it by reading files.
+- When asked to split a plan into sequential blocks, reorder the explanations
+  already given as-is into blocks — don't compress or re-summarize them into
+  shorter bullets.
 
 ## Subagents
 
