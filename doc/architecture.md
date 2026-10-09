@@ -10,6 +10,8 @@ talks to this back, never to `api.spacetraders.io`.
 - SpaceTraders universe resets invalidate agent tokens. The back handles them:
   it revokes the affected sessions and notifies the user.
 - The front authenticates against the back. See [authentication.md](authentication.md).
+- The back exposes an OpenAPI spec for the front to consume. See
+  [openapi.md](openapi.md).
 
 ## Contract
 

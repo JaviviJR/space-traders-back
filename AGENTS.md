@@ -137,9 +137,14 @@ things up in the project instead of relying on memory:
   it is configured.
 - `bin/console lint:container`, plus `lint:twig templates/` and
   `lint:yaml config/` where those packages are installed: validate before running.
-- Read the installed source and docblocks under `vendor/`.
 - Docs: https://symfony.com/doc/current/ (switch to the version matching
-  `composer.json` if it differs).
+  `composer.json` if it differs). Symfony itself has no `llms.txt`, but some
+  dependencies do — prefer it as the entry point when one exists:
+  `https://phpstan.org/llms.txt` (PHPStan) and
+  `https://symfonycasts.com/llms.txt` (symfonycasts/verify-email-bundle).
+- Read the installed source and docblocks under `vendor/` when the docs don't
+  settle it — for the exact behaviour of the installed version, patched
+  forks, or details the docs don't cover.
 
 ## Architecture decisions
 
