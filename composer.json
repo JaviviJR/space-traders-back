@@ -45,7 +45,8 @@
         "symfony/debug-bundle": "8.1.*",
         "symfony/maker-bundle": "^1.68",
         "symfony/stopwatch": "8.1.*",
-        "symfony/web-profiler-bundle": "8.1.*"
+        "symfony/web-profiler-bundle": "8.1.*",
+        "zenstruck/foundry": "^2.14"
     },
     "config": {
         "allow-plugins": {

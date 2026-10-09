@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Auth;
 
+use App\Repository\UserRepository;
+use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class RegisterControllerTest extends WebTestCase
 {
+    use MailerAssertionsTrait;
+
     public function testRegisterReturnsTheCreatedUserWithoutThePassword(): void
     {
         $client = static::createClient();
@@ -24,6 +28,14 @@ final class RegisterControllerTest extends WebTestCase
 
         self::assertSame('register-happy@example.com', $data['data']['email']);
         self::assertArrayNotHasKey('password', $data['data']);
+
+        /** @var UserRepository $userRepository */
+        $userRepository = static::getContainer()->get(UserRepository::class);
+        $user = $userRepository->findByEmail('register-happy@example.com');
+        self::assertNotNull($user);
+        self::assertFalse($user->isVerified());
+
+        self::assertEmailCount(1);
     }
 
     public function testRegisteringTheSameEmailTwiceReturnsConflict(): void
