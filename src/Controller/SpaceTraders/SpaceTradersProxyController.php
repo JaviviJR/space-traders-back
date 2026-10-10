@@ -23,7 +23,7 @@ final class SpaceTradersProxyController extends AbstractController
     ) {
     }
 
-    #[Route('/api/spacetraders/{path}', requirements: ['path' => '.+'], methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])]
+    #[Route('/api/spacetraders/{path}', requirements: ['path' => '.*'], defaults: ['path' => ''], methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])]
     #[IsGranted('ROLE_USER')]
     public function __invoke(Request $request, string $path, #[CurrentUser] User $user): JsonResponse
     {

@@ -14,6 +14,8 @@ final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
 
     private ?SpaceTradersApiException $exception = null;
 
+    private ?string $lastPath = null;
+
     /**
      * @param array<string, string[]> $headers
      */
@@ -29,8 +31,15 @@ final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
         $this->response = null;
     }
 
+    public function lastPath(): ?string
+    {
+        return $this->lastPath;
+    }
+
     public function request(string $method, string $path, array $options = []): SpaceTradersApiResponse
     {
+        $this->lastPath = $path;
+
         if (null !== $this->exception) {
             throw $this->exception;
         }

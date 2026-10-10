@@ -54,4 +54,24 @@ final class SpaceTradersProxyControllerTest extends WebTestCase
         self::assertSame($body['agentId'], $persistedAgent->getId());
         self::assertSame('register-flow@example.com', $persistedAgent->getUser()->getEmail());
     }
+
+    public function testBareSpaceTradersPathForwardsToTheApiRootForServerStatus(): void
+    {
+        $client = static::createClient();
+
+        UserFactory::createOne(['email' => 'status-flow@example.com']);
+        $token = $this->login($client, 'status-flow@example.com');
+
+        $gateway = $this->fakeSpaceTradersGateway($client);
+        $gateway->willReturn(json_encode(['status' => 'SpaceTraders is currently online'], \JSON_THROW_ON_ERROR));
+
+        $client->request('GET', '/api/spacetraders', [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token]);
+
+        self::assertResponseIsSuccessful((string) $client->getResponse()->getContent());
+        self::assertSame('', $gateway->lastPath());
+
+        /** @var array{status: string} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame('SpaceTraders is currently online', $body['status']);
+    }
 }
