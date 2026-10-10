@@ -155,6 +155,9 @@ record decisions already made; don't re-open them without asking.
   contract and headers.
 - `doc/authentication.md`: JWT auth (Lexik access token, custom refresh token
   rotation), token storage, firewall rules.
+- `doc/openapi.md`: OpenAPI documentation setup and conventions.
+- `doc/testing.md`: coverage setup, model/test factories, test doubles
+  conventions.
 
 When a decision changes, update the relevant file in the same change.
 

@@ -32,8 +32,48 @@ it defaults `isVerified` to `true`, so factory-made users don't need manual
 verification in tests. New entities that need test fixtures should get
 their own Foundry factory too, for consistency.
 
+## Test doubles
+
+Criteria for choosing between PHPUnit's generated doubles (`createStub()` /
+`createMock()`) and a hand-written double (anonymous class or a named Fake):
+
+- **`createStub()`**: a collaborator that just needs to return canned values
+  (no interaction to verify). Use for simple interfaces consumed for their
+  return value only.
+- **`createMock()`**: when the test needs to verify *how* a collaborator was
+  called (`expects()`, `with()`). To assert on an argument's contents without
+  a hand-rolled spy, use an argument matcher instead of capturing state
+  manually: `->with(self::callback(function (array $options): bool { ...;
+  return true; }))`.
+- **Hand-written double (anonymous class, or a named Fake under
+  `tests/.../Fake*`)**: when the collaborator needs real, coherent behaviour
+  across several methods (e.g. a strategy/hook interface where `supports()`
+  and `beforeForward()`/`afterForward()` must agree), or when it needs to
+  carry state between calls. PHPUnit's generated doubles configure each
+  method independently and can't express that coherence without
+  `willReturnCallback()` closures, which end up being the method body
+  anyway, just harder to read and untyped. A real class implementing the
+  interface also fails to compile when the interface gains a method, whereas
+  a generated mock silently returns `null` for it — catching contract drift
+  that a mock would hide.
+  - Keep it as an **inline anonymous class** when it's used once and the
+    shape is trivial.
+  - **Extract to a named class** (e.g. `FakeSpaceTradersGateway`,
+    `FakeSpaceTradersRouteHook`) once the same shape is duplicated across
+    tests, and make it configurable with `willXxx()` setters instead of
+    hard-coding behaviour in the constructor.
+- **Plain data objects** (a type whose only job is to hold public properties
+  read by something like Symfony's `ObjectNormalizer`, not to be called):
+  don't double these with `createMock()` — PHPUnit's doubles only configure
+  methods (and, since PHP 8.4, declared property hooks), not arbitrary
+  public properties. Just instantiate a real, typed fixture object.
+
 ## TODO
 
+- Revisit the test doubles guidance above once more of the suite is written;
+  it's based on one service's tests (`SpaceTradersProxyServiceTest`,
+  `SpaceTradersEnvelopeBuilderTest`) and may need adjusting as other patterns
+  show up.
 - If the suite grows and per-run coverage becomes slow, switch to
   [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for coverage.
   PCOV only instruments coverage (no step debugging, no profiling), which
