@@ -20,8 +20,8 @@ final class SpaceTradersGatewayTest extends TestCase
 
         $response = $gateway->request('GET', 'my/agent');
 
-        self::assertSame(200, $response->getStatusCode());
-        self::assertSame('{"data":{"foo":"bar"}}', $response->getContent());
+        self::assertSame(200, $response->statusCode);
+        self::assertSame('{"data":{"foo":"bar"}}', $response->body);
     }
 
     public function testDoesNotTranslateAnHttpErrorStatusIntoAnException(): void
@@ -33,8 +33,8 @@ final class SpaceTradersGatewayTest extends TestCase
 
         $response = $gateway->request('POST', 'register');
 
-        self::assertSame(422, $response->getStatusCode());
-        self::assertSame('{"error":"symbol already taken"}', $response->getContent(false));
+        self::assertSame(422, $response->statusCode);
+        self::assertSame('{"error":"symbol already taken"}', $response->body);
     }
 
     public function testTranslatesATransportFailureIntoASpaceTradersApiException(): void

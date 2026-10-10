@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Http\ErrorResponseData;
 use App\Security\Dto\AccessTokenResponseData;
 use App\Security\Exception\InvalidRefreshTokenException;
 use App\Security\RefreshTokenCookieFactory;
@@ -35,7 +36,7 @@ final class RefreshController extends AbstractController
 
             $user = $this->refreshTokenService->verify($plaintext);
         } catch (InvalidRefreshTokenException $exception) {
-            $response = $this->json(['message' => $exception->getMessage()], 401);
+            $response = $this->envelope->error(new ErrorResponseData('invalid_refresh_token', $exception->getMessage()), 401);
             $response->headers->setCookie($this->cookieFactory->clear());
 
             return $response;

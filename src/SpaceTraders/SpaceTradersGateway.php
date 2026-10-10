@@ -7,7 +7,6 @@ namespace App\SpaceTraders;
 use App\SpaceTraders\Exception\SpaceTradersApiException;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class SpaceTradersGateway implements SpaceTradersGatewayInterface
 {
@@ -18,10 +17,19 @@ final class SpaceTradersGateway implements SpaceTradersGatewayInterface
     ) {
     }
 
-    public function request(string $method, string $path, array $options = []): ResponseInterface
+    public function request(string $method, string $path, array $options = []): SpaceTradersApiResponse
     {
         try {
-            return $this->httpClient->request($method, self::BASE_URL.'/'.ltrim($path, '/'), $options);
+            $response = $this->httpClient->request($method, self::BASE_URL.'/'.ltrim($path, '/'), $options);
+
+            // `false` on both calls: a 4xx/5xx from SpaceTraders is relayed
+            // as-is (pass-through contract), never translated into a thrown
+            // exception. Only a genuine transport failure is.
+            return new SpaceTradersApiResponse(
+                $response->getStatusCode(),
+                $response->getContent(false),
+                $response->getHeaders(false),
+            );
         } catch (TransportExceptionInterface $exception) {
             throw new SpaceTradersApiException(0, $exception->getMessage(), $exception);
         }

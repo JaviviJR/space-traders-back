@@ -5,16 +5,15 @@ declare(strict_types=1);
 namespace App\SpaceTraders\Hook;
 
 use App\Entity\Agent;
-use App\Entity\User;
+use App\Http\HttpResponseEnvelope;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
-use App\SpaceTraders\SpaceTradersProxyResponseData;
+use App\SpaceTraders\SpaceTradersApiResponse;
+use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
 use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 /**
  * SpaceTraders' POST /register creates an agent that doesn't exist in our
@@ -38,53 +37,54 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
     ) {
     }
 
-    public function supports(Request $request, string $path): bool
+    public function supports(SpaceTradersProxyRequest $request): bool
     {
-        return 'register' === $path && $request->isMethod('POST');
+        return 'register' === $request->path && 'POST' === $request->method;
     }
 
-    public function beforeForward(Request $request, string $path, ?Agent $agent, User $user): ?SpaceTradersProxyResponseData
+    public function beforeForward(SpaceTradersProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope
     {
         return null;
     }
 
-    public function afterForward(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersProxyResponseData
+    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
     {
-        if ($spaceTradersResponse->getStatusCode() >= 300) {
-            return null;
+        if ($response->statusCode >= 300) {
+            return $response;
         }
 
-        $data = $spaceTradersResponse->toArray(false)['data'] ?? null;
+        $decoded = json_decode($response->body, true);
+        $data = \is_array($decoded) ? ($decoded['data'] ?? null) : null;
 
         if (!\is_array($data)) {
-            return null;
+            return $response;
         }
 
         $agentData = $data['agent'] ?? null;
         $token = $data['token'] ?? null;
 
         if (!\is_array($agentData) || !\is_string($token) || '' === $token) {
-            return null;
+            return $response;
         }
 
         $symbol = $agentData['symbol'] ?? null;
         $faction = $agentData['startingFaction'] ?? null;
 
         if (!\is_string($symbol) || !\is_string($faction)) {
-            return null;
+            return $response;
         }
 
-        $newAgent = new Agent($user, $symbol, $faction, $this->agentTokenCipher->encrypt($token));
+        $newAgent = new Agent($request->user, $symbol, $faction, $this->agentTokenCipher->encrypt($token));
 
         $this->entityManager->persist($newAgent);
         $this->entityManager->flush();
 
         $this->registeredAgent = $newAgent;
 
-        return null;
+        return $response;
     }
 
-    public function augment(Request $request, string $path, ?Agent $agent, User $user, ResponseInterface $spaceTradersResponse): ?SpaceTradersResponseAugmentation
+    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation
     {
         $agentId = $this->registeredAgent?->getId();
 

@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http;
+
+/**
+ * Sibling of a successful ResponseData under the `error` top-level key.
+ * $code is a stable, machine-readable identifier for the front to branch on;
+ * $message is human-readable and safe to expose (never a raw exception
+ * message for unexpected failures).
+ */
+final readonly class ErrorResponseData implements ResponseData
+{
+    public function __construct(
+        public string $code,
+        public string $message,
+    ) {
+    }
+}

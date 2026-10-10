@@ -70,43 +70,64 @@ whole, not just for some endpoints — resolution can legitimately produce no
 agent. Per-endpoint logic is opt-in, added without touching the controller
 or any other endpoint's code (Strategy pattern):
 
-Nothing in this chain builds a Symfony `Response` except the controller.
-Hooks and the service pass around `SpaceTradersProxyResponseData` (status
-code + body + headers); `SpaceTradersProxyController` is the only place that
-turns that into a `JsonResponse`.
+No Symfony HTTP type crosses a layer that doesn't own it. The `Request`
+dies in `SpaceTradersProxyController`, which translates it into a
+`SpaceTradersProxyRequest` before calling the service — hooks and the
+service never see a Symfony `Request`. Symmetrically, the HttpClient
+`ResponseInterface` dies inside `SpaceTradersGateway`, which resolves it
+(status, body, headers) into a `SpaceTradersApiResponse` before returning —
+nothing downstream depends on HttpClient's lazy response type, or risks a
+transport exception outside the one place that already catches it. On the
+way out, both this proxy and every back-only endpoint converge on the same
+`HttpResponseEnvelope` (status code + already-serialized JSON body +
+headers, in `App\Http`) — `EnvelopeResponseFactory::toJsonResponse()` is the
+only place in the app that builds a Symfony `JsonResponse`.
 
-- **`SpaceTradersRouteHookInterface`**: `supports(Request, string $path):
-  bool`, `beforeForward(Request, string $path, ?Agent, User):
-  ?SpaceTradersProxyResponseData` (non-null short-circuits — SpaceTraders is
-  never called), `afterForward(Request, string $path, ?Agent, User,
-  ResponseInterface): ?SpaceTradersProxyResponseData` (`null` = build the
-  response from SpaceTraders' own reply, non-null = override it entirely;
-  side effects — persisting something, dispatching an event — belong here
-  either way). `$agent` is `null` whenever the request has no `X-Agent-Id`
-  (public endpoints, registration). `$user` is the authenticated back user
-  (the proxy route requires `ROLE_USER` like everything else outside the
-  public auth endpoints), needed by hooks that must act on the user even
-  without an `Agent` yet, like registration.
+- **`SpaceTradersProxyRequest`**: `method`, `path`, `query`, `headers`
+  (already filtered to the forwardable subset), `body` (raw, undecoded —
+  a hook that needs specific fields decodes it itself), `agentId` (the raw
+  `X-Agent-Id` header value, not yet resolved), `user`.
+- **`SpaceTradersRouteHookInterface`**: `supports(SpaceTradersProxyRequest):
+  bool`, `beforeForward(SpaceTradersProxyRequest, ?Agent):
+  ?HttpResponseEnvelope` (non-null short-circuits — SpaceTraders is never
+  called), `afterForward(SpaceTradersProxyRequest, ?Agent,
+  SpaceTradersApiResponse): SpaceTradersApiResponse` (non-nullable: by this
+  point SpaceTraders has already been called, so this never short-circuits
+  anything — it transforms the response on its way out, e.g. redacting a
+  field inside `data`, and returns the same response unchanged when there's
+  nothing to do; side effects — persisting something, dispatching an event —
+  belong here either way). `$agent` is `null` whenever the request has no
+  `X-Agent-Id` (public endpoints, registration); the authenticated user is
+  always available via `$request->user`.
 - **`SpaceTradersResponseAugmenterInterface`**: opt-in, on top of
   `SpaceTradersRouteHookInterface`, for the common case of adding to the
-  response instead of replacing it. `augment(Request, string $path, ?Agent,
-  User, ResponseInterface): ?SpaceTradersResponseAugmentation` is called only
-  when the hook didn't short-circuit or override; it returns extra top-level
-  body fields and/or extra response headers (e.g. echoing `X-Agent-Id` back),
-  or `null` to add nothing. Most hooks don't implement this.
-- **`SpaceTradersProxyResponseData`**: `statusCode`, `body`, `headers`. Its
-  named constructor `fromSpaceTradersResponse()` builds the body from
-  SpaceTraders' own decoded JSON merged with an augmentation's `extra`
-  (SpaceTraders' own keys always win on collision, so `data`/`error` can't be
-  overridden this way).
+  response instead of replacing it — unlike `afterForward`, this can only add
+  sibling fields, never touch SpaceTraders' own top-level keys.
+  `augment(SpaceTradersProxyRequest, ?Agent, SpaceTradersApiResponse):
+  ?SpaceTradersResponseAugmentation` is called with the response
+  `afterForward` produced; it returns extra top-level body fields and/or
+  extra response headers (e.g. echoing `X-Agent-Id` back), or `null` to add
+  nothing. Most hooks don't implement this.
+- **`SpaceTradersApiResponse`**: `statusCode`, `body` (undecoded string),
+  `headers` — what the gateway hands back, and what travels through
+  `afterForward`/`augment`.
+- **`SpaceTradersEnvelopeBuilder`**: turns the final `SpaceTradersApiResponse`
+  plus an optional augmentation into an `HttpResponseEnvelope`. Without an
+  augmentation (the common, pass-through case) the body passes through
+  untouched — no decode/re-encode. An augmentation forces a decode so the
+  extra fields can be merged in (SpaceTraders' own keys always win on
+  collision, so `data`/`error` can't be overridden this way). Deliberately
+  not a named constructor on `HttpResponseEnvelope`: that type is generic
+  (shared with back-only responses) and stays unaware of SpaceTraders-specific
+  concepts.
 - **`SpaceTradersProxyService`**: orchestrates one forwarded request —
-  resolves `?Agent` from `X-Agent-Id` if present (404/403 as described
-  above), picks the first hook whose `supports()` matches (or none), runs
+  resolves `?Agent` from `agentId` if present (404/403 as described above),
+  picks the first hook whose `supports()` matches (or none), runs
   `beforeForward`/`afterForward` around the call to the gateway (substituting
   `Authorization` with the resolved agent's decrypted token only when there
-  is one), and, if nothing short-circuited or overrode the response, asks the
-  hook for an augmentation (when it implements that interface) before
-  building the final `SpaceTradersProxyResponseData`.
+  is one), asks the hook for an augmentation (when it implements that
+  interface) if `beforeForward` didn't short-circuit, and hands the result to
+  `SpaceTradersEnvelopeBuilder`.
 - **Registering a hook**: implement the interface and it's auto-tagged
   (`#[Autoconfigure(tags: ['app.space_traders_route_hook'])]` on the
   interface itself) — no edits elsewhere. The service receives all hooks via
@@ -117,7 +138,9 @@ turns that into a `JsonResponse`.
   transport failures (timeout, DNS, connection) into
   `SpaceTradersApiException`. Has an interface, despite a single
   implementation, because it's the test seam `SpaceTradersProxyService` and
-  hook tests fake against instead of spinning up `MockHttpClient` each time.
+  hook tests fake against instead of spinning up `MockHttpClient` each time
+  — the fake builds a plain `SpaceTradersApiResponse`, no HttpClient
+  involved at all.
 
 ### Back-only endpoints
 
@@ -141,7 +164,27 @@ reaches the front unredacted — see "Pending" below.
 
 ## Errors
 
-Pending. Defined once there is implemented code that produces errors.
+A single `kernel.exception` listener (`App\EventListener\ExceptionListener`)
+converts every uncaught exception into the same envelope as every other
+response — `{"error": {"code", "message"}}` — through
+`EnvelopeResponseFactory::error()`, instead of Symfony's default error shape.
+`code` is a stable, machine-readable identifier for the front to branch on;
+`message` is human-readable and safe to expose. Controllers keep throwing
+whatever exception already makes sense (they're untouched by this); the
+listener only decides how the final response is packaged:
+
+- `SpaceTradersApiException` (the gateway's genuine transport failures —
+  timeout, DNS, connection; **not** a relayed SpaceTraders 4xx/5xx) → `502`,
+  `spacetraders_unreachable`, a generic message. The back acted as a proxy
+  and the upstream didn't respond; `500` is reserved for the back's own
+  internal failures.
+- Any exception already implementing `HttpExceptionInterface` (what
+  controllers already throw today: `UnauthorizedHttpException`,
+  `AccessDeniedHttpException`, `NotFoundHttpException`, ...) → its own
+  `getStatusCode()` and `getMessage()`, both already intentional and safe —
+  set by the code that threw it.
+- Anything else (unexpected) → `500`, a generic message. The real exception
+  message is never exposed, to avoid leaking internal details.
 
 ## Tests and contract
 
@@ -152,7 +195,6 @@ Later, a few e2e tests will run against the real back for critical flows.
 
 ## TODO
 
-- Errors (see above).
 - Base URL of the back for the front (`VITE_API_URL`) and the Vite dev proxy.
 - SpaceTraders rate limiting (see "Rate limiting" above).
 - Redact `data.token` from the agent registration response instead of

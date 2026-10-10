@@ -25,8 +25,20 @@ final class EnvelopeResponseFactory
             $payload['meta'] = $meta;
         }
 
-        $json = $this->serializer->serialize($payload, 'json');
+        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize($payload, 'json')));
+    }
 
-        return JsonResponse::fromJsonString($json, $status);
+    public function error(ResponseData $data, int $status): JsonResponse
+    {
+        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize(['error' => $data], 'json')));
+    }
+
+    /**
+     * The only place in the app that builds a JsonResponse: both success()/
+     * error() and the SpaceTraders proxy controller end here.
+     */
+    public function toJsonResponse(HttpResponseEnvelope $envelope): JsonResponse
+    {
+        return JsonResponse::fromJsonString($envelope->body, $envelope->statusCode, $envelope->headers);
     }
 }
