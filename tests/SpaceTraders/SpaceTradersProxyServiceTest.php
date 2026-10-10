@@ -10,14 +10,11 @@ use App\Http\HttpResponseEnvelope;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\SpaceTradersApiResponse;
-use App\SpaceTraders\SpaceTradersAugmentationData;
 use App\SpaceTraders\SpaceTradersEnvelopeBuilder;
 use App\SpaceTraders\SpaceTradersGatewayInterface;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersProxyService;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
-use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
-use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -64,23 +61,18 @@ final class SpaceTradersProxyServiceTest extends TestCase
             ->with('encrypted-token')
             ->willReturn('raw-agent-token');
 
-        /** @var \ArrayObject<string, array<string, mixed>> $capturedOptions */
-        $capturedOptions = new \ArrayObject();
-        $gateway = new class($capturedOptions) implements SpaceTradersGatewayInterface {
-            /**
-             * @param \ArrayObject<string, array<string, mixed>> $captured
-             */
-            public function __construct(private readonly \ArrayObject $captured)
-            {
-            }
+        $gateway = $this->createMock(SpaceTradersGatewayInterface::class);
+        $gateway->expects(self::once())
+            ->method('request')
+            ->with(self::anything(), self::anything(), self::callback(
+                /** @param array{headers: array<string, string>} $options */
+                static function (array $options): bool {
+                    self::assertSame('Bearer raw-agent-token', $options['headers']['Authorization'] ?? null);
 
-            public function request(string $method, string $path, array $options = []): SpaceTradersApiResponse
-            {
-                $this->captured['options'] = $options;
-
-                return new SpaceTradersApiResponse(200, '{}');
-            }
-        };
+                    return true;
+                }
+            ))
+            ->willReturn(new SpaceTradersApiResponse(200, '{}'));
 
         $service = new SpaceTradersProxyService(
             $gateway,
@@ -91,10 +83,6 @@ final class SpaceTradersProxyServiceTest extends TestCase
         );
 
         $service->handle($this->proxyRequest('GET', 'my/ships', agentId: '42', user: $user));
-
-        /** @var array{headers: array<string, string>} $options */
-        $options = $capturedOptions['options'];
-        self::assertSame('Bearer raw-agent-token', $options['headers']['Authorization'] ?? null);
     }
 
     public function testUnknownAgentIdIsNotFound(): void
@@ -142,26 +130,8 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $gateway = new FakeSpaceTradersGateway();
 
         $shortCircuitResult = new HttpResponseEnvelope(200, '{"data":{"short":"circuit"}}');
-        $hook = new class($shortCircuitResult) implements SpaceTradersRouteHookInterface {
-            public function __construct(private readonly HttpResponseEnvelope $result)
-            {
-            }
-
-            public function supports(SpaceTradersProxyRequest $request): bool
-            {
-                return 'register' === $request->path;
-            }
-
-            public function beforeForward(SpaceTradersProxyRequest $request, ?Agent $agent): HttpResponseEnvelope
-            {
-                return $this->result;
-            }
-
-            public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
-            {
-                return $response;
-            }
-        };
+        $hook = new FakeSpaceTradersRouteHook('register');
+        $hook->willShortCircuitWith($shortCircuitResult);
 
         $service = new SpaceTradersProxyService(
             $gateway,
@@ -181,22 +151,8 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $gateway = new FakeSpaceTradersGateway();
         $gateway->willReturn('{"data":{"token":"secret"}}', 201);
 
-        $hook = new class implements SpaceTradersRouteHookInterface {
-            public function supports(SpaceTradersProxyRequest $request): bool
-            {
-                return 'register' === $request->path;
-            }
-
-            public function beforeForward(SpaceTradersProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope
-            {
-                return null;
-            }
-
-            public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
-            {
-                return new SpaceTradersApiResponse($response->statusCode, '{"data":{"redacted":true}}');
-            }
-        };
+        $hook = new FakeSpaceTradersRouteHook('register');
+        $hook->willTransformResponseWith(new SpaceTradersApiResponse(201, '{"data":{"redacted":true}}'));
 
         $service = new SpaceTradersProxyService(
             $gateway,
@@ -217,43 +173,11 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $gateway = new FakeSpaceTradersGateway();
         $gateway->willReturn('{"data":{"foo":"bar"}}', 200);
 
-        $extraData = new class implements SpaceTradersAugmentationData {
-            /**
-             * @param array<string, string> $meta
-             */
-            public function __construct(public array $meta = ['tampered' => 'nope'])
-            {
-            }
-        };
-
-        $hook = new class($extraData) implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface {
-            public function __construct(private readonly SpaceTradersAugmentationData $extraData)
-            {
-            }
-
-            public function supports(SpaceTradersProxyRequest $request): bool
-            {
-                return 'my/ships' === $request->path;
-            }
-
-            public function beforeForward(SpaceTradersProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope
-            {
-                return null;
-            }
-
-            public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
-            {
-                return $response;
-            }
-
-            public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersResponseAugmentation
-            {
-                return new SpaceTradersResponseAugmentation(
-                    extra: $this->extraData,
-                    headers: ['X-Agent-Id' => '42'],
-                );
-            }
-        };
+        $hook = new FakeSpaceTradersRouteHook('my/ships');
+        $hook->willAugmentWith(new SpaceTradersResponseAugmentation(
+            extra: new MetaAugmentationData(['tampered' => 'nope']),
+            headers: ['X-Agent-Id' => '42'],
+        ));
 
         $service = new SpaceTradersProxyService(
             $gateway,

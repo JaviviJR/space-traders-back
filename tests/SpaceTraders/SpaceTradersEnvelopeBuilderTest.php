@@ -32,7 +32,7 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
     {
         $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
         $response = new SpaceTradersApiResponse(200, '{"data":{"foo":"bar"}}');
-        $augmentation = new SpaceTradersResponseAugmentation(extra: $this->metaData(['agentId' => 42]));
+        $augmentation = new SpaceTradersResponseAugmentation(extra: new MetaAugmentationData(['agentId' => 42]));
 
         $result = $builder->build($response, $augmentation);
 
@@ -64,21 +64,6 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
     private function objectSerializer(): SerializerInterface
     {
         return new Serializer([new ObjectNormalizer()], ['json' => new JsonEncoder()]);
-    }
-
-    /**
-     * @param array<string, mixed> $meta
-     */
-    private function metaData(array $meta): SpaceTradersAugmentationData
-    {
-        return new class($meta) implements SpaceTradersAugmentationData {
-            /**
-             * @param array<string, mixed> $meta
-             */
-            public function __construct(public array $meta)
-            {
-            }
-        };
     }
 
     private function tamperedData(): SpaceTradersAugmentationData
