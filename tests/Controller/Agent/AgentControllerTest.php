@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Agent;
 
-use App\Entity\Agent;
+use App\Entity\User;
+use App\Factory\AgentFactory;
 use App\Factory\UserFactory;
 use App\Repository\UserRepository;
 use App\Tests\Support\AuthenticatesClient;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class AgentControllerTest extends WebTestCase
@@ -25,11 +25,11 @@ final class AgentControllerTest extends WebTestCase
 
         UserFactory::createOne(['email' => 'agent-owner@example.com']);
         $this->login($client, 'agent-owner@example.com');
-        $this->persistAgentFor('agent-owner@example.com', 'OWNER-AGENT');
+        AgentFactory::createOne(['user' => $this->userByEmail('agent-owner@example.com'), 'symbol' => 'OWNER-AGENT']);
 
         UserFactory::createOne(['email' => 'agent-other@example.com']);
         $otherToken = $this->login($client, 'agent-other@example.com');
-        $this->persistAgentFor('agent-other@example.com', 'OTHER-AGENT');
+        AgentFactory::createOne(['user' => $this->userByEmail('agent-other@example.com'), 'symbol' => 'OTHER-AGENT']);
 
         $client->jsonRequest('GET', '/api/agents', [], ['HTTP_AUTHORIZATION' => 'Bearer '.$otherToken]);
         self::assertResponseIsSuccessful();
@@ -40,16 +40,38 @@ final class AgentControllerTest extends WebTestCase
         self::assertSame('OTHER-AGENT', $data['data'][0]['symbol']);
     }
 
-    private function persistAgentFor(string $userEmail, string $symbol): void
+    public function testListingAgentsReturnsAllAgentsForTheCurrentUserWithMeta(): void
     {
-        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $client = static::createClient();
 
+        UserFactory::createOne(['email' => 'multi-agent-owner@example.com']);
+        $token = $this->login($client, 'multi-agent-owner@example.com');
+        $user = $this->userByEmail('multi-agent-owner@example.com');
+        AgentFactory::createOne(['user' => $user, 'symbol' => 'AGENT-ONE']);
+        AgentFactory::createOne(['user' => $user, 'symbol' => 'AGENT-TWO']);
+        AgentFactory::createOne(['user' => $user, 'symbol' => 'AGENT-THREE']);
+
+        $client->jsonRequest('GET', '/api/agents', [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token]);
+        self::assertResponseIsSuccessful();
+
+        /** @var array{data: list<array{symbol: string}>, meta: array{total: int, page: int, limit: int}} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+
+        self::assertCount(3, $data['data']);
+        self::assertSame(
+            ['AGENT-ONE', 'AGENT-TWO', 'AGENT-THREE'],
+            array_column($data['data'], 'symbol'),
+        );
+        self::assertSame(['total' => 3, 'page' => 1, 'limit' => 3], $data['meta']);
+    }
+
+    private function userByEmail(string $email): User
+    {
         /** @var UserRepository $userRepository */
         $userRepository = static::getContainer()->get(UserRepository::class);
-        $user = $userRepository->findByEmail($userEmail);
+        $user = $userRepository->findByEmail($email);
         self::assertNotNull($user);
 
-        $entityManager->persist(new Agent($user, $symbol, 'COSMIC', 'fake-encrypted-token'));
-        $entityManager->flush();
+        return $user;
     }
 }

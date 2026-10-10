@@ -6,6 +6,7 @@ namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
 use App\Security\Dto\ConfirmEmailDto;
+use App\Security\Dto\ConfirmEmailResponseData;
 use App\Security\EmailConfirmationService;
 use App\Security\Exception\InvalidEmailConfirmationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +32,6 @@ final class ConfirmEmailController extends AbstractController
             throw new BadRequestHttpException($exception->getMessage(), $exception);
         }
 
-        return $this->envelope->success(['confirmed' => true]);
+        return $this->envelope->success(new ConfirmEmailResponseData(true));
     }
 }

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller\Agent;
 
+use App\Agent\Dto\AgentResponseData;
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
+use App\Http\Meta;
 use App\Repository\AgentRepository;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,26 +27,25 @@ final class AgentController extends AbstractController
 
     #[Route('/api/agents', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
+    #[OA\Tag(name: 'Account')]
     public function list(#[CurrentUser] User $user): JsonResponse
     {
         $agents = array_map(
-            fn (Agent $agent): array => $this->toArray($agent),
+            fn (Agent $agent): AgentResponseData => $this->toResponseData($agent),
             $this->agentRepository->findAllForUser($user),
         );
+        $total = \count($agents);
 
-        return $this->envelope->success($agents);
+        return $this->envelope->success($agents, meta: new Meta($total, 1, $total));
     }
 
-    /**
-     * @return array{id: ?int, symbol: string, faction: string, createdAt: ?string}
-     */
-    private function toArray(Agent $agent): array
+    private function toResponseData(Agent $agent): AgentResponseData
     {
-        return [
-            'id' => $agent->getId(),
-            'symbol' => $agent->getSymbol(),
-            'faction' => $agent->getFaction(),
-            'createdAt' => $agent->getCreatedAt()?->format(\DATE_ATOM),
-        ];
+        return new AgentResponseData(
+            $agent->getId(),
+            $agent->getSymbol(),
+            $agent->getFaction(),
+            $agent->getCreatedAt()?->format(\DATE_ATOM),
+        );
     }
 }

@@ -6,6 +6,7 @@ namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
 use App\Repository\UserRepository;
+use App\Security\Dto\EmptyResponseData;
 use App\Security\Dto\ResendConfirmationDto;
 use App\Security\Email\RegistrationConfirmationMailer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +32,6 @@ final class ResendConfirmationController extends AbstractController
             $this->registrationConfirmationMailer->sendConfirmationEmail($user);
         }
 
-        return $this->envelope->success([], 202);
+        return $this->envelope->success(new EmptyResponseData(), 202);
     }
 }

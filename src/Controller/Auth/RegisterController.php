@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Security\Dto\RegisterResponseData;
 use App\Security\Dto\RegisterUserDto;
 use App\Security\Email\RegistrationConfirmationMailer;
 use App\Security\Exception\EmailAlreadyRegisteredException;
@@ -35,9 +36,6 @@ final class RegisterController extends AbstractController
 
         $this->registrationConfirmationMailer->sendConfirmationEmail($user);
 
-        return $this->envelope->success([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-        ], 201);
+        return $this->envelope->success(new RegisterResponseData($user->getId(), $user->getEmail()), 201);
     }
 }

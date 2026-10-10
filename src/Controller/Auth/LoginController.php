@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Security\Dto\AccessTokenResponseData;
 use App\Security\Dto\LoginDto;
 use App\Security\Exception\EmailNotVerifiedException;
 use App\Security\Exception\InvalidCredentialsException;
@@ -41,7 +42,7 @@ final class LoginController extends AbstractController
 
         $pair = $this->refreshTokenService->issue($user);
 
-        $response = $this->envelope->success(['accessToken' => $pair->accessToken]);
+        $response = $this->envelope->success(new AccessTokenResponseData($pair->accessToken));
         $response->headers->setCookie($this->cookieFactory->create($pair->refreshToken, $pair->refreshTokenExpiresAt));
 
         return $response;
