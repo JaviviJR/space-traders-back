@@ -7,6 +7,7 @@ namespace App\Tests\SpaceTraders;
 use App\Entity\Agent;
 use App\Http\HttpResponseEnvelope;
 use App\SpaceTraders\SpaceTradersApiResponse;
+use App\SpaceTraders\SpaceTradersAugmentationSchema;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
 use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
@@ -19,6 +20,8 @@ final class FakeSpaceTradersRouteHook implements SpaceTradersRouteHookInterface,
     private ?SpaceTradersApiResponse $transformedResponse = null;
 
     private ?SpaceTradersResponseAugmentation $augmentation = null;
+
+    private ?SpaceTradersAugmentationSchema $augmentationSchema = null;
 
     public function __construct(private readonly string $supportedPath)
     {
@@ -39,6 +42,11 @@ final class FakeSpaceTradersRouteHook implements SpaceTradersRouteHookInterface,
         $this->augmentation = $augmentation;
     }
 
+    public function willDescribeAugmentationWith(SpaceTradersAugmentationSchema $schema): void
+    {
+        $this->augmentationSchema = $schema;
+    }
+
     public function supports(SpaceTradersProxyRequest $request): bool
     {
         return $this->supportedPath === $request->path;
@@ -57,5 +65,14 @@ final class FakeSpaceTradersRouteHook implements SpaceTradersRouteHookInterface,
     public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation
     {
         return $this->augmentation;
+    }
+
+    public function describedAugmentation(): SpaceTradersAugmentationSchema
+    {
+        if (null === $this->augmentationSchema) {
+            throw new \LogicException('Call willDescribeAugmentationWith() before describedAugmentation().');
+        }
+
+        return $this->augmentationSchema;
     }
 }

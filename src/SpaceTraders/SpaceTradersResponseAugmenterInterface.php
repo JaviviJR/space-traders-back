@@ -22,4 +22,12 @@ interface SpaceTradersResponseAugmenterInterface
      * null to add nothing.
      */
     public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation;
+
+    /**
+     * Doc-time counterpart to augment(): which operation this hook documents
+     * extra fields for, and the SpaceTradersAugmentationData class they come
+     * from. Called by the OpenAPI describer for proxied routes, never at
+     * request time.
+     */
+    public function describedAugmentation(): SpaceTradersAugmentationSchema;
 }

@@ -9,6 +9,7 @@ use App\Http\HttpResponseEnvelope;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\SpaceTradersApiResponse;
+use App\SpaceTraders\SpaceTradersAugmentationSchema;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
 use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
@@ -93,5 +94,10 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
         }
 
         return new SpaceTradersResponseAugmentation(new RegisterAgentAugmentationData($agentId));
+    }
+
+    public function describedAugmentation(): SpaceTradersAugmentationSchema
+    {
+        return new SpaceTradersAugmentationSchema('POST', 'register', RegisterAgentAugmentationData::class);
     }
 }

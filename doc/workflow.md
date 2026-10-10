@@ -32,6 +32,10 @@ How the user works with Claude on this project. Applies to every session.
     changes.
 - When a decision is closed, write it to the relevant `doc/*.md` file and reply
   with a one-line summary.
+- Ask for confirmation on doc/*.md updates separately from the confirmation on
+  the implementation change itself, even when they're part of the same
+  proposal. Implementing something and documenting it are different
+  decisions; bundling them into one yes/no hides the second one.
 
 ## Steps and installs
 

@@ -107,7 +107,10 @@ only place in the app that builds a Symfony `JsonResponse`.
   ?SpaceTradersResponseAugmentation` is called with the response
   `afterForward` produced; it returns extra top-level body fields and/or
   extra response headers (e.g. echoing `X-Agent-Id` back), or `null` to add
-  nothing. Most hooks don't implement this.
+  nothing. Most hooks don't implement this. Also declares
+  `describedAugmentation(): SpaceTradersAugmentationSchema`, the doc-time
+  counterpart the OpenAPI describer for proxied routes uses to merge these
+  extra fields into the documented schema — see [openapi.md](openapi.md).
 - **`SpaceTradersApiResponse`**: `statusCode`, `body` (undecoded string),
   `headers` — what the gateway hands back, and what travels through
   `afterForward`/`augment`.

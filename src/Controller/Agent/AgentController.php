@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
 use App\Http\Meta;
 use App\Repository\AgentRepository;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -26,6 +27,7 @@ final class AgentController extends AbstractController
 
     #[Route('/api/agents', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
+    #[OA\Tag(name: 'Account')]
     public function list(#[CurrentUser] User $user): JsonResponse
     {
         $agents = array_map(

@@ -102,6 +102,20 @@ final class RegisterAgentHookTest extends TestCase
         self::assertSame(123, $augmentation->extra->agentId);
     }
 
+    public function testDescribesItsAugmentationForTheOpenApiDescriber(): void
+    {
+        $hook = new RegisterAgentHook(
+            $this->createStub(AgentTokenCipherInterface::class),
+            $this->createStub(EntityManagerInterface::class),
+        );
+
+        $schema = $hook->describedAugmentation();
+
+        self::assertSame('POST', $schema->method);
+        self::assertSame('register', $schema->path);
+        self::assertSame(RegisterAgentAugmentationData::class, $schema->dataClass);
+    }
+
     public function testAugmentReturnsNullWhenNothingWasRegisteredYet(): void
     {
         $hook = new RegisterAgentHook(
