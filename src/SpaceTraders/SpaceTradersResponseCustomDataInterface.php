@@ -16,7 +16,7 @@ use App\Http\HttpResponseEnvelope;
  *
  * $agent is null whenever the request has no X-Agent-Id.
  */
-interface SpaceTradersResponseAugmenterInterface
+interface SpaceTradersResponseCustomDataInterface
 {
     /**
      * Called with the HttpResponseEnvelope afterForward produced. Return
@@ -26,9 +26,8 @@ interface SpaceTradersResponseAugmenterInterface
 
     /**
      * Doc-time counterpart to augment(): which operation this hook documents
-     * extra fields for, and the SpaceTradersAugmentationData class they come
-     * from. Called by the OpenAPI describer for proxied routes, never at
-     * request time.
+     * extra fields for, and the ResponseData class they come from. Called by
+     * the OpenAPI describer for proxied routes, never at request time.
      */
     public function describedAugmentation(): SpaceTradersAugmentationSchema;
 }

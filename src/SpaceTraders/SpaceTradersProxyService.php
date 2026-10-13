@@ -59,7 +59,7 @@ final class SpaceTradersProxyService
             $apiResponse = $hook->afterForward($request, $agent, $apiResponse);
         }
 
-        $augmentation = $hook instanceof SpaceTradersResponseAugmenterInterface
+        $augmentation = $hook instanceof SpaceTradersResponseCustomDataInterface
             ? $hook->augment($request, $agent, $apiResponse)
             : null;
 

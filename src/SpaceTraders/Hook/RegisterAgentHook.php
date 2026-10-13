@@ -11,7 +11,7 @@ use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\SpaceTradersAugmentationSchema;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
-use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
+use App\SpaceTraders\SpaceTradersResponseCustomDataInterface;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -27,7 +27,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * instance state: this service lives for a single request (classic PHP-FPM
  * lifecycle, one container per request), never reused across requests.
  */
-final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface
+final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTradersResponseCustomDataInterface
 {
     private ?Agent $registeredAgent = null;
 

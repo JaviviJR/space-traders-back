@@ -4,25 +4,26 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders;
 
+use App\Http\EnvelopeBody;
 use App\Http\HttpResponseEnvelope;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
  * Turns the final HttpResponseEnvelope (after afterForward) plus an optional
  * augmentation into the HttpResponseEnvelope the controller hands to
- * EnvelopeResponseFactory::toJsonResponse(). Lives here, not as a named
- * constructor on HttpResponseEnvelope, so that generic type stays unaware
- * of SpaceTraders-specific concepts.
+ * EnvelopeResponseFactory::toJsonResponse(). The only caller is
+ * SpaceTradersProxyService: back-only responses never have an upstream to
+ * protect, so this merge logic has no business living on
+ * EnvelopeResponseFactory, which every back-only controller depends on.
  *
- * Without an augmentation (the common, pass-through case), $response->body
- * is passed through untouched — no decode/re-encode. Only an augmentation
- * forces decoding, so the merge can add extra fields without ever touching
- * SpaceTraders' own top-level keys (those always win on collision).
+ * The actual merge/collision-guard logic lives in EnvelopeBody, shared with
+ * EnvelopeResponseFactory; this class only normalizes the augmentation's
+ * ResponseData into an array for it.
  */
 final class SpaceTradersEnvelopeBuilder
 {
     public function __construct(
-        private readonly SerializerInterface $serializer,
+        private readonly NormalizerInterface $normalizer,
     ) {
     }
 
@@ -32,23 +33,12 @@ final class SpaceTradersEnvelopeBuilder
             return new HttpResponseEnvelope($response->statusCode, $response->body);
         }
 
-        $decoded = json_decode($response->body, true);
-        $body = (\is_array($decoded) ? $decoded : []) + $this->normalizeExtra($augmentation->extra);
+        $normalized = null !== $augmentation->extra ? $this->normalizer->normalize($augmentation->extra) : [];
 
-        return new HttpResponseEnvelope($response->statusCode, json_encode($body, \JSON_THROW_ON_ERROR), $augmentation->headers);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function normalizeExtra(?SpaceTradersAugmentationData $extra): array
-    {
-        if (null === $extra) {
-            return [];
-        }
-
-        $decoded = json_decode($this->serializer->serialize($extra, 'json'), true);
-
-        return \is_array($decoded) ? $decoded : [];
+        return new HttpResponseEnvelope(
+            $response->statusCode,
+            (new EnvelopeBody($response->body, \is_array($normalized) ? $normalized : []))->toJson(),
+            $augmentation->headers,
+        );
     }
 }

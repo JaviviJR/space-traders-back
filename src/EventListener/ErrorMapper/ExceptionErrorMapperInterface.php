@@ -18,7 +18,5 @@ interface ExceptionErrorMapperInterface
 {
     public function supports(\Throwable $exception): bool;
 
-    public function getCode(): string;
-
     public function map(\Throwable $exception): MappedError;
 }

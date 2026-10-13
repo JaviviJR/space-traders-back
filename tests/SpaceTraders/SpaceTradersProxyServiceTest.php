@@ -6,10 +6,10 @@ namespace App\Tests\SpaceTraders;
 
 use App\Entity\Agent;
 use App\Entity\User;
+use App\Http\EnvelopeResponseFactory;
 use App\Http\HttpResponseEnvelope;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
-use App\SpaceTraders\SpaceTradersEnvelopeBuilder;
 use App\SpaceTraders\SpaceTradersGatewayInterface;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersProxyService;
@@ -18,9 +18,9 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\SerializerInterface;
 
 final class SpaceTradersProxyServiceTest extends TestCase
 {
@@ -36,7 +36,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $agentTokenCipher,
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [],
         );
 
@@ -77,7 +77,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $agentRepository,
             $agentTokenCipher,
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [],
         );
 
@@ -93,7 +93,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             new FakeSpaceTradersGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [],
         );
 
@@ -115,7 +115,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             new FakeSpaceTradersGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [],
         );
 
@@ -136,7 +136,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [$hook],
         );
 
@@ -157,7 +157,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [$hook],
         );
 
@@ -182,7 +182,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
-            $this->envelopeBuilder(),
+            $this->envelope(),
             [$hook],
         );
 
@@ -205,12 +205,12 @@ final class SpaceTradersProxyServiceTest extends TestCase
         );
     }
 
-    private function envelopeBuilder(): SpaceTradersEnvelopeBuilder
+    private function envelope(): EnvelopeResponseFactory
     {
-        return new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        return new EnvelopeResponseFactory($this->objectSerializer());
     }
 
-    private function objectSerializer(): SerializerInterface
+    private function objectSerializer(): NormalizerInterface
     {
         return new Serializer([new ObjectNormalizer()], ['json' => new JsonEncoder()]);
     }

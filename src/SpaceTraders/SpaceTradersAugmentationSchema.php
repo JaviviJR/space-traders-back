@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders;
 
+use App\Http\ResponseData;
+
 /**
  * Doc-time metadata only: which SpaceTraders operation a
  * SpaceTradersResponseAugmenterInterface hook adds fields to, and the
- * SpaceTradersAugmentationData class those fields come from. The OpenAPI
- * describer for proxied routes uses this to merge the extra properties into
- * the documented response schema.
+ * ResponseData class those fields come from. The OpenAPI describer for
+ * proxied routes uses this to merge the extra properties into the documented
+ * response schema.
  *
  * Deliberately separate from SpaceTradersRouteHookInterface::supports(),
  * which matches a real SpaceTradersProxyRequest (and needs a real User) at
@@ -20,7 +22,7 @@ namespace App\SpaceTraders;
 final readonly class SpaceTradersAugmentationSchema
 {
     /**
-     * @param class-string<SpaceTradersAugmentationData> $dataClass
+     * @param class-string<ResponseData> $dataClass
      */
     public function __construct(
         public string $method,

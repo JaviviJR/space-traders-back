@@ -72,8 +72,7 @@ Criteria for choosing between PHPUnit's generated doubles (`createStub()` /
 
 - Revisit the test doubles guidance above once more of the suite is written;
   it's based on one service's tests (`SpaceTradersProxyServiceTest`,
-  `SpaceTradersEnvelopeBuilderTest`) and may need adjusting as other patterns
-  show up.
+  `EnvelopeBodyTest`) and may need adjusting as other patterns show up.
 - If the suite grows and per-run coverage becomes slow, switch to
   [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for coverage.
   PCOV only instruments coverage (no step debugging, no profiling), which

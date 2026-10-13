@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\SpaceTraders;
 
-use App\SpaceTraders\SpaceTradersAugmentationData;
+use App\Http\ResponseData;
 
-final readonly class MetaAugmentationData implements SpaceTradersAugmentationData
+final readonly class MetaAugmentationData implements ResponseData
 {
     /**
      * @param array<string, mixed> $meta

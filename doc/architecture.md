@@ -32,6 +32,10 @@ that one guarantee, the back is free to shape the response: add sibling
 top-level fields, or set its own response headers. SpaceTraders' response
 headers are not forwarded at all; the front must not depend on them.
 
+A sibling field colliding with one of SpaceTraders' own top-level keys is a
+bug, not a runtime condition to resolve silently — `EnvelopeBody` (see below)
+throws rather than letting either side win unpredictably.
+
 The front's `Authorization` header is never forwarded; the back uses the agent
 token instead.
 
@@ -113,18 +117,28 @@ that builds a Symfony `JsonResponse`.
   `describedAugmentation(): SpaceTradersAugmentationSchema`, the doc-time
   counterpart the OpenAPI describer for proxied routes uses to merge these
   extra fields into the documented schema — see [openapi.md](openapi.md).
-- **`SpaceTradersEnvelopeBuilder`**: turns the final `HttpResponseEnvelope`
-  (what the gateway hands back, and what travels through
-  `afterForward`/`augment` — `statusCode`, `body` undecoded, `headers`) plus
-  an optional augmentation into the `HttpResponseEnvelope` the controller
-  hands to `EnvelopeResponseFactory::toJsonResponse()`. Without an
-  augmentation (the common, pass-through case) the body passes through
-  untouched — no decode/re-encode. An augmentation forces a decode so the
-  extra fields can be merged in (SpaceTraders' own keys always win on
-  collision, so `data`/`error` can't be overridden this way). Deliberately
-  not a named constructor on `HttpResponseEnvelope`: that type is generic
-  (shared with back-only responses) and stays unaware of SpaceTraders-specific
-  concepts, even though the proxy also uses it for the raw upstream response.
+- **`EnvelopeBody`** (`App\Http`): the content of an envelope response before
+  it becomes a JSON string — `upstream` (another system's own raw, undecoded
+  JSON body, or `null`) and `extra` (top-level fields our own code adds).
+  Without `extra`, `upstream` passes through untouched — no decode/re-encode.
+  With `extra` and no `upstream` (every back-only response), `extra` alone is
+  the whole body. With both, `upstream` is decoded just enough to merge
+  `extra` in as sibling fields; a collision with one of `upstream`'s own keys
+  throws `EnvelopeMergeException` rather than letting either side silently
+  win — so does a non-empty `extra` against an `upstream` body that doesn't
+  decode to a JSON object. One shared type and merge rule for both back-only
+  responses and the SpaceTraders proxy, instead of two separate
+  implementations of the same "protect these keys" logic.
+- **`EnvelopeResponseFactory::envelope()`** (`App\Http`): the proxy's entry
+  point into the shared envelope machinery — takes SpaceTraders' raw body,
+  an optional `ResponseData` augmentation (normalized and handed to
+  `EnvelopeBody` as `extra`), the status code and headers, and returns the
+  `HttpResponseEnvelope` the controller hands to
+  `EnvelopeResponseFactory::toJsonResponse()`. `success()`/`error()` (the
+  back-only entry points) build the same `EnvelopeBody`/`HttpResponseEnvelope`
+  internally, just with `upstream: null` — one assembler, two entry points,
+  because a response with nothing to protect doesn't need a different code
+  path, only a different parameter.
 - **`SpaceTradersProxyService`**: orchestrates one forwarded request —
   resolves `?Agent` from `agentId` if present (404/403 as described above),
   picks the first hook whose `supports()` matches (or none), runs
@@ -132,7 +146,7 @@ that builds a Symfony `JsonResponse`.
   `Authorization` with the resolved agent's decrypted token only when there
   is one), asks the hook for an augmentation (when it implements that
   interface) if `beforeForward` didn't short-circuit, and hands the result to
-  `SpaceTradersEnvelopeBuilder`.
+  `EnvelopeResponseFactory::envelope()`.
 - **Registering a hook**: implement the interface and it's auto-tagged
   (`#[Autoconfigure(tags: ['app.space_traders_route_hook'])]` on the
   interface itself) — no edits elsewhere. The service receives all hooks via

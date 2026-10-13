@@ -83,8 +83,9 @@ augmentation. Expand the list to document more.
 **Hook augmentations:** `SpaceTradersResponseAugmenterInterface` (see
 "Proxy design" in architecture.md) has a doc-time counterpart to `augment()`:
 `describedAugmentation(): SpaceTradersAugmentationSchema`, returning which
-operation (method + path) the hook adds fields to and the
-`SpaceTradersAugmentationData` class those fields come from.
+operation (method + path) the hook adds fields to and the `ResponseData`
+class those fields come from (the same marker back-only responses use —
+see "Proxy design" in architecture.md).
 `SpaceTradersProxyDescriber` asks every hook for it and merges the class's
 public properties into the matching operation's response schema as siblings
 of `data` — no edit to the describer needed when a new augmenting hook is

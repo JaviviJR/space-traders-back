@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\SpaceTraders\OpenApi;
 
 use App\SpaceTraders\SpaceTradersAugmentationSchema;
-use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
+use App\SpaceTraders\SpaceTradersResponseCustomDataInterface;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use Nelmio\ApiDocBundle\Describer\DescriberInterface;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
@@ -122,7 +122,7 @@ final class SpaceTradersProxyDescriber implements DescriberInterface
         $schemas = [];
 
         foreach ($this->hooks as $hook) {
-            if (!$hook instanceof SpaceTradersResponseAugmenterInterface) {
+            if (!$hook instanceof SpaceTradersResponseCustomDataInterface) {
                 continue;
             }
 
