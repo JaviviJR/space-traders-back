@@ -8,7 +8,6 @@ use App\Entity\Agent;
 use App\Http\HttpResponseEnvelope;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
-use App\SpaceTraders\SpaceTradersApiResponse;
 use App\SpaceTraders\SpaceTradersAugmentationSchema;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
@@ -48,7 +47,7 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
         return null;
     }
 
-    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
+    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): HttpResponseEnvelope
     {
         if ($response->statusCode >= 300) {
             return $response;
@@ -85,7 +84,7 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
         return $response;
     }
 
-    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation
+    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseAugmentation
     {
         $agentId = $this->registeredAgent?->getId();
 

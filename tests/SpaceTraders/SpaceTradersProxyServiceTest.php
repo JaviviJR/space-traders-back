@@ -9,7 +9,6 @@ use App\Entity\User;
 use App\Http\HttpResponseEnvelope;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
-use App\SpaceTraders\SpaceTradersApiResponse;
 use App\SpaceTraders\SpaceTradersEnvelopeBuilder;
 use App\SpaceTraders\SpaceTradersGatewayInterface;
 use App\SpaceTraders\SpaceTradersProxyRequest;
@@ -72,7 +71,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
                     return true;
                 }
             ))
-            ->willReturn(new SpaceTradersApiResponse(200, '{}'));
+            ->willReturn(new HttpResponseEnvelope(200, '{}'));
 
         $service = new SpaceTradersProxyService(
             $gateway,
@@ -152,7 +151,7 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $gateway->willReturn('{"data":{"token":"secret"}}', 201);
 
         $hook = new FakeSpaceTradersRouteHook('register');
-        $hook->willTransformResponseWith(new SpaceTradersApiResponse(201, '{"data":{"redacted":true}}'));
+        $hook->willTransformResponseWith(new HttpResponseEnvelope(201, '{"data":{"redacted":true}}'));
 
         $service = new SpaceTradersProxyService(
             $gateway,

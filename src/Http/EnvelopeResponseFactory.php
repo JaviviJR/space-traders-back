@@ -15,9 +15,10 @@ final class EnvelopeResponseFactory
     }
 
     /**
-     * @param ResponseData|ResponseData[] $data
+     * @param ResponseData|ResponseData[]    $data
+     * @param array<string, string|string[]> $headers
      */
-    public function success(ResponseData|array $data, int $status = 200, ?Meta $meta = null): JsonResponse
+    public function success(ResponseData|array $data, int $status = 200, ?Meta $meta = null, array $headers = []): JsonResponse
     {
         $payload = ['data' => $data];
 
@@ -25,12 +26,15 @@ final class EnvelopeResponseFactory
             $payload['meta'] = $meta;
         }
 
-        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize($payload, 'json')));
+        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize($payload, 'json'), $headers));
     }
 
-    public function error(ResponseData $data, int $status): JsonResponse
+    /**
+     * @param array<string, string|string[]> $headers
+     */
+    public function error(ResponseData $data, int $status, array $headers = []): JsonResponse
     {
-        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize(['error' => $data], 'json')));
+        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize(['error' => $data], 'json'), $headers));
     }
 
     /**

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\SpaceTraders;
 
+use App\Http\HttpResponseEnvelope;
 use App\SpaceTraders\Exception\SpaceTradersApiException;
-use App\SpaceTraders\SpaceTradersApiResponse;
 use App\SpaceTraders\SpaceTradersGatewayInterface;
 
 final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
 {
-    private ?SpaceTradersApiResponse $response = null;
+    private ?HttpResponseEnvelope $response = null;
 
     private ?SpaceTradersApiException $exception = null;
 
@@ -21,7 +21,7 @@ final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
      */
     public function willReturn(string $body, int $statusCode = 200, array $headers = []): void
     {
-        $this->response = new SpaceTradersApiResponse($statusCode, $body, $headers);
+        $this->response = new HttpResponseEnvelope($statusCode, $body, $headers);
         $this->exception = null;
     }
 
@@ -36,7 +36,7 @@ final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
         return $this->lastPath;
     }
 
-    public function request(string $method, string $path, array $options = []): SpaceTradersApiResponse
+    public function request(string $method, string $path, array $options = []): HttpResponseEnvelope
     {
         $this->lastPath = $path;
 
@@ -48,6 +48,6 @@ final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
             return $this->response;
         }
 
-        return new SpaceTradersApiResponse(200, '{"data":{}}');
+        return new HttpResponseEnvelope(200, '{"data":{}}');
     }
 }

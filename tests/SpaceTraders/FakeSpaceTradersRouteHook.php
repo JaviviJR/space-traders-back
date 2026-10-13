@@ -6,7 +6,6 @@ namespace App\Tests\SpaceTraders;
 
 use App\Entity\Agent;
 use App\Http\HttpResponseEnvelope;
-use App\SpaceTraders\SpaceTradersApiResponse;
 use App\SpaceTraders\SpaceTradersAugmentationSchema;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
@@ -17,7 +16,7 @@ final class FakeSpaceTradersRouteHook implements SpaceTradersRouteHookInterface,
 {
     private ?HttpResponseEnvelope $shortCircuitResult = null;
 
-    private ?SpaceTradersApiResponse $transformedResponse = null;
+    private ?HttpResponseEnvelope $transformedResponse = null;
 
     private ?SpaceTradersResponseAugmentation $augmentation = null;
 
@@ -32,7 +31,7 @@ final class FakeSpaceTradersRouteHook implements SpaceTradersRouteHookInterface,
         $this->shortCircuitResult = $result;
     }
 
-    public function willTransformResponseWith(SpaceTradersApiResponse $response): void
+    public function willTransformResponseWith(HttpResponseEnvelope $response): void
     {
         $this->transformedResponse = $response;
     }
@@ -57,12 +56,12 @@ final class FakeSpaceTradersRouteHook implements SpaceTradersRouteHookInterface,
         return $this->shortCircuitResult;
     }
 
-    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
+    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): HttpResponseEnvelope
     {
         return $this->transformedResponse ?? $response;
     }
 
-    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation
+    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseAugmentation
     {
         return $this->augmentation;
     }

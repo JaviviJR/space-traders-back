@@ -38,6 +38,25 @@ final class RegisterControllerTest extends WebTestCase
         self::assertEmailCount(1);
     }
 
+    public function testRegisterWithTooShortPasswordReturnsWhichFieldAndWhatProblem(): void
+    {
+        $client = static::createClient();
+
+        $client->jsonRequest('POST', '/auth/register', [
+            'email' => 'register-short-password@example.com',
+            'password' => 'short',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+
+        /** @var array{error: array{code: string, message: string}} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+
+        self::assertSame('validation_failed', $data['error']['code']);
+        self::assertStringContainsString('password', $data['error']['message']);
+        self::assertStringContainsString('8 characters', $data['error']['message']);
+    }
+
     public function testRegisteringTheSameEmailTwiceReturnsConflict(): void
     {
         $client = static::createClient();

@@ -8,9 +8,9 @@ use App\Http\HttpResponseEnvelope;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
- * Turns the final SpaceTradersApiResponse (after afterForward) plus an
- * optional augmentation into the HttpResponseEnvelope the controller hands
- * to EnvelopeResponseFactory::toJsonResponse(). Lives here, not as a named
+ * Turns the final HttpResponseEnvelope (after afterForward) plus an optional
+ * augmentation into the HttpResponseEnvelope the controller hands to
+ * EnvelopeResponseFactory::toJsonResponse(). Lives here, not as a named
  * constructor on HttpResponseEnvelope, so that generic type stays unaware
  * of SpaceTraders-specific concepts.
  *
@@ -26,7 +26,7 @@ final class SpaceTradersEnvelopeBuilder
     ) {
     }
 
-    public function build(SpaceTradersApiResponse $response, ?SpaceTradersResponseAugmentation $augmentation): HttpResponseEnvelope
+    public function build(HttpResponseEnvelope $response, ?SpaceTradersResponseAugmentation $augmentation): HttpResponseEnvelope
     {
         if (null === $augmentation) {
             return new HttpResponseEnvelope($response->statusCode, $response->body);

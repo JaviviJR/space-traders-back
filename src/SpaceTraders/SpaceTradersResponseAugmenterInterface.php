@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\SpaceTraders;
 
 use App\Entity\Agent;
+use App\Http\HttpResponseEnvelope;
 
 /**
  * Optional extension for a SpaceTradersRouteHookInterface hook that wants to
@@ -18,10 +19,10 @@ use App\Entity\Agent;
 interface SpaceTradersResponseAugmenterInterface
 {
     /**
-     * Called with the SpaceTradersApiResponse afterForward produced. Return
+     * Called with the HttpResponseEnvelope afterForward produced. Return
      * null to add nothing.
      */
-    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation;
+    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseAugmentation;
 
     /**
      * Doc-time counterpart to augment(): which operation this hook documents

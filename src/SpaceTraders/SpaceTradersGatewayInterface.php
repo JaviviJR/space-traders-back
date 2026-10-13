@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders;
 
+use App\Http\HttpResponseEnvelope;
 use App\SpaceTraders\Exception\SpaceTradersApiException;
 
 interface SpaceTradersGatewayInterface
@@ -13,5 +14,5 @@ interface SpaceTradersGatewayInterface
      *
      * @throws SpaceTradersApiException if the call to SpaceTraders fails at the transport level
      */
-    public function request(string $method, string $path, array $options = []): SpaceTradersApiResponse;
+    public function request(string $method, string $path, array $options = []): HttpResponseEnvelope;
 }

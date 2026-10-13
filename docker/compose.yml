@@ -28,6 +28,7 @@ services:
         GID: ${GID:-1000}
         APP_DIR_ABS: ${APP_DIR_ABS}
     mem_limit: 512m
+    restart: unless-stopped
     user: "developer:developer"
     volumes:
       # Montado en la misma ruta absoluta que en el host: Phpactor recibe URIs

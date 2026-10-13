@@ -6,10 +6,10 @@ namespace App\Tests\SpaceTraders\Hook;
 
 use App\Entity\Agent;
 use App\Entity\User;
+use App\Http\HttpResponseEnvelope;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\Hook\RegisterAgentHook;
-use App\SpaceTraders\SpaceTradersApiResponse;
 use App\SpaceTraders\SpaceTradersProxyRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -41,7 +41,7 @@ final class RegisterAgentHookTest extends TestCase
 
         $hook = new RegisterAgentHook($cipher, $entityManager);
 
-        $response = new SpaceTradersApiResponse(201, json_encode([
+        $response = new HttpResponseEnvelope(201, json_encode([
             'data' => [
                 'token' => 'raw-spacetraders-token',
                 'agent' => ['symbol' => 'TEST-AGENT-1', 'startingFaction' => 'COSMIC'],
@@ -64,7 +64,7 @@ final class RegisterAgentHookTest extends TestCase
 
         $hook = new RegisterAgentHook($cipher, $entityManager);
 
-        $response = new SpaceTradersApiResponse(422, '{"error":"symbol already taken"}');
+        $response = new HttpResponseEnvelope(422, '{"error":"symbol already taken"}');
 
         $user = new User('register-hook-rejected@example.com', 'hashed-password');
         $result = $hook->afterForward($this->proxyRequest('POST', 'register', $user), null, $response);
@@ -79,7 +79,7 @@ final class RegisterAgentHookTest extends TestCase
 
         $hook = new RegisterAgentHook($cipher, $this->createStub(EntityManagerInterface::class));
 
-        $response = new SpaceTradersApiResponse(201, json_encode([
+        $response = new HttpResponseEnvelope(201, json_encode([
             'data' => [
                 'token' => 'raw-spacetraders-token',
                 'agent' => ['symbol' => 'TEST-AGENT-1', 'startingFaction' => 'COSMIC'],
@@ -123,7 +123,7 @@ final class RegisterAgentHookTest extends TestCase
             $this->createStub(EntityManagerInterface::class),
         );
 
-        $response = new SpaceTradersApiResponse(200, '{}');
+        $response = new HttpResponseEnvelope(200, '{}');
 
         $augmentation = $hook->augment($this->proxyRequest('POST', 'register'), null, $response);
 

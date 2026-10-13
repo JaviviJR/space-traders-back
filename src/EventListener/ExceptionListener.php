@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
+use App\EventListener\ErrorMapper\ExceptionErrorMapperInterface;
+use App\EventListener\ErrorMapper\MappedError;
 use App\Http\EnvelopeResponseFactory;
 use App\Http\ErrorResponseData;
-use App\SpaceTraders\Exception\SpaceTradersApiException;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -17,12 +18,25 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * message}} envelope used everywhere else, through the same
  * EnvelopeResponseFactory that builds every other response in the app —
  * instead of Symfony's default error shape.
+ *
+ * This listener only wires the kernel.exception hook to the envelope; it
+ * doesn't know how any particular exception should be described. Each kind
+ * of exception gets its own ExceptionErrorMapperInterface, found here
+ * through a tagged iterator ordered by priority (see AsTaggedItem on
+ * mappers that need to run ahead of a more generic one).
  */
 #[AsEventListener(event: KernelEvents::EXCEPTION)]
 final class ExceptionListener
 {
+    private const string UNEXPECTED_ERROR_CODE = 'internal_error';
+
+    /**
+     * @param iterable<ExceptionErrorMapperInterface> $errorMappers
+     */
     public function __construct(
         private readonly EnvelopeResponseFactory $envelope,
+        #[AutowireIterator('app.exception_error_mapper')]
+        private readonly iterable $errorMappers,
     ) {
     }
 
@@ -33,13 +47,22 @@ final class ExceptionListener
         }
 
         $exception = $event->getThrowable();
+        $mappedError = $this->mapError($exception);
 
-        [$status, $code, $message] = match (true) {
-            $exception instanceof SpaceTradersApiException => [502, 'spacetraders_unreachable', 'SpaceTraders is currently unreachable.'],
-            $exception instanceof HttpExceptionInterface => [$exception->getStatusCode(), 'http_error', $exception->getMessage()],
-            default => [500, 'internal_error', 'An unexpected error occurred.'],
-        };
+        $event->setResponse($this->envelope->error(
+            new ErrorResponseData($mappedError->code, $mappedError->message),
+            $mappedError->status,
+        ));
+    }
 
-        $event->setResponse($this->envelope->error(new ErrorResponseData($code, $message), $status));
+    private function mapError(\Throwable $exception): MappedError
+    {
+        foreach ($this->errorMappers as $mapper) {
+            if ($mapper->supports($exception)) {
+                return $mapper->map($exception);
+            }
+        }
+
+        return new MappedError(500, self::UNEXPECTED_ERROR_CODE, 'An unexpected error occurred.');
     }
 }

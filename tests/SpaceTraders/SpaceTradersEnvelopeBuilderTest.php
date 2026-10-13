@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\SpaceTraders;
 
-use App\SpaceTraders\SpaceTradersApiResponse;
+use App\Http\HttpResponseEnvelope;
 use App\SpaceTraders\SpaceTradersAugmentationData;
 use App\SpaceTraders\SpaceTradersEnvelopeBuilder;
 use App\SpaceTraders\SpaceTradersResponseAugmentation;
@@ -19,7 +19,7 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
     public function testPassesTheBodyThroughUntouchedWithoutAnAugmentation(): void
     {
         $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
-        $response = new SpaceTradersApiResponse(201, '{"data":{"foo":"bar"}}');
+        $response = new HttpResponseEnvelope(201, '{"data":{"foo":"bar"}}');
 
         $result = $builder->build($response, null);
 
@@ -31,7 +31,7 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
     public function testMergesAugmentationExtraAsSiblingFields(): void
     {
         $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
-        $response = new SpaceTradersApiResponse(200, '{"data":{"foo":"bar"}}');
+        $response = new HttpResponseEnvelope(200, '{"data":{"foo":"bar"}}');
         $augmentation = new SpaceTradersResponseAugmentation(extra: new MetaAugmentationData(['agentId' => 42]));
 
         $result = $builder->build($response, $augmentation);
@@ -42,7 +42,7 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
     public function testAugmentationCannotOverrideSpaceTradersOwnKeys(): void
     {
         $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
-        $response = new SpaceTradersApiResponse(200, '{"data":{"foo":"bar"}}');
+        $response = new HttpResponseEnvelope(200, '{"data":{"foo":"bar"}}');
         $augmentation = new SpaceTradersResponseAugmentation(extra: $this->tamperedData());
 
         $result = $builder->build($response, $augmentation);
@@ -53,7 +53,7 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
     public function testCopiesHeadersFromTheAugmentation(): void
     {
         $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
-        $response = new SpaceTradersApiResponse(200, '{"data":{}}');
+        $response = new HttpResponseEnvelope(200, '{"data":{}}');
         $augmentation = new SpaceTradersResponseAugmentation(headers: ['X-Agent-Id' => '42']);
 
         $result = $builder->build($response, $augmentation);

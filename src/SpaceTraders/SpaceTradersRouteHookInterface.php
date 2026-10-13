@@ -31,11 +31,11 @@ interface SpaceTradersRouteHookInterface
     /**
      * Transforms the real SpaceTraders response on its way to the front
      * (e.g. redacting a field inside `data`). Return the same
-     * SpaceTradersApiResponse unchanged when there's nothing to do — unlike
+     * HttpResponseEnvelope unchanged when there's nothing to do — unlike
      * beforeForward, this never short-circuits anything: SpaceTraders has
      * already been called by the time this runs. Side effects (persisting
      * something, dispatching an event) belong here too, regardless of
      * whether the response itself changes.
      */
-    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse;
+    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): HttpResponseEnvelope;
 }
