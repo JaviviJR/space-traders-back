@@ -33,6 +33,17 @@ RUN install-php-extensions xdebug
 
 COPY --chmod=0644 xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
+FROM dev AS phpactor-server
+
+RUN git clone --depth 1 https://github.com/phpactor/phpactor.git /opt/phpactor \
+    && composer install -d /opt/phpactor --no-dev --no-interaction --optimize-autoloader \
+    && ln -s /opt/phpactor/bin/phpactor /usr/local/bin/phpactor
+
+ARG APP_DIR_ABS
+RUN mkdir -p /home/developer/.local/share/phpactor \
+    && printf '{"%s": true}' "${APP_DIR_ABS}" > /home/developer/.local/share/phpactor/trust.json \
+    && chown -R developer:developer /home/developer/.local/share/phpactor
+
 FROM base AS prod
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
