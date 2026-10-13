@@ -1,0 +1,42 @@
+Esto es lo que ofrece Phpactor, confirmado contra su propia documentación (https://phpactor.readthedocs.io/en/master/reference/refactorings.html,
+  https://phpactor.readthedocs.io/en/master/reference/navigation.html, https://phpactor.readthedocs.io/en/master/reference/completion.html):
+
+  Navegación
+  - Ir a definición de clase/miembro, ir al tipo del símbolo bajo el cursor, ir a implementaciones de una interfaz/clase abstracta.
+  - Listar referencias a una clase o a un miembro concreto (método, propiedad, constante).
+  - Saltar o generar el fichero "relacionado" (clase padre, interfaz, test unitario/integración, benchmark) — si no existe, puede crearlo con plantilla.
+  - Hover con info del símbolo bajo el cursor.
+
+  Renombrados (más allá del F2 "básico")
+  - Rename variable (ámbito local o de clase).
+  - Rename class.
+  - Rename class member (método, propiedad, constante) — esto es lo que ya usas con F2.
+
+  Generación de código
+  - Generar método (a partir de una llamada a un método que no existe).
+  - Generar constructor (a partir de un new Clase(...)), o completar uno ya existente con las asignaciones que falten.
+  - Generar accessors (getters) para propiedades privadas.
+  - Implementar contratos: añade los métodos que falten de una interfaz o clase abstracta.
+  - Generar decorator: convierte una clase esqueleto en decorador de su interfaz.
+  - Extraer interfaz a partir de los métodos públicos de una clase.
+  - Class New / Class Copy: crear o duplicar una clase en otra ubicación, actualizando namespace.
+
+  Refactors "in place"
+  - Extract Method / Extract Expression / Extract Constant: seleccionas código y lo convierte en método, variable o constante.
+  - Change Visibility: cambia la visibilidad de un miembro.
+  - Class Move: mueve una clase (o carpeta) actualizando su namespace.
+
+  Arreglos automáticos ("fixes")
+  - Añadir propiedades/asignaciones que falten en una clase.
+  - Añadir docblocks o tipos de retorno que falten.
+  - Añadir el atributo #[\Override] donde corresponda.
+  - Arreglar namespace/nombre de clase según la config de Composer.
+  - Importar clase bajo el cursor / importar todas las clases que falten en el fichero.
+  - Expandir un nombre de clase corto a su FQCN.
+  - Override Method: sobreescribe un método del padre.
+
+  Completado inteligente (ya activo de fondo)
+  - Argumentos de funciones/constructores, miembros tras ::/->, variables locales, nombres de clase/función indexados — con inferencia de tipos vía docblocks, instanceof, genéricos (@implements/@extends), etc.
+
+  En VS Code, la mayoría de estos "fixes"/generaciones aparecen como Quick Fix / Code Action (💡 al lado de la línea, o Ctrl+.), no por un atajo dedicado. Vale la pena que pruebes Ctrl+. sobre un método que no
+  existe, un new Clase(...), o una clase que implementa una interfaz sin terminar — ahí es donde más se nota la diferencia con Intelephense free.

@@ -26,6 +26,7 @@ cmd="${1:-}"
 case "$cmd" in
 	up) "${COMPOSE[@]}" up -d "$@" ;;
 	down) "${COMPOSE[@]}" down "$@" ;;
+    restart) "${COMPOSE[@]}" restart "$@" ;;
 	build) "${COMPOSE[@]}" build "$@" ;;
 	sh) "${COMPOSE[@]}" exec php bash ;;
 	sh-root) "${COMPOSE[@]}" exec -u root php bash ;;

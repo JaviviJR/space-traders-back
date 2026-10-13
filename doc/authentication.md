@@ -74,8 +74,6 @@ Never reuse these values outside tests.
 
 ## TODO
 
-- Authentication error format (fixed by the back's general error-format
-  decision, still open — see `doc/architecture.md`).
 - Login rate limiting / brute-force protection (password policy itself is
   decided: minimum 8 characters, enforced by `RegisterUserDto`).
 - Login bypasses Symfony's authenticator system entirely (`LoginService`
