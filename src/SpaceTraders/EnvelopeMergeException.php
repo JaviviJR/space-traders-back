@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http;
+namespace App\SpaceTraders;
 
 /**
- * Thrown by EnvelopeBody::toJson() when extra fields can't be safely merged
- * into an upstream body. Both cases are bugs, not runtime conditions to
- * recover from — fail loud and early instead of silently dropping data or
- * letting one side win unpredictably.
+ * Thrown by SpaceTradersEnvelopeBuilder when extra fields can't be safely
+ * merged into SpaceTraders' own response body. Both cases are bugs, not
+ * runtime conditions to recover from — fail loud and early instead of
+ * silently dropping data or letting one side win unpredictably.
  */
 final class EnvelopeMergeException extends \LogicException
 {

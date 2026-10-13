@@ -15,7 +15,7 @@ use App\Http\ResponseData;
  * the schema source once the OpenAPI describer for proxied routes needs to
  * document these fields.
  */
-final readonly class SpaceTradersResponseAugmentation
+final readonly class SpaceTradersResponseExtraData
 {
     /**
      * @param array<string, string|string[]> $headers

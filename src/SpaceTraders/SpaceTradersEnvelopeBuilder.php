@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders;
 
-use App\Http\EnvelopeBody;
 use App\Http\HttpResponseEnvelope;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -16,9 +15,11 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * protect, so this merge logic has no business living on
  * EnvelopeResponseFactory, which every back-only controller depends on.
  *
- * The actual merge/collision-guard logic lives in EnvelopeBody, shared with
- * EnvelopeResponseFactory; this class only normalizes the augmentation's
- * ResponseData into an array for it.
+ * Without extra fields, SpaceTraders' own body passes through untouched — no
+ * decode/re-encode. Otherwise, it's decoded just enough to merge the extra
+ * fields in as sibling fields, never overriding a key SpaceTraders' body
+ * already has — that would be a bug in the caller, so it throws rather than
+ * silently picking a winner.
  */
 final class SpaceTradersEnvelopeBuilder
 {
@@ -27,18 +28,45 @@ final class SpaceTradersEnvelopeBuilder
     ) {
     }
 
-    public function build(HttpResponseEnvelope $response, ?SpaceTradersResponseAugmentation $augmentation): HttpResponseEnvelope
+    public function build(
+        HttpResponseEnvelope $spaceTradersResponse,
+        ?SpaceTradersResponseExtraData $extraData
+    ): HttpResponseEnvelope
     {
-        if (null === $augmentation) {
-            return new HttpResponseEnvelope($response->statusCode, $response->body);
+        if (null === $extraData) {
+            return new HttpResponseEnvelope($spaceTradersResponse->statusCode, $spaceTradersResponse->body);
         }
 
-        $normalized = null !== $augmentation->extra ? $this->normalizer->normalize($augmentation->extra) : [];
+        $normalized = null !== $extraData->extra ? $this->normalizer->normalize($extraData->extra) : [];
 
         return new HttpResponseEnvelope(
-            $response->statusCode,
-            (new EnvelopeBody($response->body, \is_array($normalized) ? $normalized : []))->toJson(),
-            $augmentation->headers,
+            $spaceTradersResponse->statusCode,
+            $this->mergeBody($spaceTradersResponse->body, \is_array($normalized) ? $normalized : []),
+            $extraData->headers,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     */
+    private function mergeBody(string $upstream, array $extra): string
+    {
+        if ([] === $extra) {
+            return $upstream;
+        }
+
+        $decoded = json_decode($upstream, true);
+
+        if (!\is_array($decoded)) {
+            throw EnvelopeMergeException::invalidUpstreamBody();
+        }
+
+        $collisions = array_keys(array_intersect_key($decoded, $extra));
+
+        if ([] !== $collisions) {
+            throw EnvelopeMergeException::collision($collisions);
+        }
+
+        return json_encode($decoded + $extra, \JSON_THROW_ON_ERROR);
     }
 }

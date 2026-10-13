@@ -21,7 +21,7 @@ final class SpaceTradersProxyService
         private readonly SpaceTradersGatewayInterface $gateway,
         private readonly AgentRepository $agentRepository,
         private readonly AgentTokenCipherInterface $agentTokenCipher,
-        private readonly SpaceTradersEnvelopeBuilder $envelopeBuilder,
+        private readonly SpaceTradersEnvelopeBuilder $spaceTradersEnvelopeBuilder,
         #[AutowireIterator('app.space_traders_route_hook')]
         private readonly iterable $hooks,
     ) {
@@ -59,11 +59,11 @@ final class SpaceTradersProxyService
             $apiResponse = $hook->afterForward($request, $agent, $apiResponse);
         }
 
-        $augmentation = $hook instanceof SpaceTradersResponseCustomDataInterface
+        $extraData = $hook instanceof SpaceTradersResponseCustomDataInterface
             ? $hook->augment($request, $agent, $apiResponse)
             : null;
 
-        return $this->envelopeBuilder->build($apiResponse, $augmentation);
+        return $this->spaceTradersEnvelopeBuilder->build($apiResponse, $extraData);
     }
 
     private function resolveAgent(SpaceTradersProxyRequest $request): ?Agent

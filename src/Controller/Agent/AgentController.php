@@ -8,7 +8,6 @@ use App\Agent\Dto\AgentResponseData;
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
-use App\Http\Meta;
 use App\Repository\AgentRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -34,7 +33,6 @@ final class AgentController extends AbstractController
             fn (Agent $agent): AgentResponseData => $this->toResponseData($agent),
             $this->agentRepository->findAllForUser($user),
         );
-        $total = \count($agents);
 
         return $this->envelope->success($agents);
     }

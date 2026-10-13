@@ -40,7 +40,7 @@ final class AgentControllerTest extends WebTestCase
         self::assertSame('OTHER-AGENT', $data['data'][0]['symbol']);
     }
 
-    public function testListingAgentsReturnsAllAgentsForTheCurrentUserWithMeta(): void
+    public function testListingAgentsReturnsAllAgentsForTheCurrentUserInOrder(): void
     {
         $client = static::createClient();
 
@@ -54,7 +54,7 @@ final class AgentControllerTest extends WebTestCase
         $client->jsonRequest('GET', '/api/agents', [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token]);
         self::assertResponseIsSuccessful();
 
-        /** @var array{data: list<array{symbol: string}>, meta: array{total: int, page: int, limit: int}} $data */
+        /** @var array{data: list<array{symbol: string}>} $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true);
 
         self::assertCount(3, $data['data']);
@@ -62,7 +62,6 @@ final class AgentControllerTest extends WebTestCase
             ['AGENT-ONE', 'AGENT-TWO', 'AGENT-THREE'],
             array_column($data['data'], 'symbol'),
         );
-        self::assertSame(['total' => 3, 'page' => 1, 'limit' => 3], $data['meta']);
     }
 
     private function userByEmail(string $email): User

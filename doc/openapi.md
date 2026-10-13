@@ -80,7 +80,7 @@ registration (`POST /register`) and listing ships (`GET /my/ships`). Picked
 to exercise both plain pass-through operations and one with a hook
 augmentation. Expand the list to document more.
 
-**Hook augmentations:** `SpaceTradersResponseAugmenterInterface` (see
+**Hook augmentations:** `SpaceTradersResponseCustomDataInterface` (see
 "Proxy design" in architecture.md) has a doc-time counterpart to `augment()`:
 `describedAugmentation(): SpaceTradersAugmentationSchema`, returning which
 operation (method + path) the hook adds fields to and the `ResponseData`

@@ -20,9 +20,9 @@ final class EnvelopeResponseFactory
      */
     public function success(ResponseData|array $data, int $status = 200, array $headers = []): JsonResponse
     {
-        $extra = ['data' => $this->normalizer->normalize($data)];
+        $data = ['data' => $this->normalizer->normalize($data)];
 
-        return $this->toJsonResponse($this->build($extra, $status, $headers));
+        return $this->toJsonResponse($this->build($data, $status, $headers));
     }
 
     /**
@@ -43,11 +43,11 @@ final class EnvelopeResponseFactory
     }
 
     /**
-     * @param array<string, mixed>           $extra
+     * @param array<string, mixed>           $data
      * @param array<string, string|string[]> $headers
      */
-    private function build(array $extra, int $status, array $headers): HttpResponseEnvelope
+    private function build(array $data, int $status, array $headers): HttpResponseEnvelope
     {
-        return new HttpResponseEnvelope($status, (new EnvelopeBody(null, $extra))->toJson(), $headers);
+        return new HttpResponseEnvelope($status, json_encode($data, \JSON_THROW_ON_ERROR), $headers);
     }
 }

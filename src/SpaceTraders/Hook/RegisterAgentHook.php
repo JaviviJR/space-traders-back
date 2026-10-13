@@ -10,7 +10,7 @@ use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\SpaceTradersAugmentationSchema;
 use App\SpaceTraders\SpaceTradersProxyRequest;
-use App\SpaceTraders\SpaceTradersResponseAugmentation;
+use App\SpaceTraders\SpaceTradersResponseExtraData;
 use App\SpaceTraders\SpaceTradersResponseCustomDataInterface;
 use App\SpaceTraders\SpaceTradersRouteHookInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -84,7 +84,7 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
         return $response;
     }
 
-    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseAugmentation
+    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseExtraData
     {
         $agentId = $this->registeredAgent?->getId();
 
@@ -92,7 +92,7 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
             return null;
         }
 
-        return new SpaceTradersResponseAugmentation(new RegisterAgentAugmentationData($agentId));
+        return new SpaceTradersResponseExtraData(new RegisterAgentAugmentationData($agentId));
     }
 
     public function describedAugmentation(): SpaceTradersAugmentationSchema

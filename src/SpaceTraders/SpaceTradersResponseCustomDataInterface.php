@@ -22,7 +22,7 @@ interface SpaceTradersResponseCustomDataInterface
      * Called with the HttpResponseEnvelope afterForward produced. Return
      * null to add nothing.
      */
-    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseAugmentation;
+    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?SpaceTradersResponseExtraData;
 
     /**
      * Doc-time counterpart to augment(): which operation this hook documents
