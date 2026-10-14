@@ -31,8 +31,7 @@ final class SpaceTradersEnvelopeBuilder
     public function build(
         HttpResponseEnvelope $spaceTradersResponse,
         ?SpaceTradersResponseExtraData $extraData
-    ): HttpResponseEnvelope
-    {
+    ): HttpResponseEnvelope {
         if (null === $extraData) {
             return new HttpResponseEnvelope($spaceTradersResponse->statusCode, $spaceTradersResponse->body);
         }

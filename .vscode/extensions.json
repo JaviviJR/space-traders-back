@@ -1,6 +1,16 @@
 {
   "recommendations": [
     "SanderRonde.phpstan-vscode",
-    "phpactor.phpactor"
+    "phpactor.phpactor",
+    "naumovs.color-highlight",
+    "mikestead.dotenv",
+    "usernamehw.errorlens",
+    "ecmel.vscode-html-css",
+    "junstyle.php-cs-fixer",
+    "xdebug.php-debug",
+    "phproberto.vscode-php-getters-setters",
+    "thenouillet.symfony-vscode",
+    "phpactor.vscode-phpactor",
+    "redhat.vscode-yaml"
   ]
 }
