@@ -26,15 +26,15 @@
   "phpstan.showTypeOnHover": true,
   "phpstan.dockerContainerName": "space-trader-backend-php",
   "phpstan.singleFileMode": true,
-  "php-cs-fixer.executable": "${workspaceFolder}/bin/php-cs-fixer-docker",
-  "php-cs-fixer.configFile": "${workspaceFolder}/.php-cs-fixer.dist.php",
-  "php-cs-fixer.onSave": true,
+  "php-cs-fixer.autoFixByBracket": true,
+  "php-cs-fixer.autoFixBySemicolon": true,
+  "php-cs-fixer.executablePath": "${workspaceFolder}/bin/php-cs-fixer-docker",
+  "php-cs-fixer.onsave": true,
+  "php-cs-fixer.allowRisky": false,
+  "php-cs-fixer.config": "${workspaceFolder}/.php-cs-fixer.dist.php",
+  "php-cs-fixer.tmpDir": "/tmp/php-cs-fixer",
   "[php]": {
+    "editor.formatOnSave": true,
     "editor.defaultFormatter": "junstyle.php-cs-fixer"
-},
-"php-cs-fixer.autoFixByBracket": true,
-"php-cs-fixer.autoFixBySemicolon": true,
-"php-cs-fixer.executablePath": "${workspaceFolder}/bin/php-cs-fixer-docker",
-"php-cs-fixer.onsave": true,
-"php-cs-fixer.allowRisky": false,
+  }
 }
