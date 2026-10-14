@@ -4,7 +4,7 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^3.3",
@@ -39,6 +39,7 @@
     },
     "require-dev": {
         "dama/doctrine-test-bundle": "^8.7",
+        "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.3.1",
         "phpstan/phpstan-doctrine": "^2.0",
@@ -98,12 +99,16 @@
         ],
         "phpstan": "phpstan analyse --memory-limit=1G",
         "test": "phpunit",
-        "test-coverage": "XDEBUG_MODE=coverage phpunit -c phpunit.coverage.xml"
+        "test-coverage": "XDEBUG_MODE=coverage phpunit -c phpunit.coverage.xml",
+        "cs-fix": "php-cs-fixer fix",
+        "cs-check": "php-cs-fixer fix --dry-run --diff"
     },
     "scripts-descriptions": {
         "phpstan": "Analisis estatico con PHPStan (nivel 9)",
         "test": "Ejecuta la suite de PHPUnit",
-        "test-coverage": "Ejecuta PHPUnit con cobertura de codigo (HTML en var/coverage/html y resumen en consola)"
+        "test-coverage": "Ejecuta PHPUnit con cobertura de codigo (HTML en var/coverage/html y resumen en consola)",
+        "cs-fix": "Corrige el estilo de código con PHP-CS-Fixer",
+        "cs-check": "Verifica el estilo de código con PHP-CS-Fixer"
     },
     "conflict": {
         "symfony/symfony": "*"
