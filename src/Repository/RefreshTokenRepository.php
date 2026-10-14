@@ -29,7 +29,7 @@ class RefreshTokenRepository extends ServiceEntityRepository
      */
     public function findActiveForUser(User $user): array
     {
-        /** @var list<RefreshToken> */
+        /* @var list<RefreshToken> */
         return $this->createQueryBuilder('rt')
             ->andWhere('rt.user = :user')
             ->andWhere('rt.revokedAt IS NULL')

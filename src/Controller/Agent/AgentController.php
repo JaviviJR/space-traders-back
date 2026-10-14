@@ -34,9 +34,11 @@ final class AgentController extends AbstractController
             fn (Agent $agent): AgentResponseData => $this->toResponseData($agent),
             $this->agentRepository->findAllForUser($user),
         );
+
         $total = \count($agents);
 
-        return $this->envelope->success($agents, meta: new Meta($total, 1, $total));
+        return $this->envelope->
+                success($agents, meta: new Meta($total, 1, $total));
     }
 
     private function toResponseData(Agent $agent): AgentResponseData

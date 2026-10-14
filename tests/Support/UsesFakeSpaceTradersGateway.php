@@ -17,7 +17,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
  * PHPStan has no way to know this call ever returns the fake.
  *
  * @method static \Symfony\Component\DependencyInjection\ContainerInterface getContainer()
- * @method static void assertInstanceOf(string $expected, mixed $actual, string $message = '')
+ * @method static void                                                      assertInstanceOf(string $expected, mixed $actual, string $message = '')
  */
 trait UsesFakeSpaceTradersGateway
 {

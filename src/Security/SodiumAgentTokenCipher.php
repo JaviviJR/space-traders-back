@@ -18,10 +18,7 @@ final class SodiumAgentTokenCipher implements AgentTokenCipherInterface
         string $key,
     ) {
         if (SODIUM_CRYPTO_SECRETBOX_KEYBYTES !== \strlen($key)) {
-            throw new \InvalidArgumentException(sprintf(
-                'AGENT_TOKEN_ENCRYPTION_KEY must decode to %d bytes.',
-                SODIUM_CRYPTO_SECRETBOX_KEYBYTES,
-            ));
+            throw new \InvalidArgumentException(sprintf('AGENT_TOKEN_ENCRYPTION_KEY must decode to %d bytes.', SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
         }
 
         $this->key = $key;
