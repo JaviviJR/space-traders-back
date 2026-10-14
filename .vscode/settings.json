@@ -26,5 +26,7 @@
   "phpstan.showTypeOnHover": true,
   "phpstan.dockerContainerName": "space-trader-backend-php",
   "phpstan.singleFileMode": true,
-  "phpstan.tmpDir": "${workspaceFolder}/var/phpstan-vscode"
+  "php-cs-fixer.executable": "${workspaceFolder}/bin/php-cs-fixer-docker",
+"php-cs-fixer.configFile": "${workspaceFolder}/.php-cs-fixer.dist.php",
+"php-cs-fixer.onSave": true,
 }
