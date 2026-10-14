@@ -1,7 +1,7 @@
 {
     "$schema": "/opt/phpactor/phpactor.schema.json",
-    "language_server.self_destruct_timeout": 30000,
-    "language_server.shutdown_grace_period": 1000,
+    "language_server.self_destruct_timeout": 60000,
+    "language_server.shutdown_grace_period": 2000,
     "language_server_phpstan.enabled": true,
     "symfony.enabled": true,
     "indexer.exclude_patterns": [
