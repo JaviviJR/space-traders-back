@@ -8,12 +8,13 @@
   "symfony-vscode.shellExecutable": "/bin/bash",
   "symfony-vscode.shellCommand": "docker exec space-trader-backend-php php \"$@\"",
   //"intelephense.environment.phpVersion": "8.4.0",
-  // Phpactor (extension phpactor.phpactor) corre como language server TCP
-  // persistente en el contenedor "phpactor" (ver docker/compose.yml), sin
-  // depender de ninguna ruta de host.
-  "phpactor.remote.enabled": true,
-  "phpactor.remote.host": "172.17.0.1",
-  "phpactor.remote.port": 9090,
+  // Phpactor (extension phpactor.phpactor) corre via stdio dentro del
+  // contenedor "php" (ver bin/phpactor-docker), sin depender de ninguna ruta
+  // de host en la extension (docker exec usa la misma ruta absoluta que ve
+  // VSCode, ver docker/compose.yml).
+  "phpactor.executablePath": "bin/phpactor-docker",
+//   "phpactor.executablePath": "docker exec space-trader-backend-php php /opt/phpactor/bin/phpactor \"$@\"",
+  "phpactor.path": "/opt/phpactor/bin/phpactor",
   "search.exclude": {
     "**/vendor": true,
     "**/var": true
@@ -36,5 +37,5 @@
   "[php]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "junstyle.php-cs-fixer"
-  }
+  },
 }
