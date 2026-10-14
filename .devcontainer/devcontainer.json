@@ -1,0 +1,7 @@
+{
+  "name": "space-trader-backend",
+  "dockerComposeFile": "../docker/compose.yml",
+  "service": "php",
+  "workspaceFolder": "/home/developer/app",
+  "shutdownAction": "none"
+}
