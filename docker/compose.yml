@@ -21,6 +21,7 @@ services:
       - ${APP_DIR_ABS}:${APP_DIR_ABS}
       - /tmp/php-cs-fixer:/tmp/php-cs-fixer
     working_dir: /home/developer/app
+
 #   phpactor:
 #     container_name: space-trader-backend-phpactor
 #     build:

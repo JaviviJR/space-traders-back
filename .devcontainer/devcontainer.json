@@ -11,14 +11,15 @@
         "eamodio.gitlens",
         "ecmel.vscode-html-css",
         "phproberto.vscode-php-getters-setters",
-        "TheNouillet.symfony-vscode",
         "redhat.vscode-yaml",
         "SanderRonde.phpstan-vscode",
         "xdebug.php-debug",
         "phpactor.vscode-phpactor",
         "junstyle.php-cs-fixer",
         "vix.rector-vscode",
-        "EditorConfig.EditorConfig"
+        "EditorConfig.EditorConfig",
+        "MehediDracula.php-namespace-resolver",
+        "symfony.language-tools"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

@@ -6,12 +6,13 @@
     "eamodio.gitlens",
     "redhat.vscode-yaml",
     "phpactor.vscode-phpactor",
-    "thenouillet.symfony-vscode",
     "vix.rector-vscode",
     "phproberto.vscode-php-getters-setters",
     "xdebug.php-debug",
     "junstyle.php-cs-fixer",
     "pkief.material-icon-theme",
-    "editorconfig.editorconfig"
+    "editorconfig.editorconfig",
+    "mehedidracula.php-namespace-resolver",
+    "symfony.language-tools"
   ]
 }
