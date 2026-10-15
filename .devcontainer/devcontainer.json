@@ -17,7 +17,8 @@
         "xdebug.php-debug",
         "phpactor.vscode-phpactor",
         "junstyle.php-cs-fixer",
-        "vix.rector-vscode"
+        "vix.rector-vscode",
+        "EditorConfig.EditorConfig"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

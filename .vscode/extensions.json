@@ -11,6 +11,7 @@
     "phproberto.vscode-php-getters-setters",
     "xdebug.php-debug",
     "junstyle.php-cs-fixer",
-    "pkief.material-icon-theme"
+    "pkief.material-icon-theme",
+    "editorconfig.editorconfig"
   ]
 }
