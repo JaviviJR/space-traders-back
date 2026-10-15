@@ -88,3 +88,7 @@ services:
       - ${CONTAINER_LISTEN_PORT}:80
     volumes:
       - ./pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  claude-code-config:
+    external: true
