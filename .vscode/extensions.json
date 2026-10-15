@@ -3,9 +3,6 @@
     "SanderRonde.phpstan-vscode",
     "phpactor.phpactor",
     "naumovs.color-highlight",
-    "formulahendry.auto-rename-tag",
-    "formulahendry.auto-complete-tag",
-    "formulahendry.auto-close-tag",
     "eamodio.gitlens",
     "redhat.vscode-yaml",
     "phpactor.vscode-phpactor",
@@ -13,6 +10,7 @@
     "vix.rector-vscode",
     "phproberto.vscode-php-getters-setters",
     "xdebug.php-debug",
-    "junstyle.php-cs-fixer"
+    "junstyle.php-cs-fixer",
+    "pkief.material-icon-theme"
   ]
 }
