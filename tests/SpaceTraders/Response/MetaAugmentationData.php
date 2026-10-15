@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\SpaceTraders;
+namespace App\Tests\SpaceTraders\Response;
 
 use App\Http\ResponseData;
 

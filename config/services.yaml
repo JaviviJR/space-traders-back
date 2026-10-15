@@ -24,10 +24,10 @@ services:
 
 when@test:
     services:
-        # Rebind SpaceTradersGatewayInterface to a test double so no test ever
-        # calls the real SpaceTraders API. Resolved by interface, so the
-        # container never constructs the real SpaceTradersGateway in test env.
-        App\Tests\SpaceTraders\FakeSpaceTradersGateway:
+        # Rebind GatewayInterface to a test double so no test ever calls the
+        # real SpaceTraders API. Resolved by interface, so the container
+        # never constructs the real Gateway in test env.
+        App\Tests\SpaceTraders\Proxy\FakeGateway:
             public: true
 
-        App\SpaceTraders\SpaceTradersGatewayInterface: '@App\Tests\SpaceTraders\FakeSpaceTradersGateway'
+        App\SpaceTraders\Proxy\GatewayInterface: '@App\Tests\SpaceTraders\Proxy\FakeGateway'

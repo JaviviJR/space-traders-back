@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\SpaceTraders\Exception\SpaceTradersApiException;
+use App\SpaceTraders\Exception\ApiException;
 
 /**
  * The gateway's genuine transport failures (timeout, DNS, connection) — not
@@ -18,7 +18,7 @@ final class SpaceTradersApiExceptionErrorMapper implements ExceptionErrorMapperI
 
     public function supports(\Throwable $exception): bool
     {
-        return $exception instanceof SpaceTradersApiException;
+        return $exception instanceof ApiException;
     }
 
     public function map(\Throwable $exception): MappedError

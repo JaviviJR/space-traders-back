@@ -13,6 +13,7 @@
     "mehedidracula.php-namespace-resolver",
     "symfony.language-tools",
     "neilbrayfield.php-docblocker",
-    "jaguadoromero.vscode-php-create-class"
+    "jaguadoromero.vscode-php-create-class",
+    "emallin.phpunit"
   ]
 }

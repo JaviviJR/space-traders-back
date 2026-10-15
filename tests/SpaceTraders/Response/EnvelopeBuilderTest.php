@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\SpaceTraders;
+namespace App\Tests\SpaceTraders\Response;
 
 use App\Http\HttpResponseEnvelope;
-use App\SpaceTraders\EnvelopeMergeException;
-use App\SpaceTraders\SpaceTradersEnvelopeBuilder;
-use App\SpaceTraders\SpaceTradersResponseExtraData;
+use App\SpaceTraders\Response\AugmentData;
+use App\SpaceTraders\Response\EnvelopeBuilder;
+use App\SpaceTraders\Response\EnvelopeMergeException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
-final class SpaceTradersEnvelopeBuilderTest extends TestCase
+final class EnvelopeBuilderTest extends TestCase
 {
     public function testPassesTheBodyThroughUntouchedWithoutExtraData(): void
     {
-        $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        $builder = new EnvelopeBuilder($this->objectSerializer());
         $response = new HttpResponseEnvelope(201, '{"data":{"foo":"bar"}}');
 
         $result = $builder->build($response, null);
@@ -30,9 +30,9 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
 
     public function testPassesTheBodyThroughUntouchedWhenExtraDataHasNoExtra(): void
     {
-        $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        $builder = new EnvelopeBuilder($this->objectSerializer());
         $response = new HttpResponseEnvelope(200, '{"data":{"foo":"bar"}}');
-        $extraData = new SpaceTradersResponseExtraData(headers: ['X-Agent-Id' => '42']);
+        $extraData = new AugmentData(headers: ['X-Agent-Id' => '42']);
 
         $result = $builder->build($response, $extraData);
 
@@ -42,9 +42,9 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
 
     public function testMergesExtraAsSiblingFields(): void
     {
-        $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        $builder = new EnvelopeBuilder($this->objectSerializer());
         $response = new HttpResponseEnvelope(200, '{"data":{"foo":"bar"}}');
-        $extraData = new SpaceTradersResponseExtraData(new MetaAugmentationData(['agentId' => 42]));
+        $extraData = new AugmentData(new MetaAugmentationData(['agentId' => 42]));
 
         $result = $builder->build($response, $extraData);
 
@@ -53,9 +53,9 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
 
     public function testThrowsWhenExtraCollidesWithAnUpstreamKey(): void
     {
-        $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        $builder = new EnvelopeBuilder($this->objectSerializer());
         $response = new HttpResponseEnvelope(200, '{"data":{"foo":"bar"},"meta":{"existing":true}}');
-        $extraData = new SpaceTradersResponseExtraData(new MetaAugmentationData(['agentId' => 42]));
+        $extraData = new AugmentData(new MetaAugmentationData(['agentId' => 42]));
 
         $this->expectException(EnvelopeMergeException::class);
 
@@ -64,9 +64,9 @@ final class SpaceTradersEnvelopeBuilderTest extends TestCase
 
     public function testThrowsWhenTheUpstreamBodyIsNotAValidJsonObject(): void
     {
-        $builder = new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        $builder = new EnvelopeBuilder($this->objectSerializer());
         $response = new HttpResponseEnvelope(200, 'not json');
-        $extraData = new SpaceTradersResponseExtraData(new MetaAugmentationData(['agentId' => 42]));
+        $extraData = new AugmentData(new MetaAugmentationData(['agentId' => 42]));
 
         $this->expectException(EnvelopeMergeException::class);
 

@@ -33,7 +33,7 @@ top-level fields, or set its own response headers. SpaceTraders' response
 headers are not forwarded at all; the front must not depend on them.
 
 A sibling field colliding with one of SpaceTraders' own top-level keys is a
-bug, not a runtime condition to resolve silently — `SpaceTradersEnvelopeBuilder`
+bug, not a runtime condition to resolve silently — `App\SpaceTraders\Response\EnvelopeBuilder`
 (see "Proxy design" below) throws rather than letting either side win
 unpredictably.
 
@@ -56,7 +56,7 @@ authority on that, and duplicating it here would drift out of sync.
 
 SpaceTraders rate-limits requests per agent. Every call this back makes to
 SpaceTraders — through the catch-all proxy, or from any other service —
-goes through the one shared gateway below (`SpaceTradersGatewayInterface`),
+goes through the one shared gateway below (`App\SpaceTraders\Proxy\GatewayInterface`),
 not `HttpClientInterface` directly, so there is a single choke point to add
 rate limiting to. Not implemented yet (`symfony/rate-limiter` isn't
 installed): the gateway today only centralizes the SpaceTraders base URL and
@@ -73,12 +73,12 @@ That's why `X-Agent-Id` is optional for the proxy as a whole, not just for
 some endpoints.
 
 Per-endpoint logic is opt-in via the Strategy pattern: a route implements
-`SpaceTradersRouteHookInterface` (`supports()` picks it, `beforeForward()` can
+`App\SpaceTraders\RouteHookInterface` (`supports()` picks it, `beforeForward()` can
 short-circuit before SpaceTraders is called, `afterForward()` transforms the
 response on its way out) and is auto-tagged
 (`#[Autoconfigure(tags: ['app.space_traders_route_hook'])]` on the interface
 itself) — no edits to the controller or to other hooks.
-`SpaceTradersResponseCustomDataInterface` is a separate, opt-in extension of
+`App\SpaceTraders\Response\AugmentInterface` is a separate, opt-in extension of
 that interface for the common case of only adding sibling fields/headers
 instead of replacing the response — kept apart from `afterForward()` because
 it's structurally guaranteed to never touch SpaceTraders' own top-level keys,
@@ -86,9 +86,9 @@ and it has a doc-time counterpart (`describedAugmentation()`) the OpenAPI
 describer for proxied routes uses — see [openapi.md](openapi.md).
 
 No Symfony HTTP type crosses a layer that doesn't own it: `Request` dies in
-`SpaceTradersProxyController` (translated into a `SpaceTradersProxyRequest`
+`App\Controller\SpaceTraders\SpaceTradersProxyController` (translated into a `App\SpaceTraders\Proxy\ProxyRequest`
 before the service ever sees it), and HttpClient's `ResponseInterface` dies
-inside `SpaceTradersGateway` (resolved into an `HttpResponseEnvelope`).
+inside `App\SpaceTraders\Proxy\Gateway` (resolved into an `HttpResponseEnvelope`).
 `HttpResponseEnvelope` is the one shape used end-to-end — the raw upstream
 response coming out of the gateway, and the final shape both the proxy and
 every back-only endpoint converge on going out —
@@ -96,7 +96,7 @@ every back-only endpoint converge on going out —
 builds a Symfony `JsonResponse`.
 
 Merging a hook's extra fields into SpaceTraders' raw body is
-`SpaceTradersEnvelopeBuilder`'s job, the only consumer of that logic:
+`App\SpaceTraders\Response\EnvelopeBuilder`'s job, the only consumer of that logic:
 pass-through untouched when there's nothing to add; otherwise decode just
 enough to merge the extra fields in as siblings, throwing
 `EnvelopeMergeException` on a key collision or on an upstream body that
@@ -105,18 +105,18 @@ resolve. `EnvelopeResponseFactory` doesn't know about any of this: its
 back-only `success()`/`error()` just `json_encode` their payload directly —
 a response with nothing to protect doesn't need the merge machinery.
 
-`SpaceTradersProxyService` orchestrates one forwarded request: resolves
+`App\SpaceTraders\Proxy\ProxyService` orchestrates one forwarded request: resolves
 `?Agent` from `agentId` if present (404/403 as described above), picks the
 first matching hook (if any), runs `beforeForward`/`afterForward` around the
 gateway call (substituting `Authorization` with the resolved agent's
 decrypted token only when there is one), asks the hook for extra data when it
-implements `SpaceTradersResponseCustomDataInterface`, and hands the result to
-`SpaceTradersEnvelopeBuilder`.
+implements `App\SpaceTraders\Response\AugmentInterface`, and hands the result to
+`App\SpaceTraders\Response\EnvelopeBuilder`.
 
-`SpaceTradersGatewayInterface` / `SpaceTradersGateway` wraps
+`App\SpaceTraders\Proxy\GatewayInterface` / `App\SpaceTraders\Proxy\Gateway` wraps
 `HttpClientInterface`: a 4xx/5xx from SpaceTraders is relayed as-is, not
 translated — only genuine transport failures (timeout, DNS, connection)
-become `SpaceTradersApiException`. Kept as an interface despite one
+become `App\SpaceTraders\Exception\ApiException`. Kept as an interface despite one
 implementation because it's the test seam the proxy/hook tests fake against,
 instead of spinning up `MockHttpClient` each time.
 

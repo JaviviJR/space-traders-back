@@ -58,8 +58,8 @@ Criteria for choosing between PHPUnit's generated doubles (`createStub()` /
   that a mock would hide.
   - Keep it as an **inline anonymous class** when it's used once and the
     shape is trivial.
-  - **Extract to a named class** (e.g. `FakeSpaceTradersGateway`,
-    `FakeSpaceTradersRouteHook`) once the same shape is duplicated across
+  - **Extract to a named class** (e.g. `App\Tests\SpaceTraders\Proxy\FakeGateway`,
+    `App\Tests\SpaceTraders\Proxy\FakeRouteHook`) once the same shape is duplicated across
     tests, and make it configurable with `willXxx()` setters instead of
     hard-coding behaviour in the constructor.
 - **Plain data objects** (a type whose only job is to hold public properties
@@ -71,8 +71,8 @@ Criteria for choosing between PHPUnit's generated doubles (`createStub()` /
 ## TODO
 
 - Revisit the test doubles guidance above once more of the suite is written;
-  it's based on one service's tests (`SpaceTradersProxyServiceTest`,
-  `SpaceTradersEnvelopeBuilderTest`) and may need adjusting as other patterns
+  it's based on one service's tests (`App\Tests\SpaceTraders\Proxy\ProxyServiceTest`,
+  `App\Tests\SpaceTraders\Response\EnvelopeBuilderTest`) and may need adjusting as other patterns
   show up.
 - If the suite grows and per-run coverage becomes slow, switch to
   [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for coverage.

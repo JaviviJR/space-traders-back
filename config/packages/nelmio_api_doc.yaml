@@ -6,6 +6,6 @@ nelmio_api_doc:
             version: 1.0.0
     areas: # to filter documented areas
         path_patterns:
-            - ^/api(?!/doc$)(?!/spacetraders) # Accepts routes under /api except /api/doc and /api/spacetraders (hand-documented by SpaceTradersProxyDescriber)
+            - ^/api(?!/doc$)(?!/spacetraders) # Accepts routes under /api except /api/doc and /api/spacetraders (hand-documented by App\SpaceTraders\OpenApi\ProxyDescriber)
         security:
             bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } # Inferred per-route from #[IsGranted] (see doc/openapi.md)

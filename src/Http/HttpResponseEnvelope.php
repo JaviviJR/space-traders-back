@@ -8,7 +8,7 @@ namespace App\Http;
  * A raw HTTP-shaped response: status code, body (a string — ours once
  * serialized, or SpaceTraders' own, verbatim, before any merge decision is
  * made), and headers. Used at both ends of the SpaceTraders proxy pipeline —
- * what SpaceTradersGatewayInterface::request() hands back, and what
+ * what App\SpaceTraders\Proxy\GatewayInterface::request() hands back, and what
  * EnvelopeResponseFactory::envelope() produces from it — and as the final
  * shape back-only controllers (via EnvelopeResponseFactory::success()/
  * error()) and the proxy controller hand to

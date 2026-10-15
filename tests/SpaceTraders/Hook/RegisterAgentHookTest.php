@@ -10,7 +10,7 @@ use App\Http\HttpResponseEnvelope;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\Hook\RegisterAgentHook;
-use App\SpaceTraders\SpaceTradersProxyRequest;
+use App\SpaceTraders\Proxy\ProxyRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -130,9 +130,9 @@ final class RegisterAgentHookTest extends TestCase
         self::assertNull($augmentation);
     }
 
-    private function proxyRequest(string $method, string $path, ?User $user = null): SpaceTradersProxyRequest
+    private function proxyRequest(string $method, string $path, ?User $user = null): ProxyRequest
     {
-        return new SpaceTradersProxyRequest(
+        return new ProxyRequest(
             $method,
             $path,
             [],

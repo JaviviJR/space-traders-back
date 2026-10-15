@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\SpaceTraders;
+namespace App\SpaceTraders\Response;
 
 use App\Http\HttpResponseEnvelope;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -11,8 +11,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * Turns the final HttpResponseEnvelope (after afterForward) plus an optional
  * augmentation into the HttpResponseEnvelope the controller hands to
  * EnvelopeResponseFactory::toJsonResponse(). The only caller is
- * SpaceTradersProxyService: back-only responses never have an upstream to
- * protect, so this merge logic has no business living on
+ * App\SpaceTraders\Proxy\ProxyService: back-only responses never have an
+ * upstream to protect, so this merge logic has no business living on
  * EnvelopeResponseFactory, which every back-only controller depends on.
  *
  * Without extra fields, SpaceTraders' own body passes through untouched — no
@@ -21,7 +21,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * already has — that would be a bug in the caller, so it throws rather than
  * silently picking a winner.
  */
-final class SpaceTradersEnvelopeBuilder
+final class EnvelopeBuilder
 {
     public function __construct(
         private readonly NormalizerInterface $normalizer,
@@ -30,7 +30,7 @@ final class SpaceTradersEnvelopeBuilder
 
     public function build(
         HttpResponseEnvelope $spaceTradersResponse,
-        ?SpaceTradersResponseExtraData $extraData
+        ?AugmentData $extraData,
     ): HttpResponseEnvelope {
         if (null === $extraData) {
             return new HttpResponseEnvelope($spaceTradersResponse->statusCode, $spaceTradersResponse->body);

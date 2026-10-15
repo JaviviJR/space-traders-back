@@ -6,6 +6,7 @@ namespace App\SpaceTraders;
 
 use App\Entity\Agent;
 use App\Http\HttpResponseEnvelope;
+use App\SpaceTraders\Proxy\ProxyRequest;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 /**
@@ -18,15 +19,15 @@ use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
  * authenticated user is always available via $request->user.
  */
 #[Autoconfigure(tags: ['app.space_traders_route_hook'])]
-interface SpaceTradersRouteHookInterface
+interface RouteHookInterface
 {
-    public function supports(SpaceTradersProxyRequest $request): bool;
+    public function supports(ProxyRequest $request): bool;
 
     /**
      * Returning a HttpResponseEnvelope short-circuits the call: SpaceTraders
      * is never reached.
      */
-    public function beforeForward(SpaceTradersProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope;
+    public function beforeForward(ProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope;
 
     /**
      * Transforms the real SpaceTraders response on its way to the front
@@ -37,5 +38,5 @@ interface SpaceTradersRouteHookInterface
      * something, dispatching an event) belong here too, regardless of
      * whether the response itself changes.
      */
-    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): HttpResponseEnvelope;
+    public function afterForward(ProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): HttpResponseEnvelope;
 }

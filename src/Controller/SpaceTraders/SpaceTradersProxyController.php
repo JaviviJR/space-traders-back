@@ -6,8 +6,8 @@ namespace App\Controller\SpaceTraders;
 
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
-use App\SpaceTraders\SpaceTradersProxyRequest;
-use App\SpaceTraders\SpaceTradersProxyService;
+use App\SpaceTraders\Proxy\ProxyRequest;
+use App\SpaceTraders\Proxy\ProxyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +18,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class SpaceTradersProxyController extends AbstractController
 {
     public function __construct(
-        private readonly SpaceTradersProxyService $proxyService,
+        private readonly ProxyService $proxyService,
         private readonly EnvelopeResponseFactory $envelope,
     ) {
     }
@@ -27,7 +27,7 @@ final class SpaceTradersProxyController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function __invoke(Request $request, string $path, #[CurrentUser] User $user): JsonResponse
     {
-        $proxyRequest = new SpaceTradersProxyRequest(
+        $proxyRequest = new ProxyRequest(
             $request->getMethod(),
             $path,
             $request->query->all(),

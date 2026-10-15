@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\SpaceTraders\OpenApi;
 
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
-use App\SpaceTraders\OpenApi\SpaceTradersProxyDescriber;
-use App\SpaceTraders\SpaceTradersAugmentationSchema;
-use App\Tests\SpaceTraders\FakeSpaceTradersRouteHook;
+use App\SpaceTraders\OpenApi\ProxyDescriber;
+use App\SpaceTraders\Response\AugmentationSchema;
+use App\Tests\SpaceTraders\Proxy\FakeRouteHook;
 use OpenApi\Annotations as OA;
 use OpenApi\Context;
 use PHPUnit\Framework\TestCase;
 
-final class SpaceTradersProxyDescriberTest extends TestCase
+final class ProxyDescriberTest extends TestCase
 {
     public function testDocumentsTheRepresentativeOperationsUnderTheProxyBasePath(): void
     {
@@ -37,8 +37,8 @@ final class SpaceTradersProxyDescriberTest extends TestCase
 
     public function testMergesAHooksAugmentationAsASiblingOfData(): void
     {
-        $hook = new FakeSpaceTradersRouteHook('register');
-        $hook->willDescribeAugmentationWith(new SpaceTradersAugmentationSchema('POST', 'register', RegisterAgentAugmentationData::class));
+        $hook = new FakeRouteHook('register');
+        $hook->willDescribeAugmentationWith(new AugmentationSchema('POST', 'register', RegisterAgentAugmentationData::class));
 
         $api = $this->describe([$hook]);
 
@@ -62,12 +62,12 @@ final class SpaceTradersProxyDescriberTest extends TestCase
     }
 
     /**
-     * @param list<FakeSpaceTradersRouteHook> $hooks
+     * @param list<FakeRouteHook> $hooks
      */
     private function describe(array $hooks): OA\OpenApi
     {
         $specPath = \dirname(__DIR__, 3).'/resources/spacetraders/openapi.json';
-        $describer = new SpaceTradersProxyDescriber($specPath, $hooks);
+        $describer = new ProxyDescriber($specPath, $hooks);
 
         $api = new OA\OpenApi(['_context' => new Context(['generated' => true])]);
         $api->openapi = '3.0.0';

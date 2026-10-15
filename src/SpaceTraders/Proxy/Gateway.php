@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\SpaceTraders;
+namespace App\SpaceTraders\Proxy;
 
 use App\Http\HttpResponseEnvelope;
-use App\SpaceTraders\Exception\SpaceTradersApiException;
+use App\SpaceTraders\Exception\ApiException;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-final class SpaceTradersGateway implements SpaceTradersGatewayInterface
+final class Gateway implements GatewayInterface
 {
     private const BASE_URL = 'https://api.spacetraders.io/v2';
 
@@ -38,7 +38,7 @@ final class SpaceTradersGateway implements SpaceTradersGatewayInterface
                 $response->getHeaders(false),
             );
         } catch (TransportExceptionInterface $exception) {
-            throw new SpaceTradersApiException(0, $exception->getMessage(), $exception);
+            throw new ApiException(0, $exception->getMessage(), $exception);
         }
     }
 }

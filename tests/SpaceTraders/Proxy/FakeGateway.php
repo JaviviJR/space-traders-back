@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\SpaceTraders;
+namespace App\Tests\SpaceTraders\Proxy;
 
 use App\Http\HttpResponseEnvelope;
-use App\SpaceTraders\Exception\SpaceTradersApiException;
-use App\SpaceTraders\SpaceTradersGatewayInterface;
+use App\SpaceTraders\Exception\ApiException;
+use App\SpaceTraders\Proxy\GatewayInterface;
 
-final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
+final class FakeGateway implements GatewayInterface
 {
     private ?HttpResponseEnvelope $response = null;
 
-    private ?SpaceTradersApiException $exception = null;
+    private ?ApiException $exception = null;
 
     private ?string $lastPath = null;
 
@@ -25,7 +25,7 @@ final class FakeSpaceTradersGateway implements SpaceTradersGatewayInterface
         $this->exception = null;
     }
 
-    public function willThrow(SpaceTradersApiException $exception): void
+    public function willThrow(ApiException $exception): void
     {
         $this->exception = $exception;
         $this->response = null;
