@@ -10,9 +10,7 @@ use App\SpaceTraders\Exception\ApiException;
 interface GatewayInterface
 {
     /**
-     * @param array<string, mixed> $options Symfony HttpClient request options (query, headers, body, ...)
-     *
      * @throws ApiException if the call to SpaceTraders fails at the transport level
      */
-    public function request(string $method, string $path, array $options = []): HttpResponseEnvelope;
+    public function request(ProxyRequest $proxyRequest): HttpResponseEnvelope;
 }

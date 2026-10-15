@@ -18,10 +18,28 @@ final class Gateway implements GatewayInterface
     ) {
     }
 
-    public function request(string $method, string $path, array $options = []): HttpResponseEnvelope
+    public function request(ProxyRequest $proxyRequest): HttpResponseEnvelope
     {
         try {
-            $response = $this->httpClient->request($method, self::BASE_URL.'/'.ltrim($path, '/'), $options);
+            $options = [];
+
+            if (count($proxyRequest->query) > 0) {
+                $options['query'] = $proxyRequest->query;
+            }
+
+            if (count($proxyRequest->headers) > 0) {
+                $options['headers'] = $proxyRequest->headers;
+            }
+
+            if ('' !== $proxyRequest->body) {
+                $options['body'] = $proxyRequest->body;
+            }
+
+            $response = $this->httpClient->request(
+                $proxyRequest->method,
+                self::BASE_URL.'/'.ltrim($proxyRequest->path, '/'),
+                $options
+            );
 
             // `false` on both calls: a 4xx/5xx from SpaceTraders is relayed
             // as-is (pass-through contract), never translated into a thrown

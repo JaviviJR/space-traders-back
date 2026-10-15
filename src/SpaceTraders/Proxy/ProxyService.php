@@ -43,20 +43,14 @@ final class ProxyService
             }
         }
 
-        $options = [
-            'query' => $request->query,
-            'headers' => $request->headers,
-        ];
-
-        if ('' !== $request->body) {
-            $options['body'] = $request->body;
-        }
-
         if (null !== $agent) {
-            $options['headers']['Authorization'] = 'Bearer '.$this->agentTokenCipher->decrypt($agent->getEncryptedToken());
+            $request->addHeader(
+                'Authorization',
+                'Bearer '.$this->agentTokenCipher->decrypt($agent->getEncryptedToken())
+            );
         }
 
-        $apiResponse = $this->gateway->request($request->method, $request->path, $options);
+        $apiResponse = $this->gateway->request($request);
 
         if (null !== $hook) {
             $apiResponse = $hook->afterForward($request, $agent, $apiResponse);

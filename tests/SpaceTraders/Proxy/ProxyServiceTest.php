@@ -64,10 +64,9 @@ final class ProxyServiceTest extends TestCase
         $gateway = $this->createMock(GatewayInterface::class);
         $gateway->expects(self::once())
             ->method('request')
-            ->with(self::anything(), self::anything(), self::callback(
-                /** @param array{headers: array<string, string>} $options */
-                static function (array $options): bool {
-                    self::assertSame('Bearer raw-agent-token', $options['headers']['Authorization'] ?? null);
+            ->with(self::callback(
+                static function (ProxyRequest $request): bool {
+                    self::assertSame('Bearer raw-agent-token', $request->headers['Authorization'] ?? null);
 
                     return true;
                 }
@@ -198,11 +197,11 @@ final class ProxyServiceTest extends TestCase
         return new ProxyRequest(
             $method,
             $path,
+            $user ?? new User('no-agent@example.com', 'hash'),
             [],
             [],
             '',
             $agentId,
-            $user ?? new User('no-agent@example.com', 'hash'),
         );
     }
 

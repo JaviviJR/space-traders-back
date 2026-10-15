@@ -7,6 +7,7 @@ namespace App\Tests\SpaceTraders\Proxy;
 use App\Http\HttpResponseEnvelope;
 use App\SpaceTraders\Exception\ApiException;
 use App\SpaceTraders\Proxy\GatewayInterface;
+use App\SpaceTraders\Proxy\ProxyRequest;
 
 final class FakeGateway implements GatewayInterface
 {
@@ -36,9 +37,9 @@ final class FakeGateway implements GatewayInterface
         return $this->lastPath;
     }
 
-    public function request(string $method, string $path, array $options = []): HttpResponseEnvelope
+    public function request(ProxyRequest $proxyRequest): HttpResponseEnvelope
     {
-        $this->lastPath = $path;
+        $this->lastPath = $proxyRequest->path;
 
         if (null !== $this->exception) {
             throw $this->exception;

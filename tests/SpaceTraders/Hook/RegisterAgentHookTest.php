@@ -135,11 +135,10 @@ final class RegisterAgentHookTest extends TestCase
         return new ProxyRequest(
             $method,
             $path,
+            $user ?? new User('no-register@example.com', 'hash'),
             [],
             [],
             '',
-            null,
-            $user ?? new User('no-register@example.com', 'hash'),
         );
     }
 }

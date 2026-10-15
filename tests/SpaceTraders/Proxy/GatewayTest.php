@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\SpaceTraders\Proxy;
 
+use App\Entity\User;
 use App\SpaceTraders\Exception\ApiException;
 use App\SpaceTraders\Proxy\Gateway;
+use App\SpaceTraders\Proxy\ProxyRequest;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -17,8 +19,13 @@ final class GatewayTest extends TestCase
     {
         $httpClient = new MockHttpClient([new MockResponse('{"data":{"foo":"bar"}}', ['http_code' => 200])]);
         $gateway = new Gateway($httpClient);
+        $request = new ProxyRequest(
+            method: 'GET',
+            path: 'my/agent',
+            user: new User('no-agent@example.com', 'hash'),
+        );
 
-        $response = $gateway->request('GET', 'my/agent');
+        $response = $gateway->request($request);
 
         self::assertSame(200, $response->statusCode);
         self::assertSame('{"data":{"foo":"bar"}}', $response->body);
@@ -30,8 +37,13 @@ final class GatewayTest extends TestCase
         // not translated. Only a genuine transport failure is.
         $httpClient = new MockHttpClient([new MockResponse('{"error":"symbol already taken"}', ['http_code' => 422])]);
         $gateway = new Gateway($httpClient);
+        $request = new ProxyRequest(
+            method: 'POST',
+            path: 'register',
+            user: new User('no-agent@example.com', 'hash'),
+        );
 
-        $response = $gateway->request('POST', 'register');
+        $response = $gateway->request($request);
 
         self::assertSame(422, $response->statusCode);
         self::assertSame('{"error":"symbol already taken"}', $response->body);
@@ -43,9 +55,14 @@ final class GatewayTest extends TestCase
             throw new TransportException('Connection reset by peer.');
         });
         $gateway = new Gateway($httpClient);
+        $request = new ProxyRequest(
+            method: 'GET',
+            path: 'my/agent',
+            user: new User('no-agent@example.com', 'hash'),
+        );
 
         $this->expectException(ApiException::class);
 
-        $gateway->request('GET', 'my/agent');
+        $gateway->request($request);
     }
 }

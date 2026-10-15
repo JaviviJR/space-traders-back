@@ -30,11 +30,11 @@ final class SpaceTradersProxyController extends AbstractController
         $proxyRequest = new ProxyRequest(
             $request->getMethod(),
             $path,
+            $user,
             $request->query->all(),
             $this->forwardableHeaders($request),
             $request->getContent(),
             $request->headers->get('X-Agent-Id'),
-            $user,
         );
 
         $result = $this->proxyService->handle($proxyRequest);

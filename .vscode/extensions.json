@@ -14,6 +14,7 @@
     "symfony.language-tools",
     "neilbrayfield.php-docblocker",
     "jaguadoromero.vscode-php-create-class",
-    "emallin.phpunit"
+    "emallin.phpunit",
+    "phproberto.vscode-php-getters-setters"
   ]
 }

@@ -14,7 +14,7 @@ use App\Entity\User;
  * fields decodes it itself). $agentId is the raw `X-Agent-Id` header value,
  * not yet resolved to an Agent.
  */
-final readonly class ProxyRequest
+final class ProxyRequest
 {
     /**
      * @param array<string, mixed>  $query
@@ -23,11 +23,16 @@ final readonly class ProxyRequest
     public function __construct(
         public string $method,
         public string $path,
-        public array $query,
-        public array $headers,
-        public string $body,
-        public ?string $agentId,
         public User $user,
+        public array $query = [],
+        public array $headers = [],
+        public ?string $body = null,
+        public ?string $agentId = null,
     ) {
+    }
+
+    public function addHeader(string $name, string $value): void
+    {
+        $this->headers[$name] = $value;
     }
 }
