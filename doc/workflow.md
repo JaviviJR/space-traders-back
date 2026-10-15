@@ -47,7 +47,15 @@ How the user works with Claude on this project. Applies to every session.
   command and wait for the result, then verify it by reading files.
 - When asked to split a plan into sequential blocks, reorder the explanations
   already given as-is into blocks — don't compress or re-summarize them into
-  shorter bullets.
+  shorter bullets. The functional-effect / design-rationale split from
+  "Proposals" above still applies per item once grouped into blocks.
+- Order blocks by real dependency (e.g. install before code, model before
+  service, service before controller), not by an arbitrary partition of the
+  content. If the plan has no valid linear order (independent blocks, a
+  circular dependency, or a block needing decisions from several later blocks
+  at once), say so explicitly and propose how to resolve it (parallel blocks,
+  merging blocks, asking for a decision first) instead of forcing a
+  sequence.
 
 ## Subagents
 

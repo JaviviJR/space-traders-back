@@ -149,7 +149,8 @@ things up in the project instead of relying on memory:
   included), always consult its official documentation first when you need to
   understand how it works. Only fall back to reading the package's source
   under `vendor/` if the docs don't settle the question or don't cover the
-  installed version.
+  installed version. When that fallback is needed, label what you report from
+  `vendor/` as a code-derived inference, not a documented guarantee.
 
 ## Architecture decisions
 

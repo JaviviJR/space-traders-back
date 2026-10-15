@@ -4,6 +4,7 @@
   "service": "php",
   "workspaceFolder": "/home/developer/app",
   "shutdownAction": "none",
+  "initializeCommand": "docker run --rm -v claude-code-config:/data alpine chown -R 1000:1000 /data",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
