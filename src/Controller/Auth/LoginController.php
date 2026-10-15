@@ -42,9 +42,9 @@ final class LoginController extends AbstractController
 
         $pair = $this->refreshTokenService->issue($user);
 
-        $response = $this->envelope->success(new AccessTokenResponseData($pair->accessToken));
-        $response->headers->setCookie($this->cookieFactory->create($pair->refreshToken, $pair->refreshTokenExpiresAt));
-
-        return $response;
+        return $this->envelope->success(
+            new AccessTokenResponseData($pair->accessToken),
+            headers: ['Set-Cookie' => (string) $this->cookieFactory->create($pair->refreshToken, $pair->refreshTokenExpiresAt)],
+        );
     }
 }

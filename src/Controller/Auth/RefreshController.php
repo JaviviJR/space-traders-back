@@ -36,10 +36,11 @@ final class RefreshController extends AbstractController
 
             $user = $this->refreshTokenService->verify($plaintext);
         } catch (InvalidRefreshTokenException $exception) {
-            $response = $this->envelope->error(new ErrorResponseData('invalid_refresh_token', $exception->getMessage()), 401);
-            $response->headers->setCookie($this->cookieFactory->clear());
-
-            return $response;
+            return $this->envelope->error(
+                new ErrorResponseData('invalid_refresh_token', $exception->getMessage()),
+                401,
+                headers: ['Set-Cookie' => (string) $this->cookieFactory->clear()],
+            );
         }
 
         $accessToken = $this->refreshTokenService->createAccessToken($user);

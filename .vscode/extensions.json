@@ -1,6 +1,20 @@
 {
   "recommendations": [
     "SanderRonde.phpstan-vscode",
-    "bmewburn.vscode-intelephense-client"
+    "phpactor.phpactor",
+    "naumovs.color-highlight",
+    "eamodio.gitlens",
+    "redhat.vscode-yaml",
+    "phpactor.vscode-phpactor",
+    "vix.rector-vscode",
+    "xdebug.php-debug",
+    "junstyle.php-cs-fixer",
+    "editorconfig.editorconfig",
+    "mehedidracula.php-namespace-resolver",
+    "symfony.language-tools",
+    "neilbrayfield.php-docblocker",
+    "jaguadoromero.vscode-php-create-class",
+    "emallin.phpunit",
+    "phproberto.vscode-php-getters-setters"
   ]
 }

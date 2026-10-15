@@ -37,7 +37,7 @@ All of these share a single physical route
 logical endpoint to attach attributes to — hand-writing `#[OA\...]` per
 endpoint isn't an option here the way it is for back-only ones.
 
-Instead, `App\SpaceTraders\OpenApi\SpaceTradersProxyDescriber` implements
+Instead, `App\SpaceTraders\OpenApi\ProxyDescriber` implements
 Nelmio's `DescriberInterface` — **not** auto-tagged by the bundle (unlike
 `ModelDescriberInterface`/`TypeDescriberInterface`/
 `RouteArgumentDescriberInterface`), so it carries its own
@@ -60,11 +60,11 @@ repository publishes. Stable and offline, at the cost of going stale silently
 until someone re-fetches it; re-vendoring is a manual, occasional step (no
 command for it yet — see TODO).
 
-**Hiding the physical catch-all route:** `SpaceTradersProxyController`'s own
+**Hiding the physical catch-all route:** `App\Controller\SpaceTraders\SpaceTradersProxyController`'s own
 route (`/api/spacetraders/{path}`) must not also show up in the generated
 document via Nelmio's normal attribute reflection — it would be redundant
 with, and confusing next to, the synthetic operations
-`SpaceTradersProxyDescriber` already injects. Excluded via
+`App\SpaceTraders\OpenApi\ProxyDescriber` already injects. Excluded via
 `config/packages/nelmio_api_doc.yaml`'s `areas.path_patterns`
 (`^/api(?!/doc$)(?!/spacetraders)`), which drops the whole
 `/api/spacetraders/*` family from reflection-based documentation. Two other
@@ -75,22 +75,23 @@ several rendered areas, more machinery than needed to hide a single
 controller's route.
 
 **Operations in scope:** a representative subset for this first pass
-(`SpaceTradersProxyDescriber::OPERATIONS`): server status (`GET /`), agent
+(`App\SpaceTraders\OpenApi\ProxyDescriber::OPERATIONS`): server status (`GET /`), agent
 registration (`POST /register`) and listing ships (`GET /my/ships`). Picked
 to exercise both plain pass-through operations and one with a hook
 augmentation. Expand the list to document more.
 
-**Hook augmentations:** `SpaceTradersResponseAugmenterInterface` (see
+**Hook augmentations:** `App\SpaceTraders\Response\AugmentInterface` (see
 "Proxy design" in architecture.md) has a doc-time counterpart to `augment()`:
-`describedAugmentation(): SpaceTradersAugmentationSchema`, returning which
-operation (method + path) the hook adds fields to and the
-`SpaceTradersAugmentationData` class those fields come from.
-`SpaceTradersProxyDescriber` asks every hook for it and merges the class's
+`describedAugmentation(): App\SpaceTraders\Response\AugmentationSchema`, returning which
+operation (method + path) the hook adds fields to and the `ResponseData`
+class those fields come from (the same marker back-only responses use —
+see "Proxy design" in architecture.md).
+`App\SpaceTraders\OpenApi\ProxyDescriber` asks every hook for it and merges the class's
 public properties into the matching operation's response schema as siblings
 of `data` — no edit to the describer needed when a new augmenting hook is
 added (Open/Closed: extension by implementing the method on the new hook, not
 by editing a central list). Deliberately separate from `supports()`, which
-needs a real `SpaceTradersProxyRequest` (and a real `User`) to decide — doc
+needs a real `App\SpaceTraders\Proxy\ProxyRequest` (and a real `User`) to decide — doc
 generation has neither, so this duplicates the path/method match in a small,
 hook-local way rather than fabricating a request just to ask.
 
@@ -103,5 +104,5 @@ one. Update the schema in the same change that redacts it at runtime.
 
 - No command re-fetches/re-bundles `resources/spacetraders/openapi.json` yet;
   it's a manual re-export from SpaceTraders' spec when it changes.
-- Expand `SpaceTradersProxyDescriber::OPERATIONS` beyond the representative
+- Expand `App\SpaceTraders\OpenApi\ProxyDescriber::OPERATIONS` beyond the representative
   subset above.

@@ -1,0 +1,41 @@
+{
+  // Config local para trabajar SIN abrir el proyecto dentro de un devcontainer.
+  // Linter PHP built-in desactivado: Intelephense no necesita binario PHP real,
+  // y así evitamos depender de una ruta de host hacia el contenedor.
+  // "php.validate.enable": false,
+  // Symfony for VSCode ejecuta sus comandos de consola dentro del contenedor
+  // via "docker exec", sin depender de ninguna ruta de host.
+  "symfony-vscode.shellExecutable": "/bin/bash",
+  "symfony-vscode.shellCommand": "docker exec -e XDEBUG_MODE=off space-trader-backend-php php \"$@\"",
+  //"intelephense.environment.phpVersion": "8.4.0",
+  // Phpactor (extension phpactor.phpactor) corre via stdio dentro del
+  // contenedor "php" (ver bin/phpactor-docker), sin depender de ninguna ruta
+  // de host en la extension (docker exec usa la misma ruta absoluta que ve
+  // VSCode, ver docker/compose.yml).
+  "phpactor.executablePath": "bin/phpactor-docker",
+//   "phpactor.executablePath": "docker exec space-trader-backend-php php /opt/phpactor/bin/phpactor \"$@\"",
+  "phpactor.path": "/opt/phpactor/bin/phpactor",
+  "search.exclude": {
+    "**/vendor": true,
+    "**/var": true
+  },
+  "php.suggest.basic": false,
+  // PHPStan (SanderRonde.phpstan-vscode) ejecutado en el contenedor php via bin/phpstan-docker.
+  "phpstan.binCommand": ["${workspaceFolder}/bin/phpstan-docker"],
+  "phpstan.paths": { "${workspaceFolder}": "/home/developer/app" },
+  "phpstan.configFile": "phpstan.dist.neon",
+  "phpstan.showTypeOnHover": true,
+  "phpstan.dockerContainerName": "space-trader-backend-php",
+  "phpstan.singleFileMode": true,
+  "php-cs-fixer.autoFixByBracket": true,
+  "php-cs-fixer.autoFixBySemicolon": true,
+  "php-cs-fixer.executablePath": "${workspaceFolder}/bin/php-cs-fixer-docker",
+  "php-cs-fixer.onsave": true,
+  "php-cs-fixer.allowRisky": false,
+  "php-cs-fixer.config": "${workspaceFolder}/.php-cs-fixer.dist.php",
+  "php-cs-fixer.tmpDir": "/tmp/php-cs-fixer",
+  "[php]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "junstyle.php-cs-fixer"
+  },
+}

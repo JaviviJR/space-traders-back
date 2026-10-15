@@ -24,14 +24,32 @@ RUN git config --global --add safe.directory /home/app
 
 RUN ln -sf /usr/local/bin/php /usr/bin/php
 
-FROM base AS dev
+FROM base AS dev-base
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 RUN sed -i 's/^memory_limit = .*/memory_limit = 1024M/' "$PHP_INI_DIR/php.ini"
 
+RUN mkdir -p /tmp/php-cs-fixer
+
+FROM dev-base AS dev
+
 RUN install-php-extensions xdebug
 
 COPY --chmod=0644 xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+COPY --chmod=0755 php-no-xdebug /usr/local/bin/php-no-xdebug
+
+RUN mkdir -p /tmp/php-cs-fixer
+
+RUN git clone --depth 1 https://github.com/phpactor/phpactor.git /opt/phpactor \
+    && composer install -d /opt/phpactor --no-dev --no-interaction --optimize-autoloader \
+    && ln -s /opt/phpactor/bin/phpactor /usr/local/bin/phpactor
+
+RUN mkdir -p /home/developer/.local/share/phpactor \
+    && printf '{"/home/developer/app": true}' > /home/developer/.local/share/phpactor/trust.json \
+    && chown -R developer:developer /home/developer/.local/share/phpactor
+
+RUN git config --global --add safe.directory /opt/phpactor
 
 FROM base AS prod
 
