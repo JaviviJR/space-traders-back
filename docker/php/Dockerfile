@@ -37,24 +37,15 @@ COPY --chmod=0755 php-no-xdebug /usr/local/bin/php-no-xdebug
 
 RUN mkdir -p /tmp/php-cs-fixer
 
-FROM dev AS phpactor-server
-
 RUN git clone --depth 1 https://github.com/phpactor/phpactor.git /opt/phpactor \
     && composer install -d /opt/phpactor --no-dev --no-interaction --optimize-autoloader \
     && ln -s /opt/phpactor/bin/phpactor /usr/local/bin/phpactor
 
-ARG APP_DIR_ABS
 RUN mkdir -p /home/developer/.local/share/phpactor \
-    && printf '{"%s": true, "/home/developer/app": true}' "${APP_DIR_ABS}" > /home/developer/.local/share/phpactor/trust.json \
+    && printf '{"/home/developer/app": true}' > /home/developer/.local/share/phpactor/trust.json \
     && chown -R developer:developer /home/developer/.local/share/phpactor
 
-# RUN mkdir -p /home/developer/.local/share/phpactor \
-#     && printf '{"%s": true}' "/home/developer/app" > /home/developer/.local/share/phpactor/trust.json \
-#     && chown -R developer:developer /home/developer/.local/share/phpactor
-
 RUN git config --global --add safe.directory /opt/phpactor
-
-RUN mkdir -p /tmp/php-cs-fixer
 
 FROM base AS prod
 

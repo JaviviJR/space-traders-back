@@ -1,0 +1,37 @@
+ok, seguimos, que set de reglas le pongo?                                                                                                                                                                       
+
+● Con lo que ya hemos visto, te propongo dividir las reglas en dos bloques: uno conservador para empezar ya, y uno más agresivo que dejamos para después de revisar el primer diff.
+
+  Bloque 1 — conservador, entra ya
+  <?php
+
+  declare(strict_types=1);
+
+  use Rector\Config\RectorConfig;
+ 
+  return RectorConfig::configure()
+      ->withPaths([
+          __DIR__ . '/src',
+      ])
+      ->withPhpSets(php85: true)
+      ->withComposerBased(
+          symfony: true,
+          doctrine: true,
+          twig: true,
+          phpunit: true,
+      )   
+      ->withPreparedSets(
+          deadCode: true,
+          typeDeclarations: true,
+      );
+          
+  - withPhpSets(php85: true) y withComposerBased(...): ya los teníamos, autogateados por versión instalada — riesgo bajo.
+  - deadCode: true: elimina variables/propiedades/métodos/imports sin usar. Diff moderado, pero casi siempre correcto.
+  - typeDeclarations: true: añade tipos donde se pueden inferir con certeza (devuelve, parámetros). Útil de cara a PHPStan nivel 9, y conservador porque solo actúa cuando el tipo es inequívoco.
+  
+  Bloque 2 — más opinionado, lo añadimos después de ver el primer dry-run
+  - codeQuality: true / codingStyle: true: el que más diff genera (simplifica condicionales, early returns, orden de imports). codingStyle además puede chocar con vuestro php-cs-fixer.
+  - symfonyCodeQuality: true / doctrineCodeQuality: true: reglas opinionadas específicas de controllers/servicios y de entidades/repos.
+  - phpunitCodeQuality: true / phpunitNarrowAsserts: true: asserts más específicos en tests (ej. assertCount en vez de assertEquals(count(...))).
+
+  ¿Te parece bien este reparto? Si confirmas, escribo el rector.php del bloque 1 y corremos el dry-run para ver el diff real antes de tocar nada en src.
