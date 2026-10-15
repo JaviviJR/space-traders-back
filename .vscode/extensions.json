@@ -3,14 +3,16 @@
     "SanderRonde.phpstan-vscode",
     "phpactor.phpactor",
     "naumovs.color-highlight",
-    "mikestead.dotenv",
-    "usernamehw.errorlens",
-    "ecmel.vscode-html-css",
-    "junstyle.php-cs-fixer",
-    "xdebug.php-debug",
-    "phproberto.vscode-php-getters-setters",
-    "thenouillet.symfony-vscode",
+    "eamodio.gitlens",
+    "redhat.vscode-yaml",
     "phpactor.vscode-phpactor",
-    "redhat.vscode-yaml"
+    "vix.rector-vscode",
+    "xdebug.php-debug",
+    "junstyle.php-cs-fixer",
+    "editorconfig.editorconfig",
+    "mehedidracula.php-namespace-resolver",
+    "symfony.language-tools",
+    "neilbrayfield.php-docblocker",
+    "jaguadoromero.vscode-php-create-class"
   ]
 }
