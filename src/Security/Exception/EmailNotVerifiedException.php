@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Security\Exception;
 
-final class EmailNotVerifiedException extends \RuntimeException
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
+
+final class EmailNotVerifiedException extends CustomUserMessageAccountStatusException
 {
     public static function becauseEmailIsNotVerified(): self
     {

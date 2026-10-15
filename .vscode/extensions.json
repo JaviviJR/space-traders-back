@@ -3,7 +3,6 @@
     "SanderRonde.phpstan-vscode",
     "phpactor.phpactor",
     "naumovs.color-highlight",
-    "eamodio.gitlens",
     "redhat.vscode-yaml",
     "phpactor.vscode-phpactor",
     "vix.rector-vscode",
@@ -15,6 +14,12 @@
     "neilbrayfield.php-docblocker",
     "jaguadoromero.vscode-php-create-class",
     "emallin.phpunit",
-    "phproberto.vscode-php-getters-setters"
+    "phproberto.vscode-php-getters-setters",
+    "mikestead.dotenv",
+    "mblode.twig-language-2",
+    "waderyan.gitblame",
+    "mhutchie.git-graph",
+    "donjayamanne.githistory",
+    "github.vscode-pull-request-github"
   ]
 }

@@ -8,7 +8,6 @@
     "vscode": {
       "extensions": [
         "naumovs.color-highlight",
-        "eamodio.gitlens",
         "ecmel.vscode-html-css",
         "redhat.vscode-yaml",
         "SanderRonde.phpstan-vscode",
@@ -23,7 +22,13 @@
         "emallin.phpunit",
         "mblode.twig-language-2",
         "neilbrayfield.php-docblocker",
-        "phproberto.vscode-php-getters-setters"
+        "phproberto.vscode-php-getters-setters",
+        "mikestead.dotenv",
+        "waderyan.gitblame",
+        "mhutchie.git-graph",
+        "donjayamanne.githistory",
+        "GitHub.vscode-pull-request-github",
+        "Anthropic.claude-code"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

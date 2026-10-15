@@ -4,47 +4,20 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
-use App\Http\EnvelopeResponseFactory;
-use App\Security\Dto\AccessTokenResponseData;
-use App\Security\Dto\LoginDto;
-use App\Security\Exception\EmailNotVerifiedException;
-use App\Security\Exception\InvalidCredentialsException;
-use App\Security\LoginService;
-use App\Security\RefreshTokenCookieFactory;
-use App\Security\RefreshTokenService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Routing anchor only: the `login` firewall's json_login authenticator
+ * intercepts every request to this route before the kernel resolves a
+ * controller, so this body is unreachable in normal operation.
+ */
 final class LoginController extends AbstractController
 {
-    public function __construct(
-        private readonly LoginService $loginService,
-        private readonly RefreshTokenService $refreshTokenService,
-        private readonly RefreshTokenCookieFactory $cookieFactory,
-        private readonly EnvelopeResponseFactory $envelope,
-    ) {
-    }
-
     #[Route('/auth/login', methods: ['POST'])]
-    public function __invoke(#[MapRequestPayload] LoginDto $dto): JsonResponse
+    public function __invoke(): JsonResponse
     {
-        try {
-            $user = $this->loginService->authenticate($dto);
-        } catch (InvalidCredentialsException $exception) {
-            throw new UnauthorizedHttpException('Bearer', $exception->getMessage(), $exception);
-        } catch (EmailNotVerifiedException $exception) {
-            throw new AccessDeniedHttpException($exception->getMessage(), $exception);
-        }
-
-        $pair = $this->refreshTokenService->issue($user);
-
-        return $this->envelope->success(
-            new AccessTokenResponseData($pair->accessToken),
-            headers: ['Set-Cookie' => (string) $this->cookieFactory->create($pair->refreshToken, $pair->refreshTokenExpiresAt)],
-        );
+        throw new \LogicException('Unreachable: handled by json_login.');
     }
 }
