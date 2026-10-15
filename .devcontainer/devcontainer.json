@@ -3,5 +3,42 @@
   "dockerComposeFile": "../docker/compose.yml",
   "service": "php",
   "workspaceFolder": "/home/developer/app",
-  "shutdownAction": "none"
+  "shutdownAction": "none",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "formulahendry.auto-complete-tag",
+        "naumovs.color-highlight",
+        "ms-azuretools.vscode-containers",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "ecmel.vscode-html-css",
+        "phproberto.vscode-php-getters-setters",
+        "TheNouillet.symfony-vscode",
+        "redhat.vscode-yaml",
+        "SanderRonde.phpstan-vscode",
+        "xdebug.php-debug",
+        "phpactor.vscode-phpactor"
+      ],
+      "settings": {
+        "symfony-vscode.phpExecutablePath": "/usr/local/bin/php-no-xdebug",
+        "phpstan.configFile": "phpstan.dist.neon",
+        "phpstan.showTypeOnHover": true,
+        "search.exclude": {
+            "**/vendor": true,
+            "**/var": true
+        },
+        "php.suggest.basic": false,
+        "phpstan.singleFileMode": true,
+        "php-cs-fixer.autoFixByBracket": true,
+        "php-cs-fixer.autoFixBySemicolon": true,
+        "php-cs-fixer.onsave": true,
+        "php-cs-fixer.allowRisky": false,
+        "[php]": {
+            "editor.formatOnSave": true,
+            "editor.defaultFormatter": "junstyle.php-cs-fixer"
+        }
+      }
+    }
+  }
 }

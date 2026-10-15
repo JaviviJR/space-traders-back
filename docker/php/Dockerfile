@@ -33,6 +33,8 @@ RUN install-php-extensions xdebug
 
 COPY --chmod=0644 xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
+COPY --chmod=0755 php-no-xdebug /usr/local/bin/php-no-xdebug
+
 RUN mkdir -p /tmp/php-cs-fixer
 
 FROM dev AS phpactor-server
