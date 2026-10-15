@@ -6,10 +6,14 @@ namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
 use App\Http\ErrorResponseData;
+use App\OpenApi\Attribute\DataResponse;
+use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\AccessTokenResponseData;
 use App\Security\Exception\InvalidRefreshTokenException;
 use App\Security\RefreshTokenCookieFactory;
 use App\Security\RefreshTokenService;
+use Nelmio\ApiDocBundle\Attribute\Security;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +29,18 @@ final class RefreshController extends AbstractController
     }
 
     #[Route('/auth/refresh', methods: ['POST'])]
+    #[OA\Tag(name: 'Account')]
+    #[Security(name: null)]
+    #[DataResponse(
+        model: AccessTokenResponseData::class,
+        status: 200,
+        description: 'New access token issued for the refresh token cookie presented',
+    )]
+    #[ErrorResponse(
+        status: 401,
+        description: 'Missing, invalid, expired or revoked refresh token (invalid_refresh_token). '
+            .'The refresh token cookie is cleared via Set-Cookie on this response.',
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         $plaintext = $this->cookieFactory->readFrom($request);
