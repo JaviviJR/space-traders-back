@@ -7,12 +7,12 @@
     "redhat.vscode-yaml",
     "phpactor.vscode-phpactor",
     "vix.rector-vscode",
-    "phproberto.vscode-php-getters-setters",
     "xdebug.php-debug",
     "junstyle.php-cs-fixer",
-    "pkief.material-icon-theme",
     "editorconfig.editorconfig",
     "mehedidracula.php-namespace-resolver",
-    "symfony.language-tools"
+    "symfony.language-tools",
+    "neilbrayfield.php-docblocker",
+    "jaguadoromero.vscode-php-create-class"
   ]
 }
