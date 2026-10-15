@@ -9,9 +9,9 @@
       "type": "php",
       "request": "launch",
       "port": 9004,
-      "pathMappings": {
-        "/home/developer/app": "${workspaceFolder}"
-      }
+    //   "pathMappings": {
+    //     "/home/developer/app": "${workspaceFolder}"
+    //   }
     }
   ]
 }

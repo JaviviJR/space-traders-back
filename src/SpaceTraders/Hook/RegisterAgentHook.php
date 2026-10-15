@@ -8,12 +8,11 @@ use App\Entity\Agent;
 use App\Http\HttpResponseEnvelope;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
-use App\SpaceTraders\SpaceTradersApiResponse;
-use App\SpaceTraders\SpaceTradersAugmentationSchema;
-use App\SpaceTraders\SpaceTradersProxyRequest;
-use App\SpaceTraders\SpaceTradersResponseAugmentation;
-use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
-use App\SpaceTraders\SpaceTradersRouteHookInterface;
+use App\SpaceTraders\Proxy\ProxyRequest;
+use App\SpaceTraders\Response\AugmentationSchema;
+use App\SpaceTraders\Response\AugmentData;
+use App\SpaceTraders\Response\AugmentInterface;
+use App\SpaceTraders\RouteHookInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -28,7 +27,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * instance state: this service lives for a single request (classic PHP-FPM
  * lifecycle, one container per request), never reused across requests.
  */
-final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTradersResponseAugmenterInterface
+final class RegisterAgentHook implements RouteHookInterface, AugmentInterface
 {
     private ?Agent $registeredAgent = null;
 
@@ -38,17 +37,17 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
     ) {
     }
 
-    public function supports(SpaceTradersProxyRequest $request): bool
+    public function supports(ProxyRequest $request): bool
     {
         return 'register' === $request->path && 'POST' === $request->method;
     }
 
-    public function beforeForward(SpaceTradersProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope
+    public function beforeForward(ProxyRequest $request, ?Agent $agent): ?HttpResponseEnvelope
     {
         return null;
     }
 
-    public function afterForward(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): SpaceTradersApiResponse
+    public function afterForward(ProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): HttpResponseEnvelope
     {
         if ($response->statusCode >= 300) {
             return $response;
@@ -85,7 +84,7 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
         return $response;
     }
 
-    public function augment(SpaceTradersProxyRequest $request, ?Agent $agent, SpaceTradersApiResponse $response): ?SpaceTradersResponseAugmentation
+    public function augment(ProxyRequest $request, ?Agent $agent, HttpResponseEnvelope $response): ?AugmentData
     {
         $agentId = $this->registeredAgent?->getId();
 
@@ -93,11 +92,11 @@ final class RegisterAgentHook implements SpaceTradersRouteHookInterface, SpaceTr
             return null;
         }
 
-        return new SpaceTradersResponseAugmentation(new RegisterAgentAugmentationData($agentId));
+        return new AugmentData(new RegisterAgentAugmentationData($agentId));
     }
 
-    public function describedAugmentation(): SpaceTradersAugmentationSchema
+    public function describedAugmentation(): AugmentationSchema
     {
-        return new SpaceTradersAugmentationSchema('POST', 'register', RegisterAgentAugmentationData::class);
+        return new AugmentationSchema('POST', 'register', RegisterAgentAugmentationData::class);
     }
 }

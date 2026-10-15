@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders\OpenApi;
 
-use App\SpaceTraders\SpaceTradersAugmentationSchema;
-use App\SpaceTraders\SpaceTradersResponseAugmenterInterface;
-use App\SpaceTraders\SpaceTradersRouteHookInterface;
+use App\SpaceTraders\Response\AugmentationSchema;
+use App\SpaceTraders\Response\AugmentInterface;
+use App\SpaceTraders\RouteHookInterface;
 use Nelmio\ApiDocBundle\Describer\DescriberInterface;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
 use OpenApi\Annotations as OA;
@@ -27,12 +27,12 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
  * in the docs too.
  *
  * Any App\SpaceTraders\Hook that also implements
- * SpaceTradersResponseAugmenterInterface adds its extra top-level fields to
- * the matching operation's response schema automatically, via
+ * App\SpaceTraders\Response\AugmentInterface adds its extra top-level fields
+ * to the matching operation's response schema automatically, via
  * describedAugmentation() — no edit needed here when a new one is added.
  */
 #[Autoconfigure(tags: ['nelmio_api_doc.describer.default'])]
-final class SpaceTradersProxyDescriber implements DescriberInterface
+final class ProxyDescriber implements DescriberInterface
 {
     private const string BASE_PATH = '/api/spacetraders';
 
@@ -55,7 +55,7 @@ final class SpaceTradersProxyDescriber implements DescriberInterface
     private readonly array $spec;
 
     /**
-     * @param iterable<SpaceTradersRouteHookInterface> $hooks
+     * @param iterable<RouteHookInterface> $hooks
      */
     public function __construct(
         #[Autowire('%kernel.project_dir%/resources/spacetraders/openapi.json')]
@@ -115,14 +115,14 @@ final class SpaceTradersProxyDescriber implements DescriberInterface
     }
 
     /**
-     * @return array<string, SpaceTradersAugmentationSchema> keyed by "method /path"
+     * @return array<string, AugmentationSchema> keyed by "method /path"
      */
     private function augmentationSchemasByOperation(): array
     {
         $schemas = [];
 
         foreach ($this->hooks as $hook) {
-            if (!$hook instanceof SpaceTradersResponseAugmenterInterface) {
+            if (!$hook instanceof AugmentInterface) {
                 continue;
             }
 
@@ -209,7 +209,7 @@ final class SpaceTradersProxyDescriber implements DescriberInterface
         return \is_array($schema) ? $schema : null;
     }
 
-    private function mergeAugmentation(OA\Operation $operation, SpaceTradersAugmentationSchema $schema): void
+    private function mergeAugmentation(OA\Operation $operation, AugmentationSchema $schema): void
     {
         $bodySchema = $this->successResponseSchema($operation);
 

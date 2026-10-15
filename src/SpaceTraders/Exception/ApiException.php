@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders\Exception;
 
-final class SpaceTradersApiException extends \RuntimeException
+final class ApiException extends \RuntimeException
 {
     public function __construct(
         private readonly int $statusCode,

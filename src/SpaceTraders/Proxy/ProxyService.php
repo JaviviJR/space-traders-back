@@ -2,32 +2,35 @@
 
 declare(strict_types=1);
 
-namespace App\SpaceTraders;
+namespace App\SpaceTraders\Proxy;
 
 use App\Entity\Agent;
 use App\Http\HttpResponseEnvelope;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
+use App\SpaceTraders\Response\AugmentInterface;
+use App\SpaceTraders\Response\HttpEnvelopeMerger;
+use App\SpaceTraders\RouteHookInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-final class SpaceTradersProxyService
+final class ProxyService
 {
     /**
-     * @param iterable<SpaceTradersRouteHookInterface> $hooks
+     * @param iterable<RouteHookInterface> $hooks
      */
     public function __construct(
-        private readonly SpaceTradersGatewayInterface $gateway,
+        private readonly GatewayInterface $gateway,
         private readonly AgentRepository $agentRepository,
         private readonly AgentTokenCipherInterface $agentTokenCipher,
-        private readonly SpaceTradersEnvelopeBuilder $envelopeBuilder,
+        private readonly HttpEnvelopeMerger $envelopeMerger,
         #[AutowireIterator('app.space_traders_route_hook')]
         private readonly iterable $hooks,
     ) {
     }
 
-    public function handle(SpaceTradersProxyRequest $request): HttpResponseEnvelope
+    public function handle(ProxyRequest $request): HttpResponseEnvelope
     {
         $agent = $this->resolveAgent($request);
         $hook = $this->findHook($request);
@@ -40,33 +43,27 @@ final class SpaceTradersProxyService
             }
         }
 
-        $options = [
-            'query' => $request->query,
-            'headers' => $request->headers,
-        ];
-
-        if ('' !== $request->body) {
-            $options['body'] = $request->body;
-        }
-
         if (null !== $agent) {
-            $options['headers']['Authorization'] = 'Bearer '.$this->agentTokenCipher->decrypt($agent->getEncryptedToken());
+            $request->addHeader(
+                'Authorization',
+                'Bearer '.$this->agentTokenCipher->decrypt($agent->getEncryptedToken())
+            );
         }
 
-        $apiResponse = $this->gateway->request($request->method, $request->path, $options);
+        $apiResponse = $this->gateway->request($request);
 
         if (null !== $hook) {
             $apiResponse = $hook->afterForward($request, $agent, $apiResponse);
         }
 
-        $augmentation = $hook instanceof SpaceTradersResponseAugmenterInterface
+        $extraData = $hook instanceof AugmentInterface
             ? $hook->augment($request, $agent, $apiResponse)
             : null;
 
-        return $this->envelopeBuilder->build($apiResponse, $augmentation);
+        return $this->envelopeMerger->merge($apiResponse, $extraData);
     }
 
-    private function resolveAgent(SpaceTradersProxyRequest $request): ?Agent
+    private function resolveAgent(ProxyRequest $request): ?Agent
     {
         if (null === $request->agentId) {
             return null;
@@ -85,7 +82,7 @@ final class SpaceTradersProxyService
         return $agent;
     }
 
-    private function findHook(SpaceTradersProxyRequest $request): ?SpaceTradersRouteHookInterface
+    private function findHook(ProxyRequest $request): ?RouteHookInterface
     {
         foreach ($this->hooks as $hook) {
             if ($hook->supports($request)) {

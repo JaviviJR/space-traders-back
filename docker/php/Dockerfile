@@ -24,10 +24,14 @@ RUN git config --global --add safe.directory /home/app
 
 RUN ln -sf /usr/local/bin/php /usr/bin/php
 
-FROM base AS dev
+FROM base AS dev-base
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 RUN sed -i 's/^memory_limit = .*/memory_limit = 1024M/' "$PHP_INI_DIR/php.ini"
+
+RUN mkdir -p /tmp/php-cs-fixer
+
+FROM dev-base AS dev
 
 RUN install-php-extensions xdebug
 

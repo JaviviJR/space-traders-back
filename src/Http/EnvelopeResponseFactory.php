@@ -5,32 +5,38 @@ declare(strict_types=1);
 namespace App\Http;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 final class EnvelopeResponseFactory
 {
     public function __construct(
-        private readonly SerializerInterface $serializer,
+        private readonly NormalizerInterface $normalizer,
     ) {
     }
 
     /**
-     * @param ResponseData|ResponseData[] $data
+     * @param array<string, string|string[]> $headers
+     * @param ResponseData|ResponseData[]    $data
      */
-    public function success(ResponseData|array $data, int $status = 200, ?Meta $meta = null): JsonResponse
+    public function success(ResponseData|array $data, int $status = 200, array $headers = []): JsonResponse
     {
-        $payload = ['data' => $data];
+        $data = ['data' => $this->normalizer->normalize($data)];
 
-        if (null !== $meta) {
-            $payload['meta'] = $meta;
-        }
-
-        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize($payload, 'json')));
+        return $this->toJsonResponse($this->build($data, $status, $headers));
     }
 
-    public function error(ResponseData $data, int $status): JsonResponse
+    /**
+     * @param array<string, string|string[]> $headers
+     */
+    public function error(ResponseData $data, int $status, array $headers = []): JsonResponse
     {
-        return $this->toJsonResponse(new HttpResponseEnvelope($status, $this->serializer->serialize(['error' => $data], 'json')));
+        return $this->toJsonResponse(
+            $this->build(
+                ['error' => $this->normalizer->normalize($data)],
+                $status,
+                $headers
+            )
+        );
     }
 
     /**
@@ -39,6 +45,23 @@ final class EnvelopeResponseFactory
      */
     public function toJsonResponse(HttpResponseEnvelope $envelope): JsonResponse
     {
-        return JsonResponse::fromJsonString($envelope->body, $envelope->statusCode, $envelope->headers);
+        return JsonResponse::fromJsonString(
+            $envelope->body,
+            $envelope->statusCode,
+            $envelope->headers
+        );
+    }
+
+    /**
+     * @param array<string, mixed>           $data
+     * @param array<string, string|string[]> $headers
+     */
+    private function build(array $data, int $status, array $headers): HttpResponseEnvelope
+    {
+        return new HttpResponseEnvelope(
+            $status,
+            json_encode($data, \JSON_THROW_ON_ERROR),
+            $headers
+        );
     }
 }

@@ -18,7 +18,12 @@
         "vix.rector-vscode",
         "EditorConfig.EditorConfig",
         "MehediDracula.php-namespace-resolver",
-        "symfony.language-tools"
+        "symfony.language-tools",
+        "jaguadoromero.vscode-php-create-class",
+        "emallin.phpunit",
+        "mblode.twig-language-2",
+        "neilbrayfield.php-docblocker",
+        "phproberto.vscode-php-getters-setters"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

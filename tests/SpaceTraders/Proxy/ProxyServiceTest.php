@@ -2,38 +2,38 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\SpaceTraders;
+namespace App\Tests\SpaceTraders\Proxy;
 
 use App\Entity\Agent;
 use App\Entity\User;
 use App\Http\HttpResponseEnvelope;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
-use App\SpaceTraders\SpaceTradersApiResponse;
-use App\SpaceTraders\SpaceTradersEnvelopeBuilder;
-use App\SpaceTraders\SpaceTradersGatewayInterface;
-use App\SpaceTraders\SpaceTradersProxyRequest;
-use App\SpaceTraders\SpaceTradersProxyService;
-use App\SpaceTraders\SpaceTradersResponseAugmentation;
+use App\SpaceTraders\Proxy\GatewayInterface;
+use App\SpaceTraders\Proxy\ProxyRequest;
+use App\SpaceTraders\Proxy\ProxyService;
+use App\SpaceTraders\Response\AugmentData;
+use App\SpaceTraders\Response\HttpEnvelopeMerger;
+use App\Tests\SpaceTraders\Response\MetaAugmentationData;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\SerializerInterface;
 
-final class SpaceTradersProxyServiceTest extends TestCase
+final class ProxyServiceTest extends TestCase
 {
     public function testPlainPassThroughRelaysTheGatewayResponseWithoutAnAuthorizationHeader(): void
     {
-        $gateway = new FakeSpaceTradersGateway();
+        $gateway = new FakeGateway();
         $gateway->willReturn('{"data":{"foo":"bar"}}', 200);
 
         $agentTokenCipher = $this->createMock(AgentTokenCipherInterface::class);
         $agentTokenCipher->expects(self::never())->method('decrypt');
 
-        $service = new SpaceTradersProxyService(
+        $service = new ProxyService(
             $gateway,
             $this->createStub(AgentRepository::class),
             $agentTokenCipher,
@@ -61,20 +61,19 @@ final class SpaceTradersProxyServiceTest extends TestCase
             ->with('encrypted-token')
             ->willReturn('raw-agent-token');
 
-        $gateway = $this->createMock(SpaceTradersGatewayInterface::class);
+        $gateway = $this->createMock(GatewayInterface::class);
         $gateway->expects(self::once())
             ->method('request')
-            ->with(self::anything(), self::anything(), self::callback(
-                /** @param array{headers: array<string, string>} $options */
-                static function (array $options): bool {
-                    self::assertSame('Bearer raw-agent-token', $options['headers']['Authorization'] ?? null);
+            ->with(self::callback(
+                static function (ProxyRequest $request): bool {
+                    self::assertSame('Bearer raw-agent-token', $request->headers['Authorization'] ?? null);
 
                     return true;
                 }
             ))
-            ->willReturn(new SpaceTradersApiResponse(200, '{}'));
+            ->willReturn(new HttpResponseEnvelope(200, '{}'));
 
-        $service = new SpaceTradersProxyService(
+        $service = new ProxyService(
             $gateway,
             $agentRepository,
             $agentTokenCipher,
@@ -90,8 +89,8 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $agentRepository = $this->createStub(AgentRepository::class);
         $agentRepository->method('find')->willReturn(null);
 
-        $service = new SpaceTradersProxyService(
-            new FakeSpaceTradersGateway(),
+        $service = new ProxyService(
+            new FakeGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
             $this->envelopeBuilder(),
@@ -112,8 +111,8 @@ final class SpaceTradersProxyServiceTest extends TestCase
         $agentRepository = $this->createStub(AgentRepository::class);
         $agentRepository->method('find')->willReturn($agent);
 
-        $service = new SpaceTradersProxyService(
-            new FakeSpaceTradersGateway(),
+        $service = new ProxyService(
+            new FakeGateway(),
             $agentRepository,
             $this->createStub(AgentTokenCipherInterface::class),
             $this->envelopeBuilder(),
@@ -127,13 +126,13 @@ final class SpaceTradersProxyServiceTest extends TestCase
 
     public function testAHookCanShortCircuitBeforeReachingSpaceTraders(): void
     {
-        $gateway = new FakeSpaceTradersGateway();
+        $gateway = new FakeGateway();
 
         $shortCircuitResult = new HttpResponseEnvelope(200, '{"data":{"short":"circuit"}}');
-        $hook = new FakeSpaceTradersRouteHook('register');
+        $hook = new FakeRouteHook('register');
         $hook->willShortCircuitWith($shortCircuitResult);
 
-        $service = new SpaceTradersProxyService(
+        $service = new ProxyService(
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
@@ -148,13 +147,13 @@ final class SpaceTradersProxyServiceTest extends TestCase
 
     public function testAHookCanTransformTheResponseAfterForwarding(): void
     {
-        $gateway = new FakeSpaceTradersGateway();
+        $gateway = new FakeGateway();
         $gateway->willReturn('{"data":{"token":"secret"}}', 201);
 
-        $hook = new FakeSpaceTradersRouteHook('register');
-        $hook->willTransformResponseWith(new SpaceTradersApiResponse(201, '{"data":{"redacted":true}}'));
+        $hook = new FakeRouteHook('register');
+        $hook->willTransformResponseWith(new HttpResponseEnvelope(201, '{"data":{"redacted":true}}'));
 
-        $service = new SpaceTradersProxyService(
+        $service = new ProxyService(
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
@@ -170,16 +169,16 @@ final class SpaceTradersProxyServiceTest extends TestCase
 
     public function testAnAugmenterHookAddsExtraFieldsAndHeadersWithoutOverridingSpaceTradersKeys(): void
     {
-        $gateway = new FakeSpaceTradersGateway();
+        $gateway = new FakeGateway();
         $gateway->willReturn('{"data":{"foo":"bar"}}', 200);
 
-        $hook = new FakeSpaceTradersRouteHook('my/ships');
-        $hook->willAugmentWith(new SpaceTradersResponseAugmentation(
+        $hook = new FakeRouteHook('my/ships');
+        $hook->willAugmentWith(new AugmentData(
             extra: new MetaAugmentationData(['tampered' => 'nope']),
             headers: ['X-Agent-Id' => '42'],
         ));
 
-        $service = new SpaceTradersProxyService(
+        $service = new ProxyService(
             $gateway,
             $this->createStub(AgentRepository::class),
             $this->createStub(AgentTokenCipherInterface::class),
@@ -193,25 +192,25 @@ final class SpaceTradersProxyServiceTest extends TestCase
         self::assertSame(['X-Agent-Id' => '42'], $result->headers);
     }
 
-    private function proxyRequest(string $method, string $path, ?string $agentId = null, ?User $user = null): SpaceTradersProxyRequest
+    private function proxyRequest(string $method, string $path, ?string $agentId = null, ?User $user = null): ProxyRequest
     {
-        return new SpaceTradersProxyRequest(
+        return new ProxyRequest(
             $method,
             $path,
+            $user ?? new User('no-agent@example.com', 'hash'),
             [],
             [],
             '',
             $agentId,
-            $user ?? new User('no-agent@example.com', 'hash'),
         );
     }
 
-    private function envelopeBuilder(): SpaceTradersEnvelopeBuilder
+    private function envelopeBuilder(): HttpEnvelopeMerger
     {
-        return new SpaceTradersEnvelopeBuilder($this->objectSerializer());
+        return new HttpEnvelopeMerger($this->objectSerializer());
     }
 
-    private function objectSerializer(): SerializerInterface
+    private function objectSerializer(): NormalizerInterface
     {
         return new Serializer([new ObjectNormalizer()], ['json' => new JsonEncoder()]);
     }
