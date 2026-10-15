@@ -9,6 +9,7 @@ use App\Entity\Agent;
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
 use App\Repository\AgentRepository;
+use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,14 +28,25 @@ final class AgentController extends AbstractController
     #[Route('/api/agents', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     #[OA\Tag(name: 'Account')]
+    #[OA\Response(
+        response: 200,
+        description: 'List of agents belonging to the authenticated user',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: new Model(type: AgentResponseData::class)),
+                ),
+            ],
+        ),
+    )]
     public function list(#[CurrentUser] User $user): JsonResponse
     {
         $agents = array_map(
             fn (Agent $agent): AgentResponseData => $this->toResponseData($agent),
             $this->agentRepository->findAllForUser($user),
         );
-
-        $total = \count($agents);
 
         return $this->envelope->success($agents);
     }

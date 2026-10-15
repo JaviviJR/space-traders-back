@@ -21,14 +21,14 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * already has — that would be a bug in the caller, so it throws rather than
  * silently picking a winner.
  */
-final class EnvelopeBuilder
+final class HttpEnvelopeMerger
 {
     public function __construct(
         private readonly NormalizerInterface $normalizer,
     ) {
     }
 
-    public function build(
+    public function merge(
         HttpResponseEnvelope $spaceTradersResponse,
         ?AugmentData $extraData,
     ): HttpResponseEnvelope {

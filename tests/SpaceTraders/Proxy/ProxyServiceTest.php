@@ -13,7 +13,7 @@ use App\SpaceTraders\Proxy\GatewayInterface;
 use App\SpaceTraders\Proxy\ProxyRequest;
 use App\SpaceTraders\Proxy\ProxyService;
 use App\SpaceTraders\Response\AugmentData;
-use App\SpaceTraders\Response\EnvelopeBuilder;
+use App\SpaceTraders\Response\HttpEnvelopeMerger;
 use App\Tests\SpaceTraders\Response\MetaAugmentationData;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -205,9 +205,9 @@ final class ProxyServiceTest extends TestCase
         );
     }
 
-    private function envelopeBuilder(): EnvelopeBuilder
+    private function envelopeBuilder(): HttpEnvelopeMerger
     {
-        return new EnvelopeBuilder($this->objectSerializer());
+        return new HttpEnvelopeMerger($this->objectSerializer());
     }
 
     private function objectSerializer(): NormalizerInterface

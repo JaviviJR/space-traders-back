@@ -9,7 +9,7 @@ use App\Http\HttpResponseEnvelope;
 use App\Repository\AgentRepository;
 use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Response\AugmentInterface;
-use App\SpaceTraders\Response\EnvelopeBuilder;
+use App\SpaceTraders\Response\HttpEnvelopeMerger;
 use App\SpaceTraders\RouteHookInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -24,7 +24,7 @@ final class ProxyService
         private readonly GatewayInterface $gateway,
         private readonly AgentRepository $agentRepository,
         private readonly AgentTokenCipherInterface $agentTokenCipher,
-        private readonly EnvelopeBuilder $envelopeBuilder,
+        private readonly HttpEnvelopeMerger $envelopeMerger,
         #[AutowireIterator('app.space_traders_route_hook')]
         private readonly iterable $hooks,
     ) {
@@ -60,7 +60,7 @@ final class ProxyService
             ? $hook->augment($request, $agent, $apiResponse)
             : null;
 
-        return $this->envelopeBuilder->build($apiResponse, $extraData);
+        return $this->envelopeMerger->merge($apiResponse, $extraData);
     }
 
     private function resolveAgent(ProxyRequest $request): ?Agent

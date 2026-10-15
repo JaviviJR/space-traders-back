@@ -15,8 +15,8 @@ final class EnvelopeResponseFactory
     }
 
     /**
-     * @param ResponseData|ResponseData[]    $data
      * @param array<string, string|string[]> $headers
+     * @param ResponseData|ResponseData[]    $data
      */
     public function success(ResponseData|array $data, int $status = 200, array $headers = []): JsonResponse
     {
@@ -30,7 +30,13 @@ final class EnvelopeResponseFactory
      */
     public function error(ResponseData $data, int $status, array $headers = []): JsonResponse
     {
-        return $this->toJsonResponse($this->build(['error' => $this->normalizer->normalize($data)], $status, $headers));
+        return $this->toJsonResponse(
+            $this->build(
+                ['error' => $this->normalizer->normalize($data)],
+                $status,
+                $headers
+            )
+        );
     }
 
     /**
@@ -39,7 +45,11 @@ final class EnvelopeResponseFactory
      */
     public function toJsonResponse(HttpResponseEnvelope $envelope): JsonResponse
     {
-        return JsonResponse::fromJsonString($envelope->body, $envelope->statusCode, $envelope->headers);
+        return JsonResponse::fromJsonString(
+            $envelope->body,
+            $envelope->statusCode,
+            $envelope->headers
+        );
     }
 
     /**
@@ -48,6 +58,10 @@ final class EnvelopeResponseFactory
      */
     private function build(array $data, int $status, array $headers): HttpResponseEnvelope
     {
-        return new HttpResponseEnvelope($status, json_encode($data, \JSON_THROW_ON_ERROR), $headers);
+        return new HttpResponseEnvelope(
+            $status,
+            json_encode($data, \JSON_THROW_ON_ERROR),
+            $headers
+        );
     }
 }
