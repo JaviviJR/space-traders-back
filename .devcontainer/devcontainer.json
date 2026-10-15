@@ -4,6 +4,16 @@
   "service": "php",
   "workspaceFolder": "/home/developer/app",
   "shutdownAction": "none",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "mounts": [
+    "source=claude-code-config,target=/home/developer/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/developer/.claude"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -21,23 +31,14 @@
         "jaguadoromero.vscode-php-create-class",
         "emallin.phpunit",
         "mblode.twig-language-2",
-        "neilbrayfield.php-docblocker",
         "phproberto.vscode-php-getters-setters",
         "mikestead.dotenv",
         "waderyan.gitblame",
         "mhutchie.git-graph",
         "donjayamanne.githistory",
-        "GitHub.vscode-pull-request-github"
+        "GitHub.vscode-pull-request-github",
+        "anthropic.claude-code"
       ],
-      "features": {
-        "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
-      },
-      "mounts": [
-        "source=claude-code-config,target=/home/developer/.claude,type=volume"
-      ],
-      "containerEnv": {
-        "CLAUDE_CONFIG_DIR": "/home/developer/.claude"
-      },
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
         "symfony-vscode.phpExecutablePath": "/usr/local/bin/php-no-xdebug",
