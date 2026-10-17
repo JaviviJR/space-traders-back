@@ -29,6 +29,7 @@ final class ConfirmEmailController extends AbstractController
     }
 
     #[Route('/auth/confirm-email', name: 'app_confirm_email', methods: ['POST'])]
+    #[OA\Post(operationId: 'confirmEmail')]
     #[OA\Tag(name: 'Account')]
     #[Security(name: null)]
     #[OA\RequestBody(content: new Model(type: ConfirmEmailDto::class))]

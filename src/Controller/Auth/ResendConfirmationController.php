@@ -29,6 +29,7 @@ final class ResendConfirmationController extends AbstractController
     }
 
     #[Route('/auth/resend-confirmation', methods: ['POST'])]
+    #[OA\Post(operationId: 'resendConfirmation')]
     #[OA\Tag(name: 'Account')]
     #[Security(name: null)]
     #[OA\RequestBody(content: new Model(type: ResendConfirmationDto::class))]

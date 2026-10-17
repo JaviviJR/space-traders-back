@@ -31,6 +31,7 @@ final class RegisterController extends AbstractController
     }
 
     #[Route('/auth/register', methods: ['POST'])]
+    #[OA\Post(operationId: 'registerUser')]
     #[OA\Tag(name: 'Account')]
     #[Security(name: null)]
     #[OA\RequestBody(content: new Model(type: RegisterUserDto::class))]

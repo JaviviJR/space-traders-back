@@ -21,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class LoginController extends AbstractController
 {
     #[Route('/auth/login', methods: ['POST'])]
+    #[OA\Post(operationId: 'login')]
     #[OA\Tag(name: 'Account')]
     #[Security(name: null)]
     #[OA\RequestBody(

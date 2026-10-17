@@ -29,6 +29,7 @@ final class RefreshController extends AbstractController
     }
 
     #[Route('/auth/refresh', methods: ['POST'])]
+    #[OA\Post(operationId: 'refreshToken')]
     #[OA\Tag(name: 'Account')]
     #[Security(name: null)]
     #[DataResponse(
