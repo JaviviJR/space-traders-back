@@ -31,6 +31,27 @@ RUN sed -i 's/^memory_limit = .*/memory_limit = 1024M/' "$PHP_INI_DIR/php.ini"
 
 RUN mkdir -p /tmp/php-cs-fixer
 
+# --- BEGIN manual Node.js install (temporary, see .devcontainer/devcontainer.json) ---
+#
+# The devcontainer normally gets Node.js from the
+# "ghcr.io/devcontainers/features/node:1" feature, but that feature is
+# currently disabled (commented out) in .devcontainer/devcontainer.json:
+# its install.sh calls `source` to load nvm, which breaks under dash on
+# Debian trixie (our php:8.5-fpm base), even on the latest 1.7.1 release
+# (devcontainers/features issues #565 and #1534). NodeSource's apt repo
+# doesn't support trixie either, so we install the official prebuilt
+# tarball from nodejs.org directly instead, which is distro-agnostic.
+#
+# Once the upstream feature is fixed for trixie, remove this block, delete
+# the ARG below, and re-enable the feature in devcontainer.json.
+ARG NODE_VERSION=24.22.0
+RUN apt-get install -y --no-install-recommends xz-utils \
+    && ARCH="$(dpkg --print-architecture | sed 's/amd64/x64/;s/arm64/arm64/')" \
+    && curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" \
+       | tar -xJ -C /usr/local --strip-components=1 \
+    && corepack enable
+# --- END manual Node.js install ---
+
 FROM dev-base AS dev
 
 RUN install-php-extensions xdebug

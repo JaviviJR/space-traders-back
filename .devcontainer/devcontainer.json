@@ -4,9 +4,15 @@
   "service": "php",
   "workspaceFolder": "/home/developer/app",
   "shutdownAction": "none",
+  "remoteUser": "developer",
   "initializeCommand": "docker run --rm -v claude-code-config:/data alpine chown -R 1000:1000 /data",
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {},
+    // Disabled: the feature's install.sh calls `source` to load nvm, which
+    // breaks under dash on Debian trixie (our php:8.5-fpm base), even on the
+    // latest 1.7.1 release. See devcontainers/features issues #565 and #1534.
+    // Node is installed manually instead, see docker/php/Dockerfile.
+    // Retry this feature periodically to see if trixie support lands.
+    // "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
   },
   "mounts": [
