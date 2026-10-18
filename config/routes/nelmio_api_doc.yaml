@@ -7,10 +7,10 @@ app.swagger:
 # Clean, public, documented alias for app.swagger (see doc/openapi.md) — same
 # spec, same controller, just a stable URL for external consumers (e.g. the
 # front's client generator) instead of /api/doc.json.
-app.openapi_public:
-    path: /openapi
-    methods: GET
-    defaults: { _controller: nelmio_api_doc.controller.swagger }
+# app.openapi_public:
+#     path: /api/openapi
+#     methods: GET
+#     defaults: { _controller: nelmio_api_doc.controller.swagger }
 
 # Requires the Asset component and the Twig bundle
 # $ composer require twig asset

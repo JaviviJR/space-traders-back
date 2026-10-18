@@ -39,6 +39,7 @@ security:
     access_control:
         - { path: ^/auth/(register|refresh|logout|confirm-email|resend-confirmation), roles: PUBLIC_ACCESS }
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
+        # - { path: ^/api/openapi, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
 
 when@test:
