@@ -309,6 +309,15 @@
     "twig/extra-bundle": {
         "version": "v3.29.0"
     },
+    "zenstruck/browser": {
+        "version": "1.13",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.9",
+            "ref": "98ea0fbe24749dd1a84976de6f53dbb608046f16"
+        }
+    },
     "zenstruck/foundry": {
         "version": "2.14",
         "recipe": {

@@ -22,7 +22,7 @@ final class GatewayTest extends TestCase
         $request = new ProxyRequest(
             method: 'GET',
             path: 'my/agent',
-            user: new User('no-agent@example.com', 'hash'),
+            user: new User('No Agent', 'no-agent@example.com', 'hash'),
         );
 
         $response = $gateway->request($request);
@@ -40,7 +40,7 @@ final class GatewayTest extends TestCase
         $request = new ProxyRequest(
             method: 'POST',
             path: 'register',
-            user: new User('no-agent@example.com', 'hash'),
+            user: new User('No Agent', 'no-agent@example.com', 'hash'),
         );
 
         $response = $gateway->request($request);
@@ -58,7 +58,7 @@ final class GatewayTest extends TestCase
         $request = new ProxyRequest(
             method: 'GET',
             path: 'my/agent',
-            user: new User('no-agent@example.com', 'hash'),
+            user: new User('No Agent', 'no-agent@example.com', 'hash'),
         );
 
         $this->expectException(ApiException::class);

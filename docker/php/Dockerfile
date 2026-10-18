@@ -24,7 +24,14 @@ RUN git config --global --add safe.directory /home/app
 
 RUN ln -sf /usr/local/bin/php /usr/bin/php
 
-FROM base AS dev-base
+FROM base AS dev
+
+RUN apt-get update -y
+
+RUN apt-get install -y --no-install-recommends sudo python3
+
+RUN echo 'developer ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/developer && \
+    chmod 0440 /etc/sudoers.d/developer
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 RUN sed -i 's/^memory_limit = .*/memory_limit = 1024M/' "$PHP_INI_DIR/php.ini"
@@ -52,8 +59,6 @@ RUN apt-get install -y --no-install-recommends xz-utils \
     && corepack enable
 # --- END manual Node.js install ---
 
-FROM dev-base AS dev
-
 RUN install-php-extensions xdebug
 
 COPY --chmod=0644 xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
@@ -71,6 +76,9 @@ RUN mkdir -p /home/developer/.local/share/phpactor \
     && chown -R developer:developer /home/developer/.local/share/phpactor
 
 RUN git config --global --add safe.directory /opt/phpactor
+
+## Install Python3 for Claude
+# RUN apt-get install -y --no-install-recommends python3
 
 FROM base AS prod
 

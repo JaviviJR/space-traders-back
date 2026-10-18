@@ -29,7 +29,11 @@ final class UserRegistrationService
             throw EmailAlreadyRegisteredException::withEmail($dto->email);
         }
 
-        $user = new User($dto->email, '');
+        $user = new User(
+            $dto->name,
+            $dto->email,
+            ''
+        );
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
 
         $this->entityManager->persist($user);

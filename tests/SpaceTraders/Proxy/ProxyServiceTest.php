@@ -49,7 +49,7 @@ final class ProxyServiceTest extends TestCase
 
     public function testSubstitutesTheResolvedAgentsTokenAsAuthorization(): void
     {
-        $user = new User('agent-owner@example.com', 'hash');
+        $user = new User('Agent Owner', 'agent-owner@example.com', 'hash');
         $agent = new Agent($user, 'OWNER-AGENT', 'COSMIC', 'encrypted-token');
 
         $agentRepository = $this->createMock(AgentRepository::class);
@@ -104,8 +104,8 @@ final class ProxyServiceTest extends TestCase
 
     public function testAgentOwnedBySomeoneElseIsForbidden(): void
     {
-        $owner = new User('owner@example.com', 'hash');
-        $otherUser = new User('other@example.com', 'hash');
+        $owner = new User('Owner', 'owner@example.com', 'hash');
+        $otherUser = new User('Other', 'other@example.com', 'hash');
         $agent = new Agent($owner, 'OWNER-AGENT', 'COSMIC', 'encrypted-token');
 
         $agentRepository = $this->createStub(AgentRepository::class);
@@ -197,7 +197,7 @@ final class ProxyServiceTest extends TestCase
         return new ProxyRequest(
             $method,
             $path,
-            $user ?? new User('no-agent@example.com', 'hash'),
+            $user ?? new User('No Agent', 'no-agent@example.com', 'hash'),
             [],
             [],
             '',

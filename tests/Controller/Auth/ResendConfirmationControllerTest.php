@@ -7,40 +7,47 @@ namespace App\Tests\Controller\Auth;
 use App\Factory\UserFactory;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Zenstruck\Browser\HttpOptions;
+use Zenstruck\Browser\Test\HasBrowser;
+use Zenstruck\Foundry\Attribute\ResetDatabase;
 
+#[ResetDatabase]
 final class ResendConfirmationControllerTest extends WebTestCase
 {
+    use HasBrowser;
     use MailerAssertionsTrait;
 
     public function testResendingForAnUnverifiedUserQueuesAConfirmationEmail(): void
     {
-        $client = static::createClient();
         UserFactory::createOne(['email' => 'resend-unverified@example.com', 'isVerified' => false]);
 
-        $client->jsonRequest('POST', '/auth/resend-confirmation', ['email' => 'resend-unverified@example.com']);
+        $this->browser()
+            ->post('/auth/resend-confirmation', HttpOptions::json(['email' => 'resend-unverified@example.com']))
+            ->assertStatus(202)
+        ;
 
-        self::assertResponseStatusCodeSame(202);
         self::assertEmailCount(1);
     }
 
     public function testResendingForAnAlreadyVerifiedUserQueuesNoEmail(): void
     {
-        $client = static::createClient();
         UserFactory::createOne(['email' => 'resend-verified@example.com', 'isVerified' => true]);
 
-        $client->jsonRequest('POST', '/auth/resend-confirmation', ['email' => 'resend-verified@example.com']);
+        $this->browser()
+            ->post('/auth/resend-confirmation', HttpOptions::json(['email' => 'resend-verified@example.com']))
+            ->assertStatus(202)
+        ;
 
-        self::assertResponseStatusCodeSame(202);
         self::assertEmailCount(0);
     }
 
     public function testResendingForAnUnknownEmailQueuesNoEmailAndReturnsNoError(): void
     {
-        $client = static::createClient();
+        $this->browser()
+            ->post('/auth/resend-confirmation', HttpOptions::json(['email' => 'resend-unknown@example.com']))
+            ->assertStatus(202)
+        ;
 
-        $client->jsonRequest('POST', '/auth/resend-confirmation', ['email' => 'resend-unknown@example.com']);
-
-        self::assertResponseStatusCodeSame(202);
         self::assertEmailCount(0);
     }
 }

@@ -9,21 +9,26 @@ use App\Factory\UserFactory;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
+use Zenstruck\Browser\HttpOptions;
+use Zenstruck\Browser\Test\HasBrowser;
+use Zenstruck\Foundry\Attribute\ResetDatabase;
 
+#[ResetDatabase]
 final class ConfirmEmailControllerTest extends WebTestCase
 {
+    use HasBrowser;
+
     public function testConfirmingAValidSignedUrlVerifiesTheUser(): void
     {
-        $client = static::createClient();
-
         /** @var User $user */
         $user = UserFactory::createOne(['email' => 'confirm-happy@example.com', 'isVerified' => false]);
 
         $signedUrl = $this->generateSignedUrl($user);
 
-        $client->jsonRequest('POST', '/auth/confirm-email', ['signedUrl' => $signedUrl]);
-
-        self::assertResponseStatusCodeSame(200);
+        $this->browser()
+            ->post('/auth/confirm-email', HttpOptions::json(['signedUrl' => $signedUrl]))
+            ->assertStatus(200)
+        ;
 
         /** @var UserRepository $userRepository */
         $userRepository = static::getContainer()->get(UserRepository::class);
@@ -34,8 +39,6 @@ final class ConfirmEmailControllerTest extends WebTestCase
 
     public function testConfirmingATamperedSignedUrlReturnsBadRequest(): void
     {
-        $client = static::createClient();
-
         /** @var User $user */
         $user = UserFactory::createOne(['email' => 'confirm-tampered@example.com', 'isVerified' => false]);
 
@@ -43,9 +46,10 @@ final class ConfirmEmailControllerTest extends WebTestCase
         $tamperedUrl = preg_replace('/signature=[^&]+/', 'signature=not-a-valid-signature', $signedUrl);
         self::assertNotNull($tamperedUrl);
 
-        $client->jsonRequest('POST', '/auth/confirm-email', ['signedUrl' => $tamperedUrl]);
-
-        self::assertResponseStatusCodeSame(400);
+        $this->browser()
+            ->post('/auth/confirm-email', HttpOptions::json(['signedUrl' => $tamperedUrl]))
+            ->assertStatus(400)
+        ;
     }
 
     private function generateSignedUrl(User $user): string
