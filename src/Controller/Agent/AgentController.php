@@ -27,6 +27,7 @@ final class AgentController extends AbstractController
 
     #[Route('/api/agents', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
+    #[OA\Get(operationId: 'listAgents')]
     #[OA\Tag(name: 'Account')]
     #[OA\Response(
         response: 200,

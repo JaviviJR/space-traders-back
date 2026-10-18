@@ -76,14 +76,17 @@ final class ProxyDescriber implements DescriberInterface
 
     public function describe(OA\OpenApi $api): void
     {
-        $serializer = new Serializer();
+        $openApiSerializer = new Serializer();
         $augmentationSchemas = $this->augmentationSchemasByOperation();
 
         /** @var array<string, true> $referencedSchemaNames */
         $referencedSchemaNames = [];
 
         foreach (self::OPERATIONS as $operation) {
-            $sourceOperation = $this->sourceOperation($operation['sourcePath'], $operation['method']);
+            $sourceOperation = $this->sourceOperation(
+                $operation['sourcePath'],
+                $operation['method']
+            );
 
             if (null === $sourceOperation) {
                 continue;
@@ -91,26 +94,44 @@ final class ProxyDescriber implements DescriberInterface
 
             $this->collectSchemaRefs($sourceOperation, $referencedSchemaNames);
 
-            $path = Util::getPath($api, $this->targetPath($operation['sourcePath']));
-            $target = Util::getOperation($path, $operation['method']);
+            $path = Util::getPath(
+                $api,
+                $this->targetPath($operation['sourcePath'])
+            );
+            $targetOperation = Util::getOperation(
+                $path,
+                $operation['method']
+            );
 
             /** @var OA\Operation $deserialized */
-            $deserialized = $serializer->deserialize(json_encode($sourceOperation, \JSON_THROW_ON_ERROR), $this->operationClass($operation['method']), $this->nestedContext());
-            $target->mergeProperties($deserialized);
+            $deserialized = $openApiSerializer->deserialize(
+                json_encode($sourceOperation, \JSON_THROW_ON_ERROR),
+                $this->operationClass($operation['method']),
+                $this->nestedContext()
+            );
 
-            if (!Undefined::isDefault($target->operationId)) {
-                $target->operationId = 'spacetraders_'.$target->operationId;
+            $targetOperation->mergeProperties($deserialized);
+
+            if (!Undefined::isDefault($targetOperation->operationId)) {
+                $targetOperation->operationId = 'spacetraders_'.$targetOperation->operationId;
             }
 
-            $augmentationKey = $operation['method'].' /'.ltrim($operation['sourcePath'], '/');
+            $augmentationKey = $operation['method'].'_'.ltrim($operation['sourcePath'], '/');
 
             if (isset($augmentationSchemas[$augmentationKey])) {
-                $this->mergeAugmentation($target, $augmentationSchemas[$augmentationKey]);
+                $this->mergeAugmentation(
+                    $targetOperation,
+                    $augmentationSchemas[$augmentationKey]
+                );
             }
         }
 
         foreach (array_keys($referencedSchemaNames) as $name) {
-            $this->copySchema($api, $serializer, $name);
+            $this->copySchema(
+                $api,
+                $openApiSerializer,
+                $name
+            );
         }
     }
 
@@ -127,7 +148,7 @@ final class ProxyDescriber implements DescriberInterface
             }
 
             $schema = $hook->describedAugmentation();
-            $schemas[strtolower($schema->method).' /'.ltrim($schema->path, '/')] = $schema;
+            $schemas[strtolower($schema->method).'_'.ltrim($schema->path, '/')] = $schema;
         }
 
         return $schemas;
@@ -297,9 +318,9 @@ final class ProxyDescriber implements DescriberInterface
 
     private function copySchema(OA\OpenApi $api, Serializer $serializer, string $name): void
     {
-        $data = $this->schemaDefinition($name);
+        $spaceTradersSchemaData = $this->schemaDefinition($name);
 
-        if (null === $data) {
+        if (null === $spaceTradersSchemaData) {
             return;
         }
 
@@ -310,7 +331,11 @@ final class ProxyDescriber implements DescriberInterface
         }
 
         /** @var OA\Schema $deserialized */
-        $deserialized = $serializer->deserialize(json_encode($data, \JSON_THROW_ON_ERROR), OA\Schema::class, $this->nestedContext());
+        $deserialized = $serializer->deserialize(
+            json_encode($spaceTradersSchemaData, \JSON_THROW_ON_ERROR),
+            OA\Schema::class,
+            $this->nestedContext()
+        );
         $target->mergeProperties($deserialized);
     }
 

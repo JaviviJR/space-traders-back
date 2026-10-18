@@ -4,47 +4,45 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
-use App\Http\EnvelopeResponseFactory;
+use App\OpenApi\Attribute\DataResponse;
+use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\AccessTokenResponseData;
-use App\Security\Dto\LoginDto;
-use App\Security\Exception\EmailNotVerifiedException;
-use App\Security\Exception\InvalidCredentialsException;
-use App\Security\LoginService;
-use App\Security\RefreshTokenCookieFactory;
-use App\Security\RefreshTokenService;
+use Nelmio\ApiDocBundle\Attribute\Security;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Routing anchor only: the `login` firewall's json_login authenticator
+ * intercepts every request to this route before the kernel resolves a
+ * controller, so this body is unreachable in normal operation.
+ */
 final class LoginController extends AbstractController
 {
-    public function __construct(
-        private readonly LoginService $loginService,
-        private readonly RefreshTokenService $refreshTokenService,
-        private readonly RefreshTokenCookieFactory $cookieFactory,
-        private readonly EnvelopeResponseFactory $envelope,
-    ) {
-    }
-
     #[Route('/auth/login', methods: ['POST'])]
-    public function __invoke(#[MapRequestPayload] LoginDto $dto): JsonResponse
+    #[OA\Post(operationId: 'login')]
+    #[OA\Tag(name: 'Account')]
+    #[Security(name: null)]
+    #[OA\RequestBody(
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'email', type: 'string', format: 'email'),
+                new OA\Property(property: 'password', type: 'string'),
+            ],
+            required: ['email', 'password'],
+        ),
+    )]
+    #[DataResponse(
+        model: AccessTokenResponseData::class,
+        status: 200,
+        description: 'Access token issued. The refresh token is not in this body: it is set via a '
+            .'Set-Cookie header (httpOnly, Path=/auth), see doc/authentication.md.',
+    )]
+    #[ErrorResponse(status: 401, description: 'Invalid credentials')]
+    #[ErrorResponse(status: 403, description: 'Email not verified')]
+    public function __invoke(): JsonResponse
     {
-        try {
-            $user = $this->loginService->authenticate($dto);
-        } catch (InvalidCredentialsException $exception) {
-            throw new UnauthorizedHttpException('Bearer', $exception->getMessage(), $exception);
-        } catch (EmailNotVerifiedException $exception) {
-            throw new AccessDeniedHttpException($exception->getMessage(), $exception);
-        }
-
-        $pair = $this->refreshTokenService->issue($user);
-
-        return $this->envelope->success(
-            new AccessTokenResponseData($pair->accessToken),
-            headers: ['Set-Cookie' => (string) $this->cookieFactory->create($pair->refreshToken, $pair->refreshTokenExpiresAt)],
-        );
+        throw new \LogicException('Unreachable: handled by json_login.');
     }
 }

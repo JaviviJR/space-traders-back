@@ -4,11 +4,21 @@
   "service": "php",
   "workspaceFolder": "/home/developer/app",
   "shutdownAction": "none",
+  "initializeCommand": "docker run --rm -v claude-code-config:/data alpine chown -R 1000:1000 /data",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "mounts": [
+    "source=claude-code-config,target=/home/developer/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/developer/.claude"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
         "naumovs.color-highlight",
-        "eamodio.gitlens",
         "ecmel.vscode-html-css",
         "redhat.vscode-yaml",
         "SanderRonde.phpstan-vscode",
@@ -22,8 +32,13 @@
         "jaguadoromero.vscode-php-create-class",
         "emallin.phpunit",
         "mblode.twig-language-2",
-        "neilbrayfield.php-docblocker",
-        "phproberto.vscode-php-getters-setters"
+        "phproberto.vscode-php-getters-setters",
+        "mikestead.dotenv",
+        "waderyan.gitblame",
+        "mhutchie.git-graph",
+        "donjayamanne.githistory",
+        "GitHub.vscode-pull-request-github",
+        "anthropic.claude-code"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

@@ -145,6 +145,12 @@ things up in the project instead of relying on memory:
 - Read the installed source and docblocks under `vendor/` when the docs don't
   settle it — for the exact behaviour of the installed version, patched
   forks, or details the docs don't cover.
+- For any third-party dependency listed in `composer.json` (Symfony components
+  included), always consult its official documentation first when you need to
+  understand how it works. Only fall back to reading the package's source
+  under `vendor/` if the docs don't settle the question or don't cover the
+  installed version. When that fallback is needed, label what you report from
+  `vendor/` as a code-derived inference, not a documented guarantee.
 
 ## Architecture decisions
 
