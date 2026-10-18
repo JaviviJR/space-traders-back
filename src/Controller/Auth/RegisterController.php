@@ -48,6 +48,13 @@ final class RegisterController extends AbstractController
 
         $this->registrationConfirmationMailer->sendConfirmationEmail($user);
 
-        return $this->envelope->success(new RegisterResponseData($user->getId(), $user->getEmail()), 201);
+        return $this->envelope->success(
+            new RegisterResponseData(
+                id: $user->getId(),
+                name: $user->getName(),
+                email: $user->getEmail()
+            ),
+            201
+        );
     }
 }

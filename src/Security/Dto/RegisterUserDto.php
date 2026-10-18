@@ -10,6 +10,8 @@ final readonly class RegisterUserDto
 {
     public function __construct(
         #[Assert\NotBlank]
+        public string $name,
+        #[Assert\NotBlank]
         #[Assert\Email]
         public string $email,
         #[Assert\NotBlank]

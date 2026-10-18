@@ -29,6 +29,7 @@ final class UserFactory extends PersistentObjectFactory
     protected function defaults(): array|callable
     {
         return [
+            'name' => self::faker()->name(),
             'email' => self::faker()->unique()->safeEmail(),
             'password' => 'password123',
             'isVerified' => true,
@@ -40,11 +41,12 @@ final class UserFactory extends PersistentObjectFactory
     {
         return $this
             ->instantiateWith(function (array $attributes): User {
+                \assert(\is_string($attributes['name']));
                 \assert(\is_string($attributes['email']));
                 \assert(\is_string($attributes['password']));
                 \assert(null !== $this->passwordHasher);
 
-                $user = new User($attributes['email'], '');
+                $user = new User($attributes['name'], $attributes['email'], '');
                 $user->setPassword($this->passwordHasher->hashPassword($user, $attributes['password']));
 
                 if ($attributes['isVerified']) {

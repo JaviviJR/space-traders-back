@@ -7,52 +7,52 @@ namespace App\Tests\Controller\Auth;
 use App\Factory\UserFactory;
 use App\Tests\Support\AuthenticatesClient;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Zenstruck\Browser\Test\HasBrowser;
+use Zenstruck\Foundry\Attribute\ResetDatabase;
 
+#[ResetDatabase]
 final class LogoutControllerTest extends WebTestCase
 {
     use AuthenticatesClient;
+    use HasBrowser;
 
     public function testLogoutRevokesOnlyTheSessionItWasCalledFrom(): void
     {
         // WebTestCase only supports booting one kernel per test, so two
         // simultaneous sessions for the same user are simulated with a
-        // single client, swapping which refresh cookie is active in its
+        // single browser, swapping which refresh cookie is active in its
         // cookie jar between requests.
         $email = 'logout-two-sessions@example.com';
-        $client = static::createClient();
+        $browser = $this->browser();
 
         UserFactory::createOne(['email' => $email]);
-        $this->login($client, $email);
-        $cookieA = $client->getCookieJar()->get('refresh_token', '/auth');
+        $this->login($browser, $email);
+        $cookieA = $browser->client()->getCookieJar()->get('refresh_token', '/auth');
         self::assertNotNull($cookieA);
 
-        $client->getCookieJar()->clear();
-        $this->login($client, $email);
-        $cookieB = $client->getCookieJar()->get('refresh_token', '/auth');
+        $browser->client()->getCookieJar()->clear();
+        $this->login($browser, $email);
+        $cookieB = $browser->client()->getCookieJar()->get('refresh_token', '/auth');
         self::assertNotNull($cookieB);
         self::assertNotSame($cookieA->getValue(), $cookieB->getValue());
 
-        $client->getCookieJar()->clear();
-        $client->getCookieJar()->set($cookieA);
-        $client->jsonRequest('POST', '/auth/logout');
-        self::assertResponseStatusCodeSame(204);
+        $browser->client()->getCookieJar()->clear();
+        $browser->client()->getCookieJar()->set($cookieA);
+        $browser->post('/auth/logout')->assertStatus(204);
 
         // Session A's cookie was cleared by the logout response itself.
-        $client->jsonRequest('POST', '/auth/refresh');
-        self::assertResponseStatusCodeSame(401);
+        $browser->post('/auth/refresh')->assertStatus(401);
 
-        $client->getCookieJar()->clear();
-        $client->getCookieJar()->set($cookieB);
-        $client->jsonRequest('POST', '/auth/refresh');
-        self::assertResponseIsSuccessful();
+        $browser->client()->getCookieJar()->clear();
+        $browser->client()->getCookieJar()->set($cookieB);
+        $browser->post('/auth/refresh')->assertSuccessful();
     }
 
     public function testLogoutWithoutACookieIsANoOp(): void
     {
-        $client = static::createClient();
-
-        $client->jsonRequest('POST', '/auth/logout');
-
-        self::assertResponseStatusCodeSame(204);
+        $this->browser()
+            ->post('/auth/logout')
+            ->assertStatus(204)
+        ;
     }
 }

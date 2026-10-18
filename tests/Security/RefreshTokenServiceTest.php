@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Security;
 
-use App\Entity\User;
+use App\Factory\UserFactory;
 use App\Security\Exception\InvalidRefreshTokenException;
 use App\Security\RefreshTokenService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Zenstruck\Foundry\Attribute\ResetDatabase;
 
+#[ResetDatabase]
 final class RefreshTokenServiceTest extends KernelTestCase
 {
     public function testVerifyingATokenThatWasNeverIssuedThrows(): void
@@ -25,10 +26,7 @@ final class RefreshTokenServiceTest extends KernelTestCase
     public function testRevokingAllTokensForAUserInvalidatesThem(): void
     {
         self::bootKernel();
-        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
-        $user = new User('refresh-revoke-all@example.com', 'hashed-password');
-        $entityManager->persist($user);
-        $entityManager->flush();
+        $user = UserFactory::createOne(['email' => 'refresh-revoke-all@example.com']);
 
         $service = static::getContainer()->get(RefreshTokenService::class);
         $pair = $service->issue($user);

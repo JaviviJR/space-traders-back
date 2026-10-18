@@ -19,6 +19,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(length: 180)]
+    private string $name;
+
     #[ORM\Column(length: 180, unique: true)]
     private string $email;
 
@@ -36,12 +39,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isVerified;
 
-    public function __construct(string $email, string $password)
-    {
+    public function __construct(
+        string $name,
+        string $email,
+        string $password
+    ) {
         if ('' === $email) {
             throw new \InvalidArgumentException('User email must not be empty.');
         }
 
+        $this->name = $name;
         $this->email = $email;
         $this->password = $password;
         $this->roles = ['ROLE_USER'];
@@ -51,6 +58,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
     }
 
     /** @return non-empty-string */
@@ -63,11 +80,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /** @return non-empty-string */
+    #[\Override]
     public function getUserIdentifier(): string
     {
         return $this->getEmail();
     }
 
+    #[\Override]
     public function getPassword(): string
     {
         return $this->password;
@@ -79,6 +98,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /** @return list<string> */
+    #[\Override]
     public function getRoles(): array
     {
         return array_values(array_unique([...$this->roles, 'ROLE_USER']));

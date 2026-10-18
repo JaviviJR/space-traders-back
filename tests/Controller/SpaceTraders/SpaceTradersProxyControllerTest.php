@@ -10,20 +10,25 @@ use App\Repository\AgentRepository;
 use App\Tests\Support\AuthenticatesClient;
 use App\Tests\Support\UsesFakeSpaceTradersGateway;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Zenstruck\Browser\HttpOptions;
+use Zenstruck\Browser\Test\HasBrowser;
+use Zenstruck\Foundry\Attribute\ResetDatabase;
 
+#[ResetDatabase]
 final class SpaceTradersProxyControllerTest extends WebTestCase
 {
     use AuthenticatesClient;
+    use HasBrowser;
     use UsesFakeSpaceTradersGateway;
 
     public function testRegisteringAnAgentPersistsItAndAugmentsTheResponseWithItsInternalId(): void
     {
-        $client = static::createClient();
+        $browser = $this->browser();
 
         UserFactory::createOne(['email' => 'register-flow@example.com']);
-        $token = $this->login($client, 'register-flow@example.com');
+        $token = $this->login($browser, 'register-flow@example.com');
 
-        $gateway = $this->fakeSpaceTradersGateway($client);
+        $gateway = $this->fakeSpaceTradersGateway($browser);
         $gateway->willReturn(json_encode([
             'data' => [
                 'token' => 'raw-spacetraders-token',
@@ -31,17 +36,17 @@ final class SpaceTradersProxyControllerTest extends WebTestCase
             ],
         ], \JSON_THROW_ON_ERROR), 201);
 
-        $client->jsonRequest(
-            'POST',
-            '/api/spacetraders/register',
-            ['symbol' => 'FLOW-AGENT', 'faction' => 'COSMIC'],
-            ['HTTP_AUTHORIZATION' => 'Bearer '.$token],
-        );
-
-        self::assertResponseIsSuccessful((string) $client->getResponse()->getContent());
+        $browser
+            ->post(
+                '/api/spacetraders/register',
+                HttpOptions::json(['symbol' => 'FLOW-AGENT', 'faction' => 'COSMIC'])
+                    ->withHeader('Authorization', 'Bearer '.$token),
+            )
+            ->assertSuccessful()
+        ;
 
         /** @var array{data: array{agent: array{symbol: string}, token: string}, agentId: mixed} $body */
-        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        $body = $browser->json()->decoded();
         self::assertSame('FLOW-AGENT', $body['data']['agent']['symbol']);
         self::assertSame('raw-spacetraders-token', $body['data']['token']);
         self::assertIsInt($body['agentId']);
@@ -57,21 +62,22 @@ final class SpaceTradersProxyControllerTest extends WebTestCase
 
     public function testBareSpaceTradersPathForwardsToTheApiRootForServerStatus(): void
     {
-        $client = static::createClient();
+        $browser = $this->browser();
 
         UserFactory::createOne(['email' => 'status-flow@example.com']);
-        $token = $this->login($client, 'status-flow@example.com');
+        $token = $this->login($browser, 'status-flow@example.com');
 
-        $gateway = $this->fakeSpaceTradersGateway($client);
+        $gateway = $this->fakeSpaceTradersGateway($browser);
         $gateway->willReturn(json_encode(['status' => 'SpaceTraders is currently online'], \JSON_THROW_ON_ERROR));
 
-        $client->request('GET', '/api/spacetraders', [], [], ['HTTP_AUTHORIZATION' => 'Bearer '.$token]);
-
-        self::assertResponseIsSuccessful((string) $client->getResponse()->getContent());
+        $browser
+            ->get('/api/spacetraders', HttpOptions::create()->withHeader('Authorization', 'Bearer '.$token))
+            ->assertSuccessful()
+        ;
         self::assertSame('', $gateway->lastPath());
 
         /** @var array{status: string} $body */
-        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        $body = $browser->json()->decoded();
         self::assertSame('SpaceTraders is currently online', $body['status']);
     }
 }

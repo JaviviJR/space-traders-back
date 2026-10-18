@@ -6,7 +6,7 @@ namespace App\Tests\Support;
 
 use App\SpaceTraders\Proxy\GatewayInterface;
 use App\Tests\SpaceTraders\Proxy\FakeGateway;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Zenstruck\Browser\KernelBrowser;
 
 /**
  * Shared helper for functional tests that stage a SpaceTraders response.

@@ -48,7 +48,7 @@ final class RegisterAgentHookTest extends TestCase
             ],
         ], \JSON_THROW_ON_ERROR));
 
-        $user = new User('register-hook@example.com', 'hashed-password');
+        $user = new User('Register Hook', 'register-hook@example.com', 'hashed-password');
         $result = $hook->afterForward($this->proxyRequest('POST', 'register', $user), null, $response);
 
         self::assertSame($response, $result);
@@ -66,7 +66,7 @@ final class RegisterAgentHookTest extends TestCase
 
         $response = new HttpResponseEnvelope(422, '{"error":"symbol already taken"}');
 
-        $user = new User('register-hook-rejected@example.com', 'hashed-password');
+        $user = new User('Register Hook Rejected', 'register-hook-rejected@example.com', 'hashed-password');
         $result = $hook->afterForward($this->proxyRequest('POST', 'register', $user), null, $response);
 
         self::assertSame($response, $result);
@@ -86,7 +86,7 @@ final class RegisterAgentHookTest extends TestCase
             ],
         ], \JSON_THROW_ON_ERROR));
 
-        $user = new User('augment@example.com', 'hashed-password');
+        $user = new User('Augment', 'augment@example.com', 'hashed-password');
         $proxyRequest = $this->proxyRequest('POST', 'register', $user);
         $hook->afterForward($proxyRequest, null, $response);
 
@@ -135,7 +135,7 @@ final class RegisterAgentHookTest extends TestCase
         return new ProxyRequest(
             $method,
             $path,
-            $user ?? new User('no-register@example.com', 'hash'),
+            $user ?? new User('No Register', 'no-register@example.com', 'hash'),
             [],
             [],
             '',

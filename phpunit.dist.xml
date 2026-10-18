@@ -15,6 +15,7 @@
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
+        <server name="BROWSER_ALWAYS_START_WEBSERVER" value="1"/>
     </php>
 
     <testsuites>
@@ -42,5 +43,6 @@
     <extensions>
         <bootstrap class="Zenstruck\Foundry\PHPUnit\FoundryExtension" />
         <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension" />
+        <bootstrap class="Zenstruck\Browser\Test\BrowserExtension" />
     </extensions>
 </phpunit>
