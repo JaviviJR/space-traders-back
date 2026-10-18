@@ -24,9 +24,14 @@ They're grouped into Nelmio tags by domain, not by the fact that they're
 back-only (that distinction already lives in this doc's section titles, not
 in the generated spec). `GET /api/agents` carries `#[OA\Tag(name: 'Account')]`.
 
-**TODO:** when login/register/refresh/logout get their own `#[OA\...]`
-attributes, decide whether they also belong under `Account` or warrant a
-separate domain tag (e.g. `Auth`) — not resolved yet, revisit then.
+Login, register, refresh, confirm-email, resend-confirmation and logout all
+carry `#[OA\Tag(name: 'Account')]`, same as `GET /api/agents` — no separate
+`Auth` tag was introduced.
+
+`App\OpenApi\Attribute\DataResponse` and `App\OpenApi\Attribute\ErrorResponse`
+mark their `data`/`error` property `required` on the generated `JsonContent`:
+a 2xx without `data` or a non-2xx without `error` is a contract violation, not
+a case the front needs to guard against with `?.`.
 
 
 ## SpaceTraders (proxied) endpoints

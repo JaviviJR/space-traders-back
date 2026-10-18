@@ -6,6 +6,8 @@ namespace App\Controller\Auth;
 
 use App\Security\RefreshTokenCookieFactory;
 use App\Security\RefreshTokenService;
+use Nelmio\ApiDocBundle\Attribute\Security;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +22,14 @@ final class LogoutController extends AbstractController
     }
 
     #[Route('/auth/logout', methods: ['POST'])]
+    #[OA\Post(operationId: 'logout')]
+    #[OA\Tag(name: 'Account')]
+    #[Security(name: null)]
+    #[OA\Response(
+        response: 204,
+        description: 'Refresh token cookie cleared and revoked if present. Always succeeds, even with no '
+            .'cookie or an already-invalid one — logout is idempotent.',
+    )]
     public function __invoke(Request $request): Response
     {
         $plaintext = $this->cookieFactory->readFrom($request);
