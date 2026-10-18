@@ -5,6 +5,7 @@ $finder = (new PhpCsFixer\Finder())
     ->exclude('var')
     ->exclude('vendor')
     ->exclude('docker')
+    ->exclude('src/SpaceTraders/OpenApi/Generated')
     ->notPath([
         'config/bundles.php',
         'config/reference.php',
