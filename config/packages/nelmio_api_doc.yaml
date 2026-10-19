@@ -10,3 +10,22 @@ nelmio_api_doc:
                 - ^/(api(?!/doc$)(?!/spacetraders)|auth) # Accepts routes under /api (except /api/doc and /api/spacetraders, hand-documented by App\SpaceTraders\OpenApi\ProxyDescriber) and /auth
             security:
                 bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } # Inferred per-route from #[IsGranted] (see doc/openapi.md)
+    models:
+        # Clean schema names for the generated spec (and the front's codegen), so internal PHP
+        # naming conventions (Dto for request payloads, *ResponseData for the back-only envelope
+        # marker, see App\Http\ResponseData) don't leak as suffixes into front-facing type names.
+        # Also covers #[MapRequestPayload] classes: Nelmio registers those under their bare class
+        # name even when the controller's own #[OA\RequestBody] already names the model, so without
+        # this alias both an orphan "XxxDto" and the clean name would show up in components/schemas.
+        names:
+            - { alias: ConfirmEmail, type: App\Security\Dto\ConfirmEmailDto }
+            - { alias: RegisterUser, type: App\Security\Dto\RegisterUserDto }
+            - { alias: ResendConfirmation, type: App\Security\Dto\ResendConfirmationDto }
+            - { alias: RegisteredUser, type: App\Security\Dto\RegisterResponseData }
+            - { alias: EmailConfirmation, type: App\Security\Dto\ConfirmEmailResponseData }
+            - { alias: AccessToken, type: App\Security\Dto\AccessTokenResponseData }
+            - { alias: Empty, type: App\Security\Dto\EmptyResponseData }
+            - { alias: Error, type: App\Http\ErrorResponseData }
+            # "Agent" is already taken by SpaceTraders' own schema (injected by ProxyDescriber from
+            # their vendored spec), so this one can't reuse that name without colliding.
+            - { alias: AccountAgent, type: App\Agent\Dto\AgentResponseData }

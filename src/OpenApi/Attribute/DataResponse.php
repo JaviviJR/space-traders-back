@@ -28,7 +28,7 @@ final class DataResponse extends OA\Response
         parent::__construct(
             response: $status,
             description: $description,
-            content: new OA\JsonContent(properties: [$dataProperty]),
+            content: new OA\JsonContent(properties: [$dataProperty], required: ['data']),
         );
     }
 }

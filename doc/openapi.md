@@ -24,9 +24,14 @@ They're grouped into Nelmio tags by domain, not by the fact that they're
 back-only (that distinction already lives in this doc's section titles, not
 in the generated spec). `GET /api/agents` carries `#[OA\Tag(name: 'Account')]`.
 
-**TODO:** when login/register/refresh/logout get their own `#[OA\...]`
-attributes, decide whether they also belong under `Account` or warrant a
-separate domain tag (e.g. `Auth`) — not resolved yet, revisit then.
+Login, register, refresh, confirm-email, resend-confirmation and logout all
+carry `#[OA\Tag(name: 'Account')]`, same as `GET /api/agents` — no separate
+`Auth` tag was introduced.
+
+`App\OpenApi\Attribute\DataResponse` and `App\OpenApi\Attribute\ErrorResponse`
+mark their `data`/`error` property `required` on the generated `JsonContent`:
+a 2xx without `data` or a non-2xx without `error` is a contract violation, not
+a case the front needs to guard against with `?.`.
 
 
 ## SpaceTraders (proxied) endpoints
@@ -99,6 +104,48 @@ hook-local way rather than fabricating a request just to ask.
 the "Known simplification" / TODO in architecture.md), not redacted ahead of
 the runtime fix — the docs must reflect the real contract, not the desired
 one. Update the schema in the same change that redacts it at runtime.
+
+## Schema names: keep `Dto`/`*ResponseData` out of the front
+
+Back-only request/response classes follow internal PHP naming conventions —
+`Dto` suffix for request payloads, `*ResponseData` for the
+`App\Http\ResponseData` envelope marker (see architecture.md's "Proxy
+design"). Those suffixes are meaningful here, but they must not leak into the
+generated spec: the front's codegen turns each component schema name
+verbatim into a TS type name, so `AgentResponseData` would show up front-side
+as `AgentResponseData` instead of a clean `Agent`-like name.
+
+**Every new back-only request DTO or response data class must get a clean
+alias in `config/packages/nelmio_api_doc.yaml`'s `models.names`**, named after
+what the class contains, not after its PHP role:
+
+```yaml
+models:
+    names:
+        - { alias: ConfirmEmail, type: App\Security\Dto\ConfirmEmailDto }
+```
+
+This has to be the YAML alias list, not a per-controller
+`new Model(type: ..., name: '...')` on the `#[OA\RequestBody]` /
+`App\OpenApi\Attribute\DataResponse` attribute, for any class used behind
+`#[MapRequestPayload]`: Nelmio's `SymfonyMapRequestPayloadDescriber` always
+registers that class a second time under its bare class name, independently
+of whatever name the controller's own attribute uses, leaving an orphan
+unreferenced schema (e.g. `ConfirmEmailDto` with no `$ref` to it) alongside
+the clean one. The YAML alias is checked before any attribute-level name, so
+it's the only place that converges both registrations onto one schema. Response-only
+classes (no `#[MapRequestPayload]` involved) don't strictly need the YAML
+route, but everything stays in `models.names` anyway so there's one mechanism
+to look at, not two.
+
+Pick a name that doesn't collide with an existing schema — in particular
+anything SpaceTraders' own vendored spec already defines (injected by
+`App\SpaceTraders\OpenApi\ProxyDescriber`, see above): `AgentResponseData`
+couldn't alias to `Agent` because SpaceTraders already has one, hence
+`AccountAgent`. Nelmio silently suffixes a colliding name (`Agent2`) instead
+of erroring, so check the dumped spec
+(`bin/console nelmio:apidoc:dump --format=json`) after adding an alias to
+confirm it landed as intended.
 
 ## TODO
 

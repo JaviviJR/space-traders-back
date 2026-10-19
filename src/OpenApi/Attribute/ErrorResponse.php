@@ -23,6 +23,7 @@ final class ErrorResponse extends OA\Response
             description: $description,
             content: new OA\JsonContent(
                 properties: [new OA\Property(property: 'error', ref: new Model(type: ErrorResponseData::class))],
+                required: ['error'],
             ),
         );
     }
