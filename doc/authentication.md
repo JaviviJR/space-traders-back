@@ -67,7 +67,7 @@ out.
 ## Testing
 
 `.env.test` has a dedicated JWT keypair (`config/jwt/private-test.pem` /
-`public-test.pem`) and a dedicated `AGENT_TOKEN_ENCRYPTION_KEY`, committed on
+`public-test.pem`) and a dedicated `TOKEN_ENCRYPTION_KEY`, committed on
 purpose — not secrets, just fixtures, so tests run without any local setup
 (`.env.local` isn't loaded in the `test` environment by Symfony convention).
 Never reuse these values outside tests.

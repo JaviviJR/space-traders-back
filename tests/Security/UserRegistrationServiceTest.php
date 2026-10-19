@@ -16,7 +16,7 @@ final class UserRegistrationServiceTest extends KernelTestCase
         self::bootKernel();
         $service = static::getContainer()->get(UserRegistrationService::class);
 
-        $dto = new RegisterUserDto('Duplicate Service', 'duplicate-service@example.com', 'password123');
+        $dto = new RegisterUserDto('Duplicate Service', 'duplicate-service@example.com', 'password123', 'spacetraders-token');
         $service->register($dto);
 
         $this->expectException(EmailAlreadyRegisteredException::class);

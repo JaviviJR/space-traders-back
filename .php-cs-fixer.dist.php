@@ -16,6 +16,8 @@ return (new PhpCsFixer\Config())
     ->setRules([
         '@Symfony' => true,
         'method_argument_space' => ['on_multiline' => 'ensure_fully_multiline'],
+        'array_indentation' => true,
+        'trailing_comma_in_multiline' => true,
     ])
     ->setFinder($finder)
 ;

@@ -19,6 +19,9 @@
     "waderyan.gitblame",
     "mhutchie.git-graph",
     "donjayamanne.githistory",
-    "github.vscode-pull-request-github"
+    "github.vscode-pull-request-github",
+    "ms-ossdata.vscode-pgsql",
+    "zainchen.json",
+    "aykutsarac.jsoncrack-vscode"
   ]
 }

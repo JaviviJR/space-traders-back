@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(composer phpstan *)",
+      "Bash(php bin/phpunit --filter \"RegisterControllerTest|LoginControllerTest|ConfirmEmailControllerTest|ResendConfirmationControllerTest\")",
+      "Bash(php bin/phpunit)"
     ]
   }
 }

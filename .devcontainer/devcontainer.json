@@ -44,7 +44,10 @@
         "mhutchie.git-graph",
         "donjayamanne.githistory",
         "GitHub.vscode-pull-request-github",
-        "anthropic.claude-code"
+        "anthropic.claude-code",
+        "ms-ossdata.vscode-pgsql",
+        "ZainChen.json",
+        "AykutSarac.jsoncrack-vscode"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

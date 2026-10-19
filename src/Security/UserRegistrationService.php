@@ -17,6 +17,7 @@ final class UserRegistrationService
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly EntityManagerInterface $entityManager,
+        private readonly AgentTokenCipherInterface $agentTokenCipher
     ) {
     }
 
@@ -32,7 +33,8 @@ final class UserRegistrationService
         $user = new User(
             $dto->name,
             $dto->email,
-            ''
+            '',
+            $this->agentTokenCipher->encrypt($dto->accountToken)
         );
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
 

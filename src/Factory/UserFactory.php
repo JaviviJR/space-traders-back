@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Factory;
 
 use App\Entity\User;
+use App\Security\AgentTokenCipherInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Zenstruck\Foundry\Object\Instantiator;
 use Zenstruck\Foundry\Persistence\PersistentObjectFactory;
 
 /**
@@ -14,7 +16,8 @@ use Zenstruck\Foundry\Persistence\PersistentObjectFactory;
 final class UserFactory extends PersistentObjectFactory
 {
     public function __construct(
-        private ?UserPasswordHasherInterface $passwordHasher = null,
+        private AgentTokenCipherInterface $agentTokenCipher,
+        private UserPasswordHasherInterface $passwordHasher
     ) {
         parent::__construct();
     }
@@ -31,6 +34,7 @@ final class UserFactory extends PersistentObjectFactory
         return [
             'name' => self::faker()->name(),
             'email' => self::faker()->unique()->safeEmail(),
+            'accountToken' => self::faker()->password(900),
             'password' => 'password123',
             'isVerified' => true,
         ];
@@ -40,20 +44,17 @@ final class UserFactory extends PersistentObjectFactory
     protected function initialize(): static
     {
         return $this
-            ->instantiateWith(function (array $attributes): User {
-                \assert(\is_string($attributes['name']));
-                \assert(\is_string($attributes['email']));
-                \assert(\is_string($attributes['password']));
-                \assert(null !== $this->passwordHasher);
+            ->instantiateWith(Instantiator::withConstructor()->allowExtra('isVerified'))
+            ->afterInstantiate(function (User $user, array $parameters): void {
+                \assert(\is_string($parameters['password']));
+                \assert(\is_string($parameters['accountToken']));
 
-                $user = new User($attributes['name'], $attributes['email'], '');
-                $user->setPassword($this->passwordHasher->hashPassword($user, $attributes['password']));
+                $user->setPassword($this->passwordHasher->hashPassword($user, $parameters['password']));
+                $user->setAccountToken($this->agentTokenCipher->encrypt($parameters['accountToken']));
 
-                if ($attributes['isVerified']) {
+                if ($parameters['isVerified']) {
                     $user->verify();
                 }
-
-                return $user;
             })
         ;
     }

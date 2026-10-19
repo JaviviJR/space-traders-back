@@ -14,6 +14,7 @@ use App\SpaceTraders\Proxy\ProxyRequest;
 use App\SpaceTraders\Proxy\ProxyService;
 use App\SpaceTraders\Response\AugmentData;
 use App\SpaceTraders\Response\HttpEnvelopeMerger;
+use App\Tests\Entity\UserTestFactory;
 use App\Tests\SpaceTraders\Response\MetaAugmentationData;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -49,7 +50,7 @@ final class ProxyServiceTest extends TestCase
 
     public function testSubstitutesTheResolvedAgentsTokenAsAuthorization(): void
     {
-        $user = new User('Agent Owner', 'agent-owner@example.com', 'hash');
+        $user = UserTestFactory::create(name: 'Agent Owner', email: 'agent-owner@example.com');
         $agent = new Agent($user, 'OWNER-AGENT', 'COSMIC', 'encrypted-token');
 
         $agentRepository = $this->createMock(AgentRepository::class);
@@ -104,8 +105,8 @@ final class ProxyServiceTest extends TestCase
 
     public function testAgentOwnedBySomeoneElseIsForbidden(): void
     {
-        $owner = new User('Owner', 'owner@example.com', 'hash');
-        $otherUser = new User('Other', 'other@example.com', 'hash');
+        $owner = UserTestFactory::create(name: 'Owner', email: 'owner@example.com');
+        $otherUser = UserTestFactory::create(name: 'Other', email: 'other@example.com');
         $agent = new Agent($owner, 'OWNER-AGENT', 'COSMIC', 'encrypted-token');
 
         $agentRepository = $this->createStub(AgentRepository::class);
@@ -197,7 +198,7 @@ final class ProxyServiceTest extends TestCase
         return new ProxyRequest(
             $method,
             $path,
-            $user ?? new User('No Agent', 'no-agent@example.com', 'hash'),
+            $user ?? UserTestFactory::create(name: 'No Agent', email: 'no-agent@example.com'),
             [],
             [],
             '',

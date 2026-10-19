@@ -1,5 +1,25 @@
 {
     "php-cs-fixer.exclude": [
         "**/OpenApi/Generated/**"
+    ],
+    "pgsql.connections": [
+        {
+            "id": "146FDDE9-C6B3-4589-B379-D61FBF6CCEC0",
+            "groupId": "99C6D53A-E192-491C-9D4D-9B54CFB18F2A",
+            "authenticationType": "SqlLogin",
+            "connectTimeout": 15,
+            "applicationName": "vscode-pgsql",
+            "clientEncoding": "utf8",
+            "sslmode": "disable",
+            "savePassword": true,
+            "sslRootCertMode": "none",
+            "server": "172.17.0.1",
+            "user": "space-traders",
+            "password": "",
+            "database": "space-traders",
+            "profileName": "SpaceTraders Dev, space-traders (space-traders)",
+            "sshPassword": "",
+            "expiresOn": 0
+        }
     ]
 }

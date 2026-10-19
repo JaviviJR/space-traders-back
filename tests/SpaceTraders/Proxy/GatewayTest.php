@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\SpaceTraders\Proxy;
 
-use App\Entity\User;
 use App\SpaceTraders\Exception\ApiException;
 use App\SpaceTraders\Proxy\Gateway;
 use App\SpaceTraders\Proxy\ProxyRequest;
+use App\Tests\Entity\UserTestFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -22,7 +22,7 @@ final class GatewayTest extends TestCase
         $request = new ProxyRequest(
             method: 'GET',
             path: 'my/agent',
-            user: new User('No Agent', 'no-agent@example.com', 'hash'),
+            user: UserTestFactory::create(name: 'No Agent', email: 'no-agent@example.com'),
         );
 
         $response = $gateway->request($request);
@@ -40,7 +40,7 @@ final class GatewayTest extends TestCase
         $request = new ProxyRequest(
             method: 'POST',
             path: 'register',
-            user: new User('No Agent', 'no-agent@example.com', 'hash'),
+            user: UserTestFactory::create(name: 'No Agent', email: 'no-agent@example.com'),
         );
 
         $response = $gateway->request($request);
@@ -58,7 +58,7 @@ final class GatewayTest extends TestCase
         $request = new ProxyRequest(
             method: 'GET',
             path: 'my/agent',
-            user: new User('No Agent', 'no-agent@example.com', 'hash'),
+            user: UserTestFactory::create(name: 'No Agent', email: 'no-agent@example.com'),
         );
 
         $this->expectException(ApiException::class);

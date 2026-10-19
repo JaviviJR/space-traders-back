@@ -26,6 +26,7 @@ final class RegisterControllerTest extends WebTestCase
                 'name' => 'Happy Register',
                 'email' => 'register-happy@example.com',
                 'password' => 'password123',
+                'accountToken' => 'some-account-token',
             ]))
             ->assertStatus(201)
         ;
@@ -36,12 +37,14 @@ final class RegisterControllerTest extends WebTestCase
         self::assertSame('register-happy@example.com', $data['data']['email']);
         self::assertSame('Happy Register', $data['data']['name']);
         self::assertArrayNotHasKey('password', $data['data']);
+        self::assertArrayNotHasKey('accountToken', $data['data']);
 
         /** @var UserRepository $userRepository */
         $userRepository = static::getContainer()->get(UserRepository::class);
         $user = $userRepository->findByEmail('register-happy@example.com');
         self::assertNotNull($user);
         self::assertFalse($user->isVerified());
+        self::assertNotEmpty($user->getAccountToken());
 
         self::assertEmailCount(1);
     }
@@ -55,6 +58,7 @@ final class RegisterControllerTest extends WebTestCase
                 'name' => 'Short Password',
                 'email' => 'register-short-password@example.com',
                 'password' => 'short',
+                'accountToken' => 'some-account-token',
             ]))
             ->assertStatus(422)
         ;
@@ -70,7 +74,7 @@ final class RegisterControllerTest extends WebTestCase
     public function testRegisteringTheSameEmailTwiceReturnsConflict(): void
     {
         $browser = $this->browser();
-        $payload = ['name' => 'Register Duplicate', 'email' => 'register-duplicate@example.com', 'password' => 'password123'];
+        $payload = ['name' => 'Register Duplicate', 'email' => 'register-duplicate@example.com', 'password' => 'password123', 'accountToken' => 'some-account-token',];
 
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(201);
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(409);

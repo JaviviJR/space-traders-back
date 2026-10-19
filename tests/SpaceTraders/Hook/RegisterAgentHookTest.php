@@ -11,6 +11,7 @@ use App\Security\AgentTokenCipherInterface;
 use App\SpaceTraders\Hook\Dto\RegisterAgentAugmentationData;
 use App\SpaceTraders\Hook\RegisterAgentHook;
 use App\SpaceTraders\Proxy\ProxyRequest;
+use App\Tests\Entity\UserTestFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -48,7 +49,7 @@ final class RegisterAgentHookTest extends TestCase
             ],
         ], \JSON_THROW_ON_ERROR));
 
-        $user = new User('Register Hook', 'register-hook@example.com', 'hashed-password');
+        $user = UserTestFactory::create(name: 'Register Hook', email: 'register-hook@example.com', password: 'hashed-password');
         $result = $hook->afterForward($this->proxyRequest('POST', 'register', $user), null, $response);
 
         self::assertSame($response, $result);
@@ -66,7 +67,7 @@ final class RegisterAgentHookTest extends TestCase
 
         $response = new HttpResponseEnvelope(422, '{"error":"symbol already taken"}');
 
-        $user = new User('Register Hook Rejected', 'register-hook-rejected@example.com', 'hashed-password');
+        $user = UserTestFactory::create(name: 'Register Hook Rejected', email: 'register-hook-rejected@example.com', password: 'hashed-password');
         $result = $hook->afterForward($this->proxyRequest('POST', 'register', $user), null, $response);
 
         self::assertSame($response, $result);
@@ -86,7 +87,7 @@ final class RegisterAgentHookTest extends TestCase
             ],
         ], \JSON_THROW_ON_ERROR));
 
-        $user = new User('Augment', 'augment@example.com', 'hashed-password');
+        $user = UserTestFactory::create(name: 'Augment', email: 'augment@example.com', password: 'hashed-password');
         $proxyRequest = $this->proxyRequest('POST', 'register', $user);
         $hook->afterForward($proxyRequest, null, $response);
 
@@ -135,7 +136,7 @@ final class RegisterAgentHookTest extends TestCase
         return new ProxyRequest(
             $method,
             $path,
-            $user ?? new User('No Register', 'no-register@example.com', 'hash'),
+            $user ?? UserTestFactory::create(name: 'No Register', email: 'no-register@example.com'),
             [],
             [],
             '',

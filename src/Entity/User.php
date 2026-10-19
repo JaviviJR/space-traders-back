@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -39,10 +40,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isVerified;
 
+    #[ORM\Column(type: Types::TEXT)]
+    private string $accountToken;
+
     public function __construct(
         string $name,
         string $email,
-        string $password
+        string $password,
+        string $accountToken
     ) {
         if ('' === $email) {
             throw new \InvalidArgumentException('User email must not be empty.');
@@ -53,6 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $password;
         $this->roles = ['ROLE_USER'];
         $this->isVerified = false;
+        $this->accountToken = $accountToken;
     }
 
     public function getId(): ?int
@@ -122,5 +128,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // No transient sensitive data to clear.
+    }
+
+    public function getAccountToken(): string
+    {
+        return $this->accountToken;
+    }
+
+    public function setAccountToken(string $accountToken): static
+    {
+        $this->accountToken = $accountToken;
+
+        return $this;
     }
 }

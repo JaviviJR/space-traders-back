@@ -14,11 +14,11 @@ final class SodiumAgentTokenCipher implements AgentTokenCipherInterface
     private string $key;
 
     public function __construct(
-        #[Autowire(env: 'base64:AGENT_TOKEN_ENCRYPTION_KEY')]
+        #[Autowire(env: 'base64:TOKEN_ENCRYPTION_KEY')]
         string $key,
     ) {
         if (SODIUM_CRYPTO_SECRETBOX_KEYBYTES !== \strlen($key)) {
-            throw new \InvalidArgumentException(sprintf('AGENT_TOKEN_ENCRYPTION_KEY must decode to %d bytes.', SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
+            throw new \InvalidArgumentException(sprintf('TOKEN_ENCRYPTION_KEY must decode to %d bytes.', SODIUM_CRYPTO_SECRETBOX_KEYBYTES));
         }
 
         $this->key = $key;
