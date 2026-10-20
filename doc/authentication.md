@@ -19,6 +19,19 @@ to generate a signed confirmation link, then rebuilds it to point at
 `{FRONT_URL}/confirm-email?<signature query>` instead of the bundle's own
 backend route. `FRONT_URL` is an env var (e.g. `http://localhost:5173`).
 
+The `<signature query>` (`id`, `expires`, `token`, `signature`) is the query
+string of the **back's** own signed URL for route `app_confirm_email` — only
+the host changes, not the query. It's opaque to the front: the front's job is
+just to land on `{FRONT_URL}/confirm-email`, read those 4 params and forward
+them, unchanged, as the query string of `POST /auth/confirm-email` (see
+`ConfirmEmailDto`, bound with `#[MapQueryString]`). The controller passes the
+real `Request` it receives straight to `EmailConfirmationService`, which hands
+it to `VerifyEmailHelperInterface::validateEmailConfirmationFromRequest()`
+as-is. This only works because the front's request targets the exact same
+route/path that was signed — reconstructing a different URL (e.g. from a
+JSON body) would require rebuilding it with the router and risks drifting
+from whatever scheme/host was used at signing time.
+
 `POST /auth/login` returns **403** (`AccessDeniedHttpException`, raised as
 `EmailNotVerifiedException`) when the credentials are correct but
 `!isVerified` — deliberately different from the **401**

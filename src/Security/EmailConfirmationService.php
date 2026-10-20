@@ -24,9 +24,8 @@ final class EmailConfirmationService
     /**
      * @throws InvalidEmailConfirmationException if the signed URL is invalid, expired or tampered with
      */
-    public function confirm(string $signedUrl): void
+    public function confirm(Request $request): void
     {
-        $request = Request::create($signedUrl);
         $userId = $request->query->get('id');
 
         $user = null !== $userId ? $this->userRepository->find((int) $userId) : null;

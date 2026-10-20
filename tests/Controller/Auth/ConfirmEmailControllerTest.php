@@ -9,7 +9,6 @@ use App\Factory\UserFactory;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
-use Zenstruck\Browser\HttpOptions;
 use Zenstruck\Browser\Test\HasBrowser;
 use Zenstruck\Foundry\Attribute\ResetDatabase;
 
@@ -23,10 +22,10 @@ final class ConfirmEmailControllerTest extends WebTestCase
         /** @var User $user */
         $user = UserFactory::createOne(['email' => 'confirm-happy@example.com', 'isVerified' => false]);
 
-        $signedUrl = $this->generateSignedUrl($user);
+        $query = $this->generateSignedQuery($user);
 
         $this->browser()
-            ->post('/auth/confirm-email', HttpOptions::json(['signedUrl' => $signedUrl]))
+            ->post('/auth/confirm-email?'.$query)
             ->assertStatus(200)
         ;
 
@@ -42,17 +41,17 @@ final class ConfirmEmailControllerTest extends WebTestCase
         /** @var User $user */
         $user = UserFactory::createOne(['email' => 'confirm-tampered@example.com', 'isVerified' => false]);
 
-        $signedUrl = $this->generateSignedUrl($user);
-        $tamperedUrl = preg_replace('/signature=[^&]+/', 'signature=not-a-valid-signature', $signedUrl);
-        self::assertNotNull($tamperedUrl);
+        $query = $this->generateSignedQuery($user);
+        $tamperedQuery = preg_replace('/signature=[^&]+/', 'signature=not-a-valid-signature', $query);
+        self::assertNotNull($tamperedQuery);
 
         $this->browser()
-            ->post('/auth/confirm-email', HttpOptions::json(['signedUrl' => $tamperedUrl]))
+            ->post('/auth/confirm-email?'.$tamperedQuery)
             ->assertStatus(400)
         ;
     }
 
-    private function generateSignedUrl(User $user): string
+    private function generateSignedQuery(User $user): string
     {
         /** @var VerifyEmailHelperInterface $verifyEmailHelper */
         $verifyEmailHelper = static::getContainer()->get(VerifyEmailHelperInterface::class);
@@ -64,6 +63,6 @@ final class ConfirmEmailControllerTest extends WebTestCase
             ['id' => (string) $user->getId()],
         );
 
-        return $signature->getSignedUrl();
+        return (string) parse_url($signature->getSignedUrl(), PHP_URL_QUERY);
     }
 }

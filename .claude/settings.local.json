@@ -5,7 +5,10 @@
       "Bash(composer phpstan *)",
       "Bash(php bin/phpunit --filter \"RegisterControllerTest|LoginControllerTest|ConfirmEmailControllerTest|ResendConfirmationControllerTest\")",
       "Bash(php bin/phpunit)",
-      "Bash(echo \"exit:$?\")"
+      "Bash(echo \"exit:$?\")",
+      "WebFetch(domain:symfonycasts.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(php bin/phpunit tests/Controller/Auth/ConfirmEmailControllerTest.php)"
     ]
   }
 }
