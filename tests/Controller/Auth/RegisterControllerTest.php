@@ -74,7 +74,7 @@ final class RegisterControllerTest extends WebTestCase
     public function testRegisteringTheSameEmailTwiceReturnsConflict(): void
     {
         $browser = $this->browser();
-        $payload = ['name' => 'Register Duplicate', 'email' => 'register-duplicate@example.com', 'password' => 'password123', 'accountToken' => 'some-account-token',];
+        $payload = ['name' => 'Register Duplicate', 'email' => 'register-duplicate@example.com', 'password' => 'password123', 'accountToken' => 'some-account-token'];
 
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(201);
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(409);
