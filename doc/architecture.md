@@ -178,6 +178,18 @@ Mappers, in evaluation order:
 Anything unmapped → `500`, `internal_error`, a generic message (the real
 exception is never exposed).
 
+## CORS
+
+The front (Vue + Pinia SPA) is served from a different origin than the back,
+so cross-origin requests need CORS headers. Handled by `NelmioCorsBundle`
+(`config/packages/nelmio_cors.yaml`), not hand-written headers in
+controllers or the kernel.
+
+Allowed origin is `%env(CORS_ALLOW_ORIGIN)%`, currently set in the committed
+`.env` to `^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$` — any port on
+localhost/127.0.0.1, since the front's dev port can vary. This is a dev-only
+default.
+
 ## Tests and contract
 
 The front's e2e tests intercept requests to the back with `page.route()`, so
@@ -187,6 +199,9 @@ Later, a few e2e tests will run against the real back for critical flows.
 
 ## TODO
 
+- When a production environment exists, restrict `CORS_ALLOW_ORIGIN` to the
+  real production domain only (set per-environment, not in the committed
+  `.env` default — see "CORS" above).
 - Base URL of the back for the front (`VITE_API_URL`) and the Vite dev proxy.
 - SpaceTraders rate limiting (see "Rate limiting" above).
 - Redact `data.token` from the agent registration response instead of
