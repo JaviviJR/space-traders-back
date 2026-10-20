@@ -18,7 +18,6 @@ nelmio_api_doc:
         # name even when the controller's own #[OA\RequestBody] already names the model, so without
         # this alias both an orphan "XxxDto" and the clean name would show up in components/schemas.
         names:
-            - { alias: ConfirmEmail, type: App\Security\Dto\ConfirmEmailDto }
             - { alias: RegisterUser, type: App\Security\Dto\RegisterUserDto }
             - { alias: ResendConfirmation, type: App\Security\Dto\ResendConfirmationDto }
             - { alias: RegisteredUser, type: App\Security\Dto\RegisterResponseData }
