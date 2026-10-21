@@ -19,11 +19,11 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Documents a representative subset of the SpaceTraders-proxied routes (see
- * "Proxy design" in doc/architecture.md) by copying their path/parameters/
+ * "Proxy design" in doc/spacetraders-proxy.md) by copying their path/parameters/
  * request/response schema straight out of SpaceTraders' own published spec
  * (vendored at resources/spacetraders/openapi.json, see doc/openapi.md) —
  * the schemas are never hand-transcribed, so the contract-fidelity rule in
- * architecture.md ("the back does not add, remove or rename fields") holds
+ * doc/spacetraders-proxy.md ("the back does not add, remove or rename fields") holds
  * in the docs too.
  *
  * Any App\SpaceTraders\Hook that also implements

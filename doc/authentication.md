@@ -6,7 +6,7 @@ Status: implemented (registration, login, refresh, logout, agent linking).
 
 An app user registers with email and password, independently of any
 SpaceTraders agent — a user can exist with zero agents. A user can link
-**several** agents (1:N). See `doc/architecture.md` for how agent-scoped
+**several** agents (1:N). See [spacetraders-proxy.md](spacetraders-proxy.md) for how agent-scoped
 SpaceTraders requests pick which agent to act on.
 
 The SpaceTraders agent token is stored only in the back, encrypted. The front
