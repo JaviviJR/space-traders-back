@@ -49,10 +49,13 @@ final class ExceptionListener
         $exception = $event->getThrowable();
         $mappedError = $this->mapError($exception);
 
-        $event->setResponse($this->envelope->error(
-            new ErrorResponseData($mappedError->code, $mappedError->message),
-            $mappedError->status,
-        ));
+        $event->setResponse(
+            $this->envelope->error(
+                $mappedError->body,
+                $mappedError->status,
+                $mappedError->headers
+            )
+        );
     }
 
     private function mapError(\Throwable $exception): MappedError
@@ -63,6 +66,6 @@ final class ExceptionListener
             }
         }
 
-        return new MappedError(500, self::UNEXPECTED_ERROR_CODE, 'An unexpected error occurred.');
+        return new MappedError(500, new ErrorResponseData(self::UNEXPECTED_ERROR_CODE, 'An unexpected error occurred.'));
     }
 }

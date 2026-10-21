@@ -25,7 +25,7 @@ final class SpaceTradersApiExceptionErrorMapperTest extends TestCase
         $mapped = (new SpaceTradersApiExceptionErrorMapper())->map(new ApiException(0, ''));
 
         self::assertSame(502, $mapped->status);
-        self::assertSame('spacetraders_unreachable', $mapped->code);
-        self::assertSame('SpaceTraders is currently unreachable.', $mapped->message);
+        self::assertSame('spacetraders_unreachable', $mapped->body->code);
+        self::assertSame('SpaceTraders is currently unreachable.', $mapped->body->message);
     }
 }

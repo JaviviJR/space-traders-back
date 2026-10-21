@@ -9,8 +9,12 @@ namespace App\Http;
  * $code is a stable, machine-readable identifier for the front to branch on;
  * $message is human-readable and safe to expose (never a raw exception
  * message for unexpected failures).
+ *
+ * Not final: an error kind that needs extra fields (e.g.
+ * ValidationErrorResponseData) extends it, so every error body still carries
+ * code and message and the rest of the pipeline treats it as any other.
  */
-final readonly class ErrorResponseData implements ResponseData
+readonly class ErrorResponseData implements ResponseData
 {
     public function __construct(
         public string $code,

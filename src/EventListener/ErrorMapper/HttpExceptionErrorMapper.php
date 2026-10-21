@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorResponseData;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
@@ -11,6 +12,8 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
  * (UnauthorizedHttpException, AccessDeniedHttpException,
  * NotFoundHttpException, ...): its own getStatusCode() and getMessage(),
  * both already intentional and safe — set by the code that threw it.
+ * Its getHeaders() are kept too: some are part of the HTTP semantics of the
+ * status (Allow on a 405, WWW-Authenticate on a 401, Retry-After on a 429).
  */
 final class HttpExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
@@ -25,6 +28,10 @@ final class HttpExceptionErrorMapper implements ExceptionErrorMapperInterface
     {
         \assert($exception instanceof HttpExceptionInterface);
 
-        return new MappedError($exception->getStatusCode(), self::CODE, $exception->getMessage());
+        return new MappedError(
+            $exception->getStatusCode(),
+            new ErrorResponseData(self::CODE, $exception->getMessage()),
+            $exception->getHeaders(),
+        );
     }
 }
