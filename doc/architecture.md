@@ -198,6 +198,32 @@ Anything specific to one mapper (why that status, why that priority, what it
 deliberately doesn't match) is documented in the mapper's own docblock, not
 here.
 
+### Localized validation messages
+
+Only the per-field messages in a validation error's `violations` follow the
+request's `Accept-Language` header. Everything else — the envelope's `code`
+and `message` (`Validation failed.` included), every other mapper's
+message, and relayed SpaceTraders errors — stays in English.
+
+This relies on the framework, not on code in the mapper:
+`framework.set_locale_from_accept_language` sets the request locale, and the
+Validator translates constraint messages with the `validators` catalogs
+shipped by `symfony/validator` (`config/packages/translation.yaml`).
+
+- Enabled locales are `en` and `es` (`framework.enabled_locales`). A missing
+  header keeps `default_locale` (`en`); an unsupported one gets the *first*
+  enabled locale, so `en` must stay first. A regional variant (`es-AR`)
+  matches its language (`es`).
+- The response carries `Vary: Accept-Language` (added by the framework to
+  every response once the option is on). No `Content-Language`: most of the
+  body, including the envelope's `message`, isn't in the request locale.
+- A custom constraint message (`#[Assert\...(message: ...)]`) must be a
+  translation key with entries in `translations/validators.{en,es}.*`;
+  plain English text there is never translated.
+- Type mismatches reported by `#[MapRequestPayload]` (`This value should be
+  of type ...`) are translated too; templates with no entry in the catalogs
+  stay in English.
+
 ### Controllers don't translate exceptions
 
 Controllers and services let domain exceptions propagate to the listener;
@@ -237,6 +263,14 @@ Later, a few e2e tests will run against the real back for critical flows.
   `.env` default — see "CORS" above).
 - Base URL of the back for the front (`VITE_API_URL`) and the Vite dev proxy.
 - SpaceTraders rate limiting (see "Rate limiting" above).
+- Known leak of localized messages, accepted for now: once a translator
+  exists, LexikJWTAuthenticationBundle translates its own authentication
+  failure message with the `security` domain. Its own keys (`Invalid JWT
+  Token`, `Expired JWT Token`) have no catalog entry and stay in English, but
+  a valid JWT for a deleted user returns Symfony's `Username could not be
+  found.` translated (e.g. Spanish with `Accept-Language: es`). Revisit if it
+  causes problems — e.g. a listener on Lexik's `JWT_INVALID`/`JWT_EXPIRED`
+  events that resets the untranslated message.
 - Redact `data.token` from the agent registration response instead of
   relaying it to the front unchanged (see "Back-only endpoints" above).
 - `error.code`'s type is inconsistent across the two response kinds: a

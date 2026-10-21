@@ -1,0 +1,8 @@
+framework:
+    default_locale: en
+    # The first enabled locale is the fallback for an unsupported Accept-Language.
+    enabled_locales: ['en', 'es']
+    set_locale_from_accept_language: true
+    translator:
+        default_path: '%kernel.project_dir%/translations'
+        providers:
