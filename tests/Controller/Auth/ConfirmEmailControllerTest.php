@@ -45,10 +45,15 @@ final class ConfirmEmailControllerTest extends WebTestCase
         $tamperedQuery = preg_replace('/signature=[^&]+/', 'signature=not-a-valid-signature', $query);
         self::assertNotNull($tamperedQuery);
 
-        $this->browser()
+        $browser = $this->browser()
             ->post('/auth/confirm-email?'.$tamperedQuery)
             ->assertStatus(400)
         ;
+
+        /** @var array{error: array{code: string, message: string}} $data */
+        $data = $browser->json()->decoded();
+
+        self::assertSame('invalid_email_confirmation', $data['error']['code']);
     }
 
     private function generateSignedQuery(User $user): string

@@ -33,6 +33,12 @@ mark their `data`/`error` property `required` on the generated `JsonContent`:
 a 2xx without `data` or a non-2xx without `error` is a contract violation, not
 a case the front needs to guard against with `?.`.
 
+`ErrorResponse` documents the `error` property as `ErrorResponseData` by
+default. When an endpoint can return an error whose body is a subclass with
+extra fields (see "Errors" in [architecture.md](architecture.md)), pass it as
+`model:` on that status's `#[ErrorResponse]` so the schema shows what is
+actually sent; the other statuses keep the default.
+
 
 ## SpaceTraders (proxied) endpoints
 

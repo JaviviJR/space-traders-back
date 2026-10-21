@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorResponseData;
+use App\Http\ValidationErrorResponseData;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
@@ -14,7 +14,12 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
  * generic HttpException whose getMessage() concatenates the violation
  * messages but drops which field each one is about. This unwraps the
  * original ValidationFailedException (kept as the HttpException's previous)
- * and rebuilds "field: problem" pairs from its violations.
+ * and groups its violation messages by property path.
+ *
+ * Violations without a property path (class-level constraints, or a payload
+ * the Serializer couldn't read at all) go under GLOBAL_KEY instead of an
+ * empty-string key, which a front binding keys to form fields would silently
+ * drop. Same idea as DRF's `non_field_errors` or Rails' `errors[:base]`.
  *
  * Runs ahead of HttpExceptionErrorMapper, which would otherwise also
  * support the wrapping HttpException.
@@ -23,6 +28,7 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 final class ValidationFailedExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
     private const string CODE = 'validation_failed';
+    private const string GLOBAL_KEY = '_global';
 
     public function supports(\Throwable $exception): bool
     {
@@ -36,11 +42,15 @@ final class ValidationFailedExceptionErrorMapper implements ExceptionErrorMapper
         $previous = $exception->getPrevious();
         \assert($previous instanceof ValidationFailedException);
 
-        $messages = [];
+        $violations = [];
         foreach ($previous->getViolations() as $violation) {
-            $messages[] = \sprintf('%s: %s', $violation->getPropertyPath(), $violation->getMessage());
+            $path = '' === $violation->getPropertyPath() ? self::GLOBAL_KEY : $violation->getPropertyPath();
+            $violations[$path][] = (string) $violation->getMessage();
         }
 
-        return new MappedError($exception->getStatusCode(), new ErrorResponseData(self::CODE, implode('; ', $messages)));
+        return new MappedError(
+            $exception->getStatusCode(),
+            new ValidationErrorResponseData(self::CODE, 'Validation failed.', $violations),
+        );
     }
 }

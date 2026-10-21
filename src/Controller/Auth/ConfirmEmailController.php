@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Http\ValidationErrorResponseData;
 use App\OpenApi\Attribute\DataResponse;
 use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\ConfirmEmailDto;
 use App\Security\Dto\ConfirmEmailResponseData;
 use App\Security\EmailConfirmationService;
-use App\Security\Exception\InvalidEmailConfirmationException;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class ConfirmEmailController extends AbstractController
@@ -38,14 +37,10 @@ final class ConfirmEmailController extends AbstractController
     #[OA\Parameter(name: 'signature', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[DataResponse(model: ConfirmEmailResponseData::class, status: 200, description: 'Email confirmed')]
     #[ErrorResponse(status: 400, description: 'Invalid or expired confirmation signature')]
-    #[ErrorResponse(status: 422, description: 'Validation failed')]
+    #[ErrorResponse(status: 422, description: 'Validation failed', model: ValidationErrorResponseData::class)]
     public function __invoke(#[MapQueryString] ConfirmEmailDto $dto, Request $request): JsonResponse
     {
-        try {
-            $this->emailConfirmationService->confirm($request);
-        } catch (InvalidEmailConfirmationException $exception) {
-            throw new BadRequestHttpException($exception->getMessage(), $exception);
-        }
+        $this->emailConfirmationService->confirm($request);
 
         return $this->envelope->success(new ConfirmEmailResponseData(true));
     }

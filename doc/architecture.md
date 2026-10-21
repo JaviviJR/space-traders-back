@@ -178,7 +178,19 @@ failures; anything else that should reach the front gets a mapper.
 4. If it must run ahead of a more generic mapper that would also match, raise
    its priority with `#[AsTaggedItem(priority: ...)]`; with none, it runs
    after every prioritised one.
-5. Add a unit test in `tests/EventListener/ErrorMapper/` (supports, doesn't
+5. If the error needs fields beyond `code`/`message` (e.g. per-field detail
+   the front binds to a form), put them in a `readonly` subclass of
+   `ErrorResponseData` in `src/Http/` and return that as the body — not a
+   nullable field on `ErrorResponseData`, which every other error would then
+   carry. The rest of the pipeline is unchanged: the subclass is still an
+   `ErrorResponseData`. Document it on the affected endpoints with
+   `#[ErrorResponse(..., model: TheSubclass::class)]` (see
+   [openapi.md](openapi.md)).
+6. If the error response needs headers (e.g. a `Set-Cookie` clearing a
+   rejected credential, or headers an `HttpExceptionInterface` carries), return
+   them in `MappedError::$headers`; the listener passes them to the envelope.
+   A mapper may inject whatever HTTP-layer service it needs to build them.
+7. Add a unit test in `tests/EventListener/ErrorMapper/` (supports, doesn't
    support another exception, maps to the expected status/code/message), and
    assert the `code` in the functional test of the endpoint that triggers it.
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Http\ValidationErrorResponseData;
 use App\OpenApi\Attribute\DataResponse;
 use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\RegisterResponseData;
@@ -35,7 +36,7 @@ final class RegisterController extends AbstractController
     #[OA\RequestBody(content: new Model(type: RegisterUserDto::class))]
     #[DataResponse(model: RegisterResponseData::class, status: 201, description: 'User registered')]
     #[ErrorResponse(status: 409, description: 'Email already registered')]
-    #[ErrorResponse(status: 422, description: 'Validation failed')]
+    #[ErrorResponse(status: 422, description: 'Validation failed', model: ValidationErrorResponseData::class)]
     public function __invoke(#[MapRequestPayload] RegisterUserDto $dto): JsonResponse
     {
         $user = $this->userRegistrationService->register($dto);

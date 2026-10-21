@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
-use App\Http\ErrorResponseData;
 use App\OpenApi\Attribute\DataResponse;
 use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\AccessTokenResponseData;
@@ -46,19 +45,11 @@ final class RefreshController extends AbstractController
     {
         $plaintext = $this->cookieFactory->readFrom($request);
 
-        try {
-            if (null === $plaintext) {
-                throw InvalidRefreshTokenException::becauseNotFoundOrInvalid();
-            }
-
-            $user = $this->refreshTokenService->verify($plaintext);
-        } catch (InvalidRefreshTokenException $exception) {
-            return $this->envelope->error(
-                new ErrorResponseData('invalid_refresh_token', $exception->getMessage()),
-                401,
-                headers: ['Set-Cookie' => (string) $this->cookieFactory->clear()],
-            );
+        if (null === $plaintext) {
+            throw InvalidRefreshTokenException::becauseNotFoundOrInvalid();
         }
+
+        $user = $this->refreshTokenService->verify($plaintext);
 
         $accessToken = $this->refreshTokenService->createAccessToken($user);
 

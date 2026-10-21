@@ -52,7 +52,8 @@ final class ExceptionListener
         $event->setResponse(
             $this->envelope->error(
                 $mappedError->body,
-                $mappedError->status
+                $mappedError->status,
+                $mappedError->headers
             )
         );
     }

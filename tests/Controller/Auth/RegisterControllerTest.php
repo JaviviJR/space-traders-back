@@ -63,12 +63,21 @@ final class RegisterControllerTest extends WebTestCase
             ->assertStatus(422)
         ;
 
-        /** @var array{error: array{code: string, message: string}} $data */
+        /** @var array{error: array{code: string, message: string, violations: array<string, list<string>>}} $data */
         $data = $browser->json()->decoded();
 
         self::assertSame('validation_failed', $data['error']['code']);
-        self::assertStringContainsString('password', $data['error']['message']);
-        self::assertStringContainsString('8 characters', $data['error']['message']);
+        self::assertSame(['password'], array_keys($data['error']['violations']));
+        self::assertStringContainsString('8 characters', $data['error']['violations']['password'][0]);
+    }
+
+    public function testAWrongMethodReturnsMethodNotAllowedWithTheAllowedOnes(): void
+    {
+        $this->browser()
+            ->get('/auth/register')
+            ->assertStatus(405)
+            ->assertHeaderEquals('Allow', 'POST')
+        ;
     }
 
     public function testRegisteringTheSameEmailTwiceReturnsConflict(): void
