@@ -35,7 +35,7 @@ a case the front needs to guard against with `?.`.
 
 `ErrorResponse` documents the `error` property as `ErrorResponseData` by
 default. When an endpoint can return an error whose body is a subclass with
-extra fields (see "Errors" in [architecture.md](architecture.md)), pass it as
+extra fields (see "Adding a mapper" in [errors.md](errors.md)), pass it as
 `model:` on that status's `#[ErrorResponse]` so the schema shows what is
 actually sent; the other statuses keep the default.
 
@@ -44,7 +44,7 @@ actually sent; the other statuses keep the default.
 
 All of these share a single physical route
 (`/api/spacetraders/{path}`, see "Proxy design" in
-[architecture.md](architecture.md)), so there's no one controller action per
+[spacetraders-proxy.md](spacetraders-proxy.md)), so there's no one controller action per
 logical endpoint to attach attributes to — hand-writing `#[OA\...]` per
 endpoint isn't an option here the way it is for back-only ones.
 
@@ -61,7 +61,7 @@ path to live under `/api/spacetraders/...`. The schemas themselves are never
 hand-transcribed — they come straight from SpaceTraders' published spec
 (deserialized via `zircote/swagger-php`'s own `OpenApi\Serializer`, into the
 same annotation objects the classic `#[OA\...]` attributes would produce), so
-the contract-fidelity rule in architecture.md ("the back does not add, remove
+the contract-fidelity rule in [spacetraders-proxy.md](spacetraders-proxy.md) ("the back does not add, remove
 or rename fields") holds in the docs too, not just at runtime.
 
 **Spec source:** vendored at `resources/spacetraders/openapi.json` — a
@@ -92,11 +92,11 @@ to exercise both plain pass-through operations and one with a hook
 augmentation. Expand the list to document more.
 
 **Hook augmentations:** `App\SpaceTraders\Response\AugmentInterface` (see
-"Proxy design" in architecture.md) has a doc-time counterpart to `augment()`:
+"Proxy design" in [spacetraders-proxy.md](spacetraders-proxy.md)) has a doc-time counterpart to `augment()`:
 `describedAugmentation(): App\SpaceTraders\Response\AugmentationSchema`, returning which
 operation (method + path) the hook adds fields to and the `ResponseData`
 class those fields come from (the same marker back-only responses use —
-see "Proxy design" in architecture.md).
+see "Proxy design" in [spacetraders-proxy.md](spacetraders-proxy.md)).
 `App\SpaceTraders\OpenApi\ProxyDescriber` asks every hook for it and merges the class's
 public properties into the matching operation's response schema as siblings
 of `data` — no edit to the describer needed when a new augmenting hook is
@@ -115,8 +115,8 @@ one. Update the schema in the same change that redacts it at runtime.
 
 Back-only request/response classes follow internal PHP naming conventions —
 `Dto` suffix for request payloads, `*ResponseData` for the
-`App\Http\ResponseData` envelope marker (see architecture.md's "Proxy
-design"). Those suffixes are meaningful here, but they must not leak into the
+`App\Http\ResponseData` envelope marker (see "Proxy design" in
+[spacetraders-proxy.md](spacetraders-proxy.md)). Those suffixes are meaningful here, but they must not leak into the
 generated spec: the front's codegen turns each component schema name
 verbatim into a TS type name, so `AgentResponseData` would show up front-side
 as `AgentResponseData` instead of a clean `Agent`-like name.

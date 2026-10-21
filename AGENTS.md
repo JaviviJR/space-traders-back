@@ -155,15 +155,26 @@ things up in the project instead of relying on memory:
 ## Architecture decisions
 
 Read these before designing or generating code that touches their area. They
-record decisions already made; don't re-open them without asking.
+record decisions already made; don't re-open them without asking. They are not
+loaded automatically: read only the ones whose trigger matches the task.
 
-- `@doc/architecture.md`: BFF role, SpaceTraders vs back-only endpoints, response
-  contract and headers.
-- `@doc/authentication.md`: JWT auth (Lexik access token, custom refresh token
-  rotation), token storage, firewall rules.
-- `@doc/openapi.md`: OpenAPI documentation setup and conventions.
-- `@doc/testing.md`: coverage setup, model/test factories, test doubles
-  conventions.
+- [doc/architecture.md](doc/architecture.md): read before designing a new
+  endpoint or feature, deciding whether an endpoint is SpaceTraders-proxied or
+  back-only, or touching CORS. BFF role and the overall response contract.
+- [doc/spacetraders-proxy.md](doc/spacetraders-proxy.md): read before touching
+  anything that calls SpaceTraders: the catch-all proxy, route hooks,
+  augmentations, `X-Agent-Id`, the gateway or rate limiting.
+- [doc/errors.md](doc/errors.md): read before adding an exception mapper,
+  throwing a new domain exception, touching validation or its translated
+  messages, or changing error responses.
+- [doc/authentication.md](doc/authentication.md): read before touching login,
+  registration, JWT or refresh tokens, the user/agent model, agent token
+  storage, or firewall rules.
+- [doc/openapi.md](doc/openapi.md): read before adding or changing an
+  endpoint's OpenAPI attributes, request/response DTOs, or the SpaceTraders
+  spec describer.
+- [doc/testing.md](doc/testing.md): read before writing or changing tests,
+  test factories or test doubles, or touching coverage setup.
 
 When a decision changes, update the relevant file in the same change.
 
@@ -177,4 +188,5 @@ mechanism or one of its rules changes, not when a new implementation is added.
 ## Working agreements
 
 How the user wants to work with Claude (confirmations, proposals, installs,
-language). Read `doc/workflow.md` at the start of every session.
+language). Read [doc/workflow.md](doc/workflow.md) at the start of every
+session.
