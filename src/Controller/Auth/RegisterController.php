@@ -10,7 +10,6 @@ use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\RegisterResponseData;
 use App\Security\Dto\RegisterUserDto;
 use App\Security\Email\RegistrationConfirmationMailer;
-use App\Security\Exception\EmailAlreadyRegisteredException;
 use App\Security\UserRegistrationService;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
@@ -18,7 +17,6 @@ use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class RegisterController extends AbstractController
@@ -40,11 +38,7 @@ final class RegisterController extends AbstractController
     #[ErrorResponse(status: 422, description: 'Validation failed')]
     public function __invoke(#[MapRequestPayload] RegisterUserDto $dto): JsonResponse
     {
-        try {
-            $user = $this->userRegistrationService->register($dto);
-        } catch (EmailAlreadyRegisteredException $exception) {
-            throw new ConflictHttpException($exception->getMessage(), $exception);
-        }
+        $user = $this->userRegistrationService->register($dto);
 
         $this->registrationConfirmationMailer->sendConfirmationEmail($user);
 

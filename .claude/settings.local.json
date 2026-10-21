@@ -8,7 +8,11 @@
       "Bash(echo \"exit:$?\")",
       "WebFetch(domain:symfonycasts.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(php bin/phpunit tests/Controller/Auth/ConfirmEmailControllerTest.php)"
+      "Bash(php bin/phpunit tests/Controller/Auth/ConfirmEmailControllerTest.php)",
+      "Bash(php bin/console cache:warmup -q)",
+      "Bash(php bin/console lint:container)",
+      "Bash(php bin/phpunit tests/EventListener tests/Controller/Auth/RegisterControllerTest.php)",
+      "Bash(vendor/bin/php-cs-fixer fix *)"
     ]
   }
 }

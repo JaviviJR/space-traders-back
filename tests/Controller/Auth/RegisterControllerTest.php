@@ -78,5 +78,10 @@ final class RegisterControllerTest extends WebTestCase
 
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(201);
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(409);
+
+        /** @var array{error: array{code: string, message: string}} $data */
+        $data = $browser->json()->decoded();
+
+        self::assertSame('email_already_registered', $data['error']['code']);
     }
 }
