@@ -157,15 +157,22 @@ things up in the project instead of relying on memory:
 Read these before designing or generating code that touches their area. They
 record decisions already made; don't re-open them without asking.
 
-- `doc/architecture.md`: BFF role, SpaceTraders vs back-only endpoints, response
+- `@doc/architecture.md`: BFF role, SpaceTraders vs back-only endpoints, response
   contract and headers.
-- `doc/authentication.md`: JWT auth (Lexik access token, custom refresh token
+- `@doc/authentication.md`: JWT auth (Lexik access token, custom refresh token
   rotation), token storage, firewall rules.
-- `doc/openapi.md`: OpenAPI documentation setup and conventions.
-- `doc/testing.md`: coverage setup, model/test factories, test doubles
+- `@doc/openapi.md`: OpenAPI documentation setup and conventions.
+- `@doc/testing.md`: coverage setup, model/test factories, test doubles
   conventions.
 
 When a decision changes, update the relevant file in the same change.
+
+These files record the generic mechanism and how to add a new case (steps,
+rules, conventions), not an inventory of concrete implementations. Don't list
+each mapper, handler, hook or strategy there; anything specific to one
+implementation (why that status, that priority, what it deliberately doesn't
+match) goes in that class's own docblock. Touch the `.md` only when the
+mechanism or one of its rules changes, not when a new implementation is added.
 
 ## Working agreements
 

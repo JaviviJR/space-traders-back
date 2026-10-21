@@ -25,7 +25,7 @@ final class EmailAlreadyRegisteredExceptionErrorMapperTest extends TestCase
         $mapped = (new EmailAlreadyRegisteredExceptionErrorMapper())->map(EmailAlreadyRegisteredException::withEmail('taken@example.com'));
 
         self::assertSame(409, $mapped->status);
-        self::assertSame('email_already_registered', $mapped->code);
-        self::assertSame('This email is already registered.', $mapped->message);
+        self::assertSame('email_already_registered', $mapped->body->code);
+        self::assertSame('This email is already registered.', $mapped->body->message);
     }
 }

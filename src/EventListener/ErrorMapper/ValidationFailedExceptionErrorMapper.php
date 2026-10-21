@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorResponseData;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
@@ -40,6 +41,6 @@ final class ValidationFailedExceptionErrorMapper implements ExceptionErrorMapper
             $messages[] = \sprintf('%s: %s', $violation->getPropertyPath(), $violation->getMessage());
         }
 
-        return new MappedError($exception->getStatusCode(), self::CODE, implode('; ', $messages));
+        return new MappedError($exception->getStatusCode(), new ErrorResponseData(self::CODE, implode('; ', $messages)));
     }
 }

@@ -149,34 +149,55 @@ instead of Symfony's default error shape. `code` is a stable,
 machine-readable identifier for the front to branch on; `message` is
 human-readable and safe to expose.
 
-Deciding `(status, code, message)` for a given exception is delegated to
+Deciding the response for a given exception is delegated to
 `ExceptionErrorMapperInterface` (`supports()` + `map()`): one class per kind
 of exception, tagged `app.exception_error_mapper` and injected into the
 listener as a priority-ordered `#[AutowireIterator]`, trying each
 `supports()` in order and using the first match — the same shape Symfony
-itself uses for Normalizers. Adding a new exception case means adding a
-mapper class, not editing a growing switch. A mapper that must run ahead of a
-more generic one raises its priority (`#[AsTaggedItem(priority: ...)]`); with
-none, it runs last.
-
-Mappers, in evaluation order:
-
-- `ValidationFailedExceptionErrorMapper` (priority `10`) — a failed
-  `#[MapRequestPayload]`/`#[MapQueryString]` → the exception's own status
-  (normally `422`), `validation_failed`, one `"field: problem"` per
-  violation joined with `; `.
-- `HttpExceptionErrorMapper` (default) — fallback for any other
-  `HttpExceptionInterface` (`UnauthorizedHttpException`,
-  `AccessDeniedHttpException`, `NotFoundHttpException`, ...) → its own
-  status/message, already intentional and safe. Runs after the validation
-  mapper, which would otherwise also match the wrapping `HttpException`.
-- `SpaceTradersApiExceptionErrorMapper` (default) — the gateway's genuine
-  transport failures only (timeout, DNS, connection; **not** a relayed
-  SpaceTraders 4xx/5xx) → `502`, `spacetraders_unreachable`. `500` is
-  reserved for the back's own internal failures.
+itself uses for Normalizers. `map()` returns a `MappedError`: the HTTP
+status plus the public body as an `ErrorResponseData`, which the listener
+hands to the envelope as-is.
 
 Anything unmapped → `500`, `internal_error`, a generic message (the real
-exception is never exposed).
+exception is never exposed). `500` is reserved for the back's own internal
+failures; anything else that should reach the front gets a mapper.
+
+### Adding a mapper
+
+1. Create a class in `src/EventListener/ErrorMapper/` implementing
+   `ExceptionErrorMapperInterface`. The interface carries
+   `#[AutoconfigureTag]`, so autoconfiguration registers it; no service
+   definition needed.
+2. `supports()` matches the exception (usually an `instanceof`); `map()`
+   returns its status, a stable `code` (a `snake_case` slug, kept in a
+   `CODE` constant) and the public message.
+3. Choose the message deliberately: a fixed text by default. Reuse
+   `getMessage()` only when the exception's message is written to be shown
+   to the front (as `HttpExceptionInterface` messages are); a domain
+   exception's message is not a public contract.
+4. If it must run ahead of a more generic mapper that would also match, raise
+   its priority with `#[AsTaggedItem(priority: ...)]`; with none, it runs
+   after every prioritised one.
+5. Add a unit test in `tests/EventListener/ErrorMapper/` (supports, doesn't
+   support another exception, maps to the expected status/code/message), and
+   assert the `code` in the functional test of the endpoint that triggers it.
+
+Anything specific to one mapper (why that status, why that priority, what it
+deliberately doesn't match) is documented in the mapper's own docblock, not
+here.
+
+### Controllers don't translate exceptions
+
+Controllers and services let domain exceptions propagate to the listener;
+they don't `catch` them to rethrow an `HttpException`. Services stay
+HTTP-agnostic, and every error response is decided in one place.
+
+The one exception: when the same exception needs a different response
+depending on the endpoint (e.g. "user not found" is a `404` on a lookup but
+must be a generic `401` on login, to avoid revealing which emails exist), a
+global mapper can't express it. Prefer having the service throw distinct
+exceptions; only if that isn't reasonable, translate in that specific
+controller.
 
 ## CORS
 

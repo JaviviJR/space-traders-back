@@ -25,7 +25,7 @@ final class HttpExceptionErrorMapperTest extends TestCase
         $mapped = (new HttpExceptionErrorMapper())->map(new NotFoundHttpException('Agent not found.'));
 
         self::assertSame(404, $mapped->status);
-        self::assertSame('http_error', $mapped->code);
-        self::assertSame('Agent not found.', $mapped->message);
+        self::assertSame('http_error', $mapped->body->code);
+        self::assertSame('Agent not found.', $mapped->body->message);
     }
 }

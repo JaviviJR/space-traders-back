@@ -40,11 +40,11 @@ final class ValidationFailedExceptionErrorMapperTest extends TestCase
         $mapped = (new ValidationFailedExceptionErrorMapper())->map($exception);
 
         self::assertSame(422, $mapped->status);
-        self::assertSame('validation_failed', $mapped->code);
+        self::assertSame('validation_failed', $mapped->body->code);
         self::assertSame(
             'password: This value is too short. It should have 8 characters or more.; '
             .'email: This value is not a valid email address.',
-            $mapped->message,
+            $mapped->body->message,
         );
     }
 }
