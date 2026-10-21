@@ -12,39 +12,22 @@ SpaceTraders requests pick which agent to act on.
 The SpaceTraders agent token is stored only in the back, encrypted. The front
 never sees it.
 
-A new `User` has `isVerified = false`. Registration triggers
-`RegistrationConfirmationMailer` (`src/Security/Email/RegistrationConfirmationMailer.php`),
-which uses `symfonycasts/verify-email-bundle`'s `VerifyEmailHelperInterface`
-to generate a signed confirmation link, then rebuilds it to point at
-`{FRONT_URL}/confirm-email?<signature query>` instead of the bundle's own
-backend route. `FRONT_URL` is an env var (e.g. `http://localhost:5173`).
+A new `User` has `isVerified = false`. Registration sends a confirmation
+email (`symfonycasts/verify-email-bundle`) whose link points at
+`{FRONT_URL}/confirm-email?<signature query>`, not at a backend route.
+`FRONT_URL` is an env var (e.g. `http://localhost:5173`).
 
-The `<signature query>` (`id`, `expires`, `token`, `signature`) is the query
-string of the **back's** own signed URL for route `app_confirm_email` — only
-the host changes, not the query. It's opaque to the front: the front's job is
-just to land on `{FRONT_URL}/confirm-email`, read those 4 params and forward
-them, unchanged, as the query string of `POST /auth/confirm-email`. The
-controller passes the real `Request` it receives straight to
-`EmailConfirmationService`, which hands it to
-`VerifyEmailHelperInterface::validateEmailConfirmationFromRequest()` as-is.
-This only works because the front's request targets the exact same
-route/path that was signed — reconstructing a different URL (e.g. from a
-JSON body) would require rebuilding it with the router and risks drifting
-from whatever scheme/host was used at signing time.
-
-The signature is the query's only validation: no `#[MapQueryString]` DTO.
-The HMAC already covers every parameter, and a validator in front of it
-would answer a bad query with `validation_failed` and per-field
-`violations`, telling the caller which parameter is wrong. Instead, a
-missing, extra or altered parameter, an unknown `id` and a tampered
-signature all return the same `400` `invalid_email_confirmation` body, so
-the endpoint doesn't reveal which part failed or which user ids exist.
+The `<signature query>` (`id`, `expires`, `token`, `signature`) is opaque to
+the front: its job is just to land on `{FRONT_URL}/confirm-email`, read those
+4 params and forward them, unchanged, as the query string of
+`POST /auth/confirm-email`. A missing, extra or altered parameter, an unknown
+`id` and a tampered signature all return the same `400`
+`invalid_email_confirmation` body, so the endpoint doesn't reveal which part
+failed or which user ids exist.
 
 `POST /auth/login` returns **403** `email_not_verified` when the credentials
-are correct but `!isVerified`: `UserVerificationChecker::checkPostAuth()`
-throws `EmailNotVerifiedException`, which runs only after the password
-check, so an unverified account isn't revealed to someone without its
-password. A wrong password or an unknown email is a **401**
+are correct but `!isVerified`, and only then: an unverified account isn't
+revealed to someone without its password. A wrong password or an unknown email is a **401**
 `invalid_credentials`, with the same body for both so the endpoint doesn't
 reveal which emails exist. The front must not treat that 401 like
 `authentication_required`: it's a form error, not a cue to try
@@ -86,8 +69,7 @@ out.
 
 - `login` (`^/auth/login$`): stateless, Symfony's `json_login` with
   `UserVerificationChecker` as user checker and `LoginSuccessHandler` /
-  `LoginFailureHandler` as handlers. The authenticator answers every JSON
-  request, so `LoginController` only runs for a non-JSON one (`415`).
+  `LoginFailureHandler` as handlers.
 - `main`: `stateless: true`, with the Lexik JWT authenticator.
 - Public (no JWT required): `/auth/register`, `/auth/login`, `/auth/refresh`,
   `/auth/logout`, `/auth/confirm-email` (POST), `/auth/resend-confirmation`

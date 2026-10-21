@@ -12,6 +12,15 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\InvalidSignatureException;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
+/**
+ * Receives the real Request and hands it to
+ * VerifyEmailHelperInterface::validateEmailConfirmationFromRequest() as-is.
+ * That only works because the front's request targets the exact route/path
+ * that was signed (see RegistrationConfirmationMailer); reconstructing the
+ * URL from anything else (e.g. a JSON body) would mean rebuilding it with
+ * the router, at the risk of drifting from the scheme/host used at signing
+ * time.
+ */
 final class EmailConfirmationService
 {
     public function __construct(

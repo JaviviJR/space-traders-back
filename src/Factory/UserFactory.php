@@ -11,6 +11,9 @@ use Zenstruck\Foundry\Object\Instantiator;
 use Zenstruck\Foundry\Persistence\PersistentObjectFactory;
 
 /**
+ * Defaults isVerified to true, so factory-made users don't need manual
+ * verification in tests.
+ *
  * @extends PersistentObjectFactory<User>
  */
 final class UserFactory extends PersistentObjectFactory

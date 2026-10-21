@@ -22,15 +22,9 @@ Entry points only hand the exception to the factory; they never decide a
 response themselves.
 
 - `ExceptionListener` (`kernel.exception`): every uncaught exception.
-- `JwtAuthenticationFailureListener` (LexikJWTAuthenticationBundle's
-  `JWT_NOT_FOUND` / `JWT_INVALID` / `JWT_EXPIRED`): Lexik answers a rejected
-  JWT with its own response from inside the firewall, so it never reaches
-  `kernel.exception`. The listener replaces it with the factory's response
-  for the event's exception. Throwing from there to reach
-  `ExceptionListener` doesn't work: without a token, `JWT_NOT_FOUND` comes
-  from the firewall's entry point, which already runs inside
-  `kernel.exception`, and an exception thrown there escapes the kernel
-  (inferred from `vendor/` source, not documented).
+- `JwtAuthenticationFailureListener` (LexikJWTAuthenticationBundle's JWT
+  failure events): Lexik answers a rejected JWT from inside the firewall, so
+  it never reaches `kernel.exception`.
 - `LoginFailureHandler` (`json_login`'s `failure_handler`): a failed login
   is also answered inside the firewall, for the same reason.
 
@@ -80,11 +74,7 @@ failures; anything else that should reach the front gets a mapper.
    carry. The rest of the pipeline is unchanged: the subclass is still an
    `ErrorResponseData`. Document it on the affected endpoints with
    `#[ErrorResponse(..., code: ErrorCode::TheCase, model: TheSubclass::class)]`
-   (see [openapi.md](openapi.md)). Every `#[ErrorResponse]` names its
-   `code:`, with or without a subclass. The exception is the validation
-   error of `#[MapRequestPayload]` / `#[MapQueryString]`: it's inferred
-   from the attribute and never annotated by hand (see "Validation errors
-   are inferred" in [openapi.md](openapi.md)).
+   (see "Error codes" in [openapi.md](openapi.md)).
 6. If the error response needs headers (e.g. a `Set-Cookie` clearing a
    rejected credential, or headers an `HttpExceptionInterface` carries), return
    them in `MappedError::$headers`; the listener passes them to the envelope.

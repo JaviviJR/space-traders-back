@@ -24,7 +24,9 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
  *
  * Throwing from here instead, to reach ExceptionListener, wouldn't work for
  * a missing token: JWT_NOT_FOUND is dispatched from the firewall's entry
- * point, which already runs inside kernel.exception.
+ * point, which already runs inside kernel.exception, and an exception
+ * thrown there escapes the kernel (inferred from vendor/ source, not
+ * documented).
  *
  * Types the shared AuthenticationFailureEvent parent: setResponse() lives
  * there, not on JWTFailureEventInterface. AUTHENTICATION_FAILURE isn't

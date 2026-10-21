@@ -15,6 +15,15 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+/**
+ * Orchestrates one forwarded SpaceTraders request: resolves the Agent from
+ * X-Agent-Id when present (404 if it doesn't exist, 403 if it belongs to
+ * another user), picks the first hook whose supports() matches, runs
+ * beforeForward()/afterForward() around the gateway call (substituting
+ * Authorization with the agent's decrypted token only when there is an
+ * agent), asks the hook for extra data when it implements AugmentInterface,
+ * and hands the result to HttpEnvelopeMerger.
+ */
 final class ProxyService
 {
     /**

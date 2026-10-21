@@ -10,6 +10,13 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
+/**
+ * Sends the confirmation link for a newly registered User. The link is
+ * signed by VerifyEmailHelperInterface for the back's own app_confirm_email
+ * route, then rebuilt to point at {FRONT_URL}/confirm-email with that signed
+ * URL's query string unchanged: only the host changes, so the front can
+ * forward the query as-is to the route that was signed.
+ */
 final readonly class RegistrationConfirmationMailer
 {
     public function __construct(

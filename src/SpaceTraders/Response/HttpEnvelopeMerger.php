@@ -19,7 +19,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * decode/re-encode. Otherwise, it's decoded just enough to merge the extra
  * fields in as sibling fields, never overriding a key SpaceTraders' body
  * already has — that would be a bug in the caller, so it throws rather than
- * silently picking a winner.
+ * silently picking a winner. An upstream body that doesn't decode to a JSON
+ * object can't take sibling fields at all, and throws for the same reason.
  */
 final class HttpEnvelopeMerger
 {

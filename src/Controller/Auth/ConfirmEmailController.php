@@ -17,6 +17,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
+/**
+ * Deliberately no #[MapQueryString] DTO: the signature is the query's only
+ * validation. Its HMAC already covers every parameter, and a validator in
+ * front of it would answer a bad query with validation_failed and per-field
+ * violations, telling the caller which parameter is wrong. Instead, every
+ * failure is the same 400 invalid_email_confirmation.
+ */
 final class ConfirmEmailController extends AbstractController
 {
     public function __construct(

@@ -10,8 +10,16 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
  * The front's codegen reads error codes from the dumped spec, so this checks
- * the spec itself: every ErrorCode case is listed, and every error body's
- * `code` points at that one schema instead of a plain string.
+ * the spec itself: every ErrorCode case is listed, every error body's
+ * `code` points at that one schema instead of a plain string, and every
+ * documented 4xx/5xx error response narrows `code` to exactly one known case
+ * and carries it as `example` (which also catches an error documented with a
+ * hand-written #[OA\Response] instead of #[ErrorResponse]).
+ *
+ * It can't detect a case no code path emits anymore (harmless for the
+ * front: a documented code that never arrives), nor a narrowed code that
+ * doesn't match what the endpoint returns: that's the endpoint's functional
+ * test.
  */
 final class ErrorCodeSchemaTest extends KernelTestCase
 {

@@ -23,6 +23,13 @@ use OpenApi\Attributes as OA;
  * carries it as `example`: Swagger UI's allOf merge keeps the shared enum
  * (it doesn't override enums by design, swagger-ui#3674), so without it the
  * example would still show the first case.
+ *
+ * Checked by running the Swagger UI bundled with Nelmio (its resolver and
+ * sample generator) on the dumped spec: derived from that vendor/ code, not
+ * from Swagger UI's docs. Two other fixes were rejected: reordering the
+ * allOf also worked there, but only because its merge lets the first branch
+ * win; an `example` on the whole `error` object would have to invent the
+ * subclass fields (`violations`).
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class ErrorResponse extends OA\Response
