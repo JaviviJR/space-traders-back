@@ -4,38 +4,25 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
-use App\EventListener\ErrorMapper\ExceptionErrorMapperInterface;
-use App\EventListener\ErrorMapper\MappedError;
-use App\Http\EnvelopeResponseFactory;
-use App\Http\ErrorCode;
-use App\Http\ErrorResponseData;
-use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+use App\EventListener\ErrorMapper\ExceptionResponseFactory;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Converts every uncaught exception into the same {"error": {code,
- * message}} envelope used everywhere else, through the same
- * EnvelopeResponseFactory that builds every other response in the app —
- * instead of Symfony's default error shape.
+ * message}} envelope used everywhere else, instead of Symfony's default
+ * error shape.
  *
- * This listener only wires the kernel.exception hook to the envelope; it
- * doesn't know how any particular exception should be described. Each kind
- * of exception gets its own ExceptionErrorMapperInterface, found here
- * through a tagged iterator ordered by priority (see AsTaggedItem on
- * mappers that need to run ahead of a more generic one).
+ * This listener only wires the kernel.exception hook; deciding the response
+ * for a given exception is ExceptionResponseFactory's job, shared with the
+ * other entry points that don't go through this hook.
  */
 #[AsEventListener(event: KernelEvents::EXCEPTION)]
 final class ExceptionListener
 {
-    /**
-     * @param iterable<ExceptionErrorMapperInterface> $errorMappers
-     */
     public function __construct(
-        private readonly EnvelopeResponseFactory $envelope,
-        #[AutowireIterator('app.exception_error_mapper')]
-        private readonly iterable $errorMappers,
+        private readonly ExceptionResponseFactory $responseFactory,
     ) {
     }
 
@@ -45,26 +32,6 @@ final class ExceptionListener
             return;
         }
 
-        $exception = $event->getThrowable();
-        $mappedError = $this->mapError($exception);
-
-        $event->setResponse(
-            $this->envelope->error(
-                $mappedError->body,
-                $mappedError->status,
-                $mappedError->headers
-            )
-        );
-    }
-
-    private function mapError(\Throwable $exception): MappedError
-    {
-        foreach ($this->errorMappers as $mapper) {
-            if ($mapper->supports($exception)) {
-                return $mapper->map($exception);
-            }
-        }
-
-        return new MappedError(500, new ErrorResponseData(ErrorCode::InternalError, 'An unexpected error occurred.'));
+        $event->setResponse($this->responseFactory->create($event->getThrowable()));
     }
 }

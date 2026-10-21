@@ -1,7 +1,7 @@
 # Errors
 
-A single `kernel.exception` listener (`ExceptionListener`) converts every
-uncaught exception into the same envelope as any other response —
+Every error response is built in one place, `ExceptionResponseFactory`: it
+turns an exception into the same envelope as any other response —
 `{"error": {"code", "message"}}` — via `EnvelopeResponseFactory::error()`,
 instead of Symfony's default error shape. `code` is a stable,
 machine-readable identifier for the front to branch on; `message` is
@@ -10,11 +10,30 @@ human-readable and safe to expose.
 Deciding the response for a given exception is delegated to
 `ExceptionErrorMapperInterface` (`supports()` + `map()`): one class per kind
 of exception, tagged `app.exception_error_mapper` and injected into the
-listener as a priority-ordered `#[AutowireIterator]`, trying each
+factory as a priority-ordered `#[AutowireIterator]`, trying each
 `supports()` in order and using the first match — the same shape Symfony
 itself uses for Normalizers. `map()` returns a `MappedError`: the HTTP
-status plus the public body as an `ErrorResponseData`, which the listener
+status plus the public body as an `ErrorResponseData`, which the factory
 hands to the envelope as-is.
+
+## Entry points
+
+Listeners only hand the exception to the factory; they never decide a
+response themselves.
+
+- `ExceptionListener` (`kernel.exception`): every uncaught exception.
+- `JwtAuthenticationFailureListener` (LexikJWTAuthenticationBundle's
+  `JWT_NOT_FOUND` / `JWT_INVALID` / `JWT_EXPIRED`): Lexik answers a rejected
+  JWT with its own response from inside the firewall, so it never reaches
+  `kernel.exception`. The listener replaces it with the factory's response
+  for the event's exception. Throwing from there to reach
+  `ExceptionListener` doesn't work: without a token, `JWT_NOT_FOUND` comes
+  from the firewall's entry point, which already runs inside
+  `kernel.exception`, and an exception thrown there escapes the kernel
+  (inferred from `vendor/` source, not documented).
+
+A new source of errors that bypasses `kernel.exception` gets another thin
+entry point that calls the factory, not its own envelope.
 
 Anything unmapped → `500`, `internal_error`, a generic message (the real
 exception is never exposed). `500` is reserved for the back's own internal
@@ -107,14 +126,13 @@ controller.
 
 ## TODO
 
-- Known leak of localized messages, accepted for now: once a translator
-  exists, LexikJWTAuthenticationBundle translates its own authentication
-  failure message with the `security` domain. Its own keys (`Invalid JWT
-  Token`, `Expired JWT Token`) have no catalog entry and stay in English, but
-  a valid JWT for a deleted user returns Symfony's `Username could not be
-  found.` translated (e.g. Spanish with `Accept-Language: es`). Revisit if it
-  causes problems — e.g. a listener on Lexik's `JWT_INVALID`/`JWT_EXPIRED`
-  events that resets the untranslated message.
+- `LoginFailureHandler` still builds its error envelope itself, outside
+  `ExceptionResponseFactory`, and returns `http_error` for both its 401
+  (bad credentials) and its 403 (email not verified), so the front can only
+  tell them apart by status. Move it behind the factory with mappers and
+  codes of its own. First reconcile [authentication.md](authentication.md),
+  which says login bypasses Symfony's authenticators, with
+  `config/packages/security.yaml`, whose `login` firewall uses `json_login`.
 - `error.code`'s type is inconsistent across the two response kinds: a
   string slug for back-only errors (`ErrorResponseData`), a number from
   SpaceTraders' own catalog for relayed proxy errors (see

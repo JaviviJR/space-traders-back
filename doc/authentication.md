@@ -84,6 +84,11 @@ out.
 - Public (no JWT required): `/auth/register`, `/auth/login`, `/auth/refresh`,
   `/auth/logout`, `/auth/confirm-email` (POST), `/auth/resend-confirmation`
   (POST). Everything else requires `ROLE_USER`.
+- A missing or rejected JWT (malformed, expired, or for a user that no
+  longer exists) returns `401` `authentication_required` in the error
+  envelope, with `WWW-Authenticate: Bearer`. All cases share one code: the
+  front tries `/auth/refresh` once, then sends the user to login. See
+  "Entry points" in [errors.md](errors.md).
 
 ## Testing
 

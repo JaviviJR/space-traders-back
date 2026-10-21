@@ -16,6 +16,7 @@ namespace App\Http;
  */
 enum ErrorCode: string
 {
+    case AuthenticationRequired = 'authentication_required';
     case EmailAlreadyRegistered = 'email_already_registered';
     case HttpError = 'http_error';
     case InternalError = 'internal_error';

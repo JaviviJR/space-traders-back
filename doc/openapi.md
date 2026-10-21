@@ -68,6 +68,14 @@ same annotation objects the classic `#[OA\...]` attributes would produce), so
 the contract-fidelity rule in [spacetraders-proxy.md](spacetraders-proxy.md) ("the back does not add, remove
 or rename fields") holds in the docs too, not just at runtime.
 
+**Security:** the copied operation's `security` is replaced with this
+back's `bearerAuth`. The front authenticates every proxied call with the
+back's JWT; SpaceTraders' own requirements describe the upstream hop. This
+doesn't break the contract-fidelity rule, which covers request/response
+fields, not authentication. It's also what gets these operations their
+inferred `401` (see "Authentication errors are inferred" under "Error
+codes").
+
 **Spec source:** vendored at `resources/spacetraders/openapi.json` — a
 bundled (all `$ref`s resolved to `#/components/schemas/...`) export of
 SpaceTraders' published spec, not the raw multi-file source `api-docs`
@@ -216,6 +224,21 @@ is inferred; what follows from its logic (the exceptions its service throws)
 is annotated. If an operation documents that status by hand anyway, the
 hand-written response wins: Nelmio reads controller attributes before
 running route argument describers.
+
+**Authentication errors are inferred, not annotated:** every operation
+whose `security` requires `bearerAuth` gets the `401`
+`authentication_required` response from
+`App\OpenApi\Describer\AuthenticationErrorResponseDescriber` (a Nelmio
+`DescriberInterface`, priority `-500` so it runs after Nelmio's own
+describers), built with the same `ErrorResponse`. The 401 follows from the
+firewall, not from the action's logic, so it is never annotated by hand;
+an operation that documents its `401` by hand keeps it. The `security`
+itself comes from `#[IsGranted]` on back-only actions (Nelmio's
+`SecurityDescriber`, inferred from `vendor/` source) and from
+`ProxyDescriber` on proxied ones: an action protected only by
+`access_control`, without `#[IsGranted]`, ends up with neither.
+`tests/OpenApi/AuthenticationErrorResponseTest` checks every operation
+requiring the JWT documents it.
 
 The argument resolver's transport errors — a body it can't decode (`400`)
 or an unsupported `Content-Type` (`415`) — are deliberately not documented.

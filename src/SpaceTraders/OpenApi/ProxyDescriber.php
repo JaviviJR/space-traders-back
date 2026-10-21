@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders\OpenApi;
 
+use App\OpenApi\Describer\AuthenticationErrorResponseDescriber;
 use App\SpaceTraders\Response\AugmentationSchema;
 use App\SpaceTraders\Response\AugmentInterface;
 use App\SpaceTraders\RouteHookInterface;
@@ -111,6 +112,12 @@ final class ProxyDescriber implements DescriberInterface
             );
 
             $targetOperation->mergeProperties($deserialized);
+
+            // The front authenticates every proxied call with this back's
+            // JWT, never with a SpaceTraders token: SpaceTraders' own
+            // security requirements describe the upstream hop, not this
+            // contract. Request/response fields are left untouched.
+            $targetOperation->security = [[AuthenticationErrorResponseDescriber::SECURITY_SCHEME => []]];
 
             if (!Undefined::isDefault($targetOperation->operationId)) {
                 $targetOperation->operationId = 'spacetraders_'.$targetOperation->operationId;
