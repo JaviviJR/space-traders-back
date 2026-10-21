@@ -8,7 +8,7 @@ use App\Repository\UserRepository;
 use App\Security\Exception\InvalidEmailConfirmationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use SymfonyCasts\Bundle\VerifyEmail\Exception\InvalidSignatureException;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
@@ -22,7 +22,10 @@ final class EmailConfirmationService
     }
 
     /**
-     * @throws InvalidEmailConfirmationException if the signed URL is invalid, expired or tampered with
+     * A missing or unknown `id` fails exactly like a tampered signature, so
+     * the response doesn't reveal which user ids exist.
+     *
+     * @throws InvalidEmailConfirmationException if the signed URL is incomplete, invalid, expired or tampered with
      */
     public function confirm(Request $request): void
     {
@@ -31,7 +34,7 @@ final class EmailConfirmationService
         $user = null !== $userId ? $this->userRepository->find((int) $userId) : null;
 
         if (null === $user) {
-            throw new NotFoundHttpException(sprintf('User "%s" not found.', $userId));
+            throw InvalidEmailConfirmationException::fromVerifyEmailException(new InvalidSignatureException());
         }
 
         try {

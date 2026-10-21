@@ -48,7 +48,10 @@ failures; anything else that should reach the front gets a mapper.
    `ErrorResponseData`. Document it on the affected endpoints with
    `#[ErrorResponse(..., code: ErrorCode::TheCase, model: TheSubclass::class)]`
    (see [openapi.md](openapi.md)). Every `#[ErrorResponse]` names its
-   `code:`, with or without a subclass.
+   `code:`, with or without a subclass. The exception is the validation
+   error of `#[MapRequestPayload]` / `#[MapQueryString]`: it's inferred
+   from the attribute and never annotated by hand (see "Validation errors
+   are inferred" in [openapi.md](openapi.md)).
 6. If the error response needs headers (e.g. a `Set-Cookie` clearing a
    rejected credential, or headers an `HttpExceptionInterface` carries), return
    them in `MappedError::$headers`; the listener passes them to the envelope.

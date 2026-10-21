@@ -19,7 +19,10 @@ use OpenApi\Attributes as OA;
  * $code is required: the shared schema's `code` is the whole ErrorCode enum,
  * which Swagger UI would render as its first case, a wrong example on almost
  * every endpoint. Narrowing it here (allOf the model plus a single-value
- * enum) shows the real code and gives the front's codegen the exact literal.
+ * enum) gives the front's codegen the exact literal. The narrowed code also
+ * carries it as `example`: Swagger UI's allOf merge keeps the shared enum
+ * (it doesn't override enums by design, swagger-ui#3674), so without it the
+ * example would still show the first case.
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class ErrorResponse extends OA\Response
@@ -39,7 +42,7 @@ final class ErrorResponse extends OA\Response
                         allOf: [
                             new OA\Schema(ref: new Model(type: $model)),
                             new OA\Schema(
-                                properties: [new OA\Property(property: 'code', type: 'string', enum: [$code->value])],
+                                properties: [new OA\Property(property: 'code', type: 'string', enum: [$code->value], example: $code->value)],
                                 required: ['code'],
                             ),
                         ],

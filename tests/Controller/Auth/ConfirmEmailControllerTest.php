@@ -56,6 +56,45 @@ final class ConfirmEmailControllerTest extends WebTestCase
         self::assertSame('invalid_email_confirmation', $data['error']['code']);
     }
 
+    public function testConfirmingWithoutAQueryReturnsTheInvalidLinkErrorWithoutViolations(): void
+    {
+        $browser = $this->browser()
+            ->post('/auth/confirm-email')
+            ->assertStatus(400)
+        ;
+
+        /** @var array{error: array<string, mixed>} $data */
+        $data = $browser->json()->decoded();
+
+        self::assertSame('invalid_email_confirmation', $data['error']['code']);
+        self::assertArrayNotHasKey('violations', $data['error']);
+    }
+
+    public function testConfirmingAnUnknownUserIdFailsExactlyLikeATamperedSignature(): void
+    {
+        /** @var User $user */
+        $user = UserFactory::createOne(['email' => 'confirm-unknown@example.com', 'isVerified' => false]);
+
+        $query = $this->generateSignedQuery($user);
+        $tamperedQuery = preg_replace('/signature=[^&]+/', 'signature=not-a-valid-signature', $query);
+        $unknownIdQuery = preg_replace('/\bid=\d+/', 'id=999999', $query);
+        self::assertNotNull($tamperedQuery);
+        self::assertNotNull($unknownIdQuery);
+
+        $tamperedBody = $this->browser()
+            ->post('/auth/confirm-email?'.$tamperedQuery)
+            ->assertStatus(400)
+            ->json()->decoded()
+        ;
+        $unknownIdBody = $this->browser()
+            ->post('/auth/confirm-email?'.$unknownIdQuery)
+            ->assertStatus(400)
+            ->json()->decoded()
+        ;
+
+        self::assertSame($tamperedBody, $unknownIdBody);
+    }
+
     private function generateSignedQuery(User $user): string
     {
         /** @var VerifyEmailHelperInterface $verifyEmailHelper */

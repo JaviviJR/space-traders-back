@@ -132,7 +132,7 @@ what the class contains, not after its PHP role:
 ```yaml
 models:
     names:
-        - { alias: ConfirmEmail, type: App\Security\Dto\ConfirmEmailDto }
+        - { alias: RegisterUser, type: App\Security\Dto\RegisterUserDto }
 ```
 
 This has to be the YAML alias list, not a per-controller
@@ -141,7 +141,7 @@ This has to be the YAML alias list, not a per-controller
 `#[MapRequestPayload]`: Nelmio's `SymfonyMapRequestPayloadDescriber` always
 registers that class a second time under its bare class name, independently
 of whatever name the controller's own attribute uses, leaving an orphan
-unreferenced schema (e.g. `ConfirmEmailDto` with no `$ref` to it) alongside
+unreferenced schema (e.g. `RegisterUserDto` with no `$ref` to it) alongside
 the clean one. The YAML alias is checked before any attribute-level name, so
 it's the only place that converges both registrations onto one schema. Response-only
 classes (no `#[MapRequestPayload]` involved) don't strictly need the YAML
@@ -184,19 +184,51 @@ change touches, and it couples `src/Http/` to every domain's codes.
 Swagger UI renders an enum's example as its first case — a wrong code on
 almost every endpoint. So `#[ErrorResponse]` requires the code that status
 returns and narrows `error` for that response only:
-`allOf: [ $ref Error (or the subclass), { code: enum [that one value] } ]`.
-Swagger UI then shows the real code, and the front's codegen types that
-response's error as the exact literal (`Error & { code: '...' }`), while
+`allOf: [ $ref Error (or the subclass), { code: enum [that one value], example: that value } ]`.
+The front's codegen types that response's error as the exact literal
+(`Error & { code: '...' }`). The `example` is what makes Swagger UI show
+the real code: its `allOf` merge keeps the shared, full enum (it doesn't
+override enums by design, see
+[swagger-ui#3674](https://github.com/swagger-api/swagger-ui/issues/3674)),
+so the narrowing alone still rendered the first case. Checked by running
+the Swagger UI bundled with Nelmio (its resolver and sample generator) on
+the dumped spec — derived from that `vendor/` code, not from Swagger UI's
+docs. Reordering the `allOf` also worked there but only because its merge
+lets the first branch win, and an `example` on the whole `error` object
+would have to invent the subclass fields (`violations`). Meanwhile
 `Error`, its subclasses and `ErrorCode` stay the shared components. Required
 rather than optional so an error response can't be documented without its
 code; typed as `ErrorCode` so it can't name a code outside the catalog. One
 code per response for now: when a status can return several, widen it to a
 list.
 
+**Validation errors are inferred, not annotated:** an action argument with
+`#[MapRequestPayload]` or `#[MapQueryString]` gets its validation error
+response from `App\OpenApi\RouteArgumentDescriber\ValidationErrorResponseDescriber`
+(a Nelmio `RouteArgumentDescriberInterface`, auto-tagged by the bundle), at
+the attribute's own `validationFailedStatusCode` — `422` for
+`#[MapRequestPayload]`, `404` for `#[MapQueryString]` unless set — with
+`ValidationError` as model and `validation_failed` as code, built with the
+same `ErrorResponse`. Don't add an `#[ErrorResponse]` for it on the
+controller: the status comes from the attribute that decides it at runtime,
+so the two can't drift. The split: what follows from the action's signature
+is inferred; what follows from its logic (the exceptions its service throws)
+is annotated. If an operation documents that status by hand anyway, the
+hand-written response wins: Nelmio reads controller attributes before
+running route argument describers.
+
+The argument resolver's transport errors — a body it can't decode (`400`)
+or an unsupported `Content-Type` (`415`) — are deliberately not documented.
+They come out through `HttpExceptionErrorMapper` as `http_error`, and the
+front handles them as any unknown error (see "Front contract" below): a
+generated client always sends a well-formed body with its content type, so
+listing them on every endpoint with a payload would add noise to the
+contract, not information.
+
 `tests/OpenApi/ErrorCodeSchemaTest` dumps the spec and checks that the
 `ErrorCode` schema lists every case, that the error bodies reference it, and
 that every documented 4xx/5xx error response narrows `code` to exactly one
-known case — which also catches an error documented with a hand-written
+known case and carries it as `example` — which also catches an error documented with a hand-written
 `#[OA\Response]` instead of `#[ErrorResponse]`. It can't detect the opposite
 drift — a case no code path emits anymore — which is harmless for the front
 (a documented code that never arrives), nor a narrowed code that doesn't

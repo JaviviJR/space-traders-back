@@ -23,14 +23,22 @@ The `<signature query>` (`id`, `expires`, `token`, `signature`) is the query
 string of the **back's** own signed URL for route `app_confirm_email` — only
 the host changes, not the query. It's opaque to the front: the front's job is
 just to land on `{FRONT_URL}/confirm-email`, read those 4 params and forward
-them, unchanged, as the query string of `POST /auth/confirm-email` (see
-`ConfirmEmailDto`, bound with `#[MapQueryString]`). The controller passes the
-real `Request` it receives straight to `EmailConfirmationService`, which hands
-it to `VerifyEmailHelperInterface::validateEmailConfirmationFromRequest()`
-as-is. This only works because the front's request targets the exact same
+them, unchanged, as the query string of `POST /auth/confirm-email`. The
+controller passes the real `Request` it receives straight to
+`EmailConfirmationService`, which hands it to
+`VerifyEmailHelperInterface::validateEmailConfirmationFromRequest()` as-is.
+This only works because the front's request targets the exact same
 route/path that was signed — reconstructing a different URL (e.g. from a
 JSON body) would require rebuilding it with the router and risks drifting
 from whatever scheme/host was used at signing time.
+
+The signature is the query's only validation: no `#[MapQueryString]` DTO.
+The HMAC already covers every parameter, and a validator in front of it
+would answer a bad query with `validation_failed` and per-field
+`violations`, telling the caller which parameter is wrong. Instead, a
+missing, extra or altered parameter, an unknown `id` and a tampered
+signature all return the same `400` `invalid_email_confirmation` body, so
+the endpoint doesn't reveal which part failed or which user ids exist.
 
 `POST /auth/login` returns **403** (`AccessDeniedHttpException`, raised as
 `EmailNotVerifiedException`) when the credentials are correct but

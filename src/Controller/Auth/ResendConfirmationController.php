@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
-use App\Http\ErrorCode;
-use App\Http\ValidationErrorResponseData;
 use App\OpenApi\Attribute\DataResponse;
-use App\OpenApi\Attribute\ErrorResponse;
 use App\Repository\UserRepository;
 use App\Security\Dto\EmptyResponseData;
 use App\Security\Dto\ResendConfirmationDto;
@@ -41,7 +38,6 @@ final class ResendConfirmationController extends AbstractController
         description: 'Always 202 regardless of whether the email exists or is already verified, '
             .'to avoid leaking which emails are registered',
     )]
-    #[ErrorResponse(status: 422, code: ErrorCode::ValidationFailed, description: 'Validation failed', model: ValidationErrorResponseData::class)]
     public function __invoke(#[MapRequestPayload] ResendConfirmationDto $dto): JsonResponse
     {
         $user = $this->userRepository->findByEmail($dto->email);
