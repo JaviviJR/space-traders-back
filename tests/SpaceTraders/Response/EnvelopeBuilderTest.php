@@ -6,8 +6,8 @@ namespace App\Tests\SpaceTraders\Response;
 
 use App\Http\HttpResponseEnvelope;
 use App\SpaceTraders\Response\AugmentData;
-use App\SpaceTraders\Response\HttpEnvelopeMerger;
 use App\SpaceTraders\Response\EnvelopeMergeException;
+use App\SpaceTraders\Response\HttpEnvelopeMerger;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;

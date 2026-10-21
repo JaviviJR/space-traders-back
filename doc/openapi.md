@@ -181,8 +181,8 @@ same slug as with a plain string.
 Why this over generating the enum from the mappers (see "Alternative
 considered" below): the type system makes the spec complete by
 construction. No code path can build an error body with a code missing
-from the spec — including bodies built outside the mapper pipeline (the
-unmapped fallback in `ExceptionListener`, the security failure handlers).
+from the spec — including bodies built outside the mappers (the factory's
+unmapped fallback).
 The accepted cost: every new code adds a case to one central enum, on top
 of the new mapper class. That's a data catalog, not a behaviour switch
 (nothing `match`es on it), but it is a shared file every error-adding
@@ -240,9 +240,11 @@ itself comes from `#[IsGranted]` on back-only actions (Nelmio's
 `tests/OpenApi/AuthenticationErrorResponseTest` checks every operation
 requiring the JWT documents it.
 
-The argument resolver's transport errors — a body it can't decode (`400`)
-or an unsupported `Content-Type` (`415`) — are deliberately not documented.
-They come out through `HttpExceptionErrorMapper` as `http_error`, and the
+Transport errors — a body that can't be decoded or lacks a required key
+(`400`), or an unsupported `Content-Type` (`415`) — are deliberately not
+documented, whether they come from the argument resolver or from
+`json_login` on `/auth/login`. They come out through
+`HttpExceptionErrorMapper` as `http_error`, and the
 front handles them as any unknown error (see "Front contract" below): a
 generated client always sends a well-formed body with its content type, so
 listing them on every endpoint with a payload would add noise to the
@@ -310,9 +312,8 @@ How each mapper would expose its code, from weakest to preferred:
 
 What makes it harder than the current decision:
 
-- Codes emitted outside mappers (the listener's unmapped fallback, security
-  failure handlers) need their own source, or they silently vanish from the
-  spec. This is the drift the enum rules out by type.
+- Codes emitted outside mappers (the factory's unmapped fallback) need
+  their own source, or they silently vanish from the spec. This is the drift the enum rules out by type.
 - A mapper that forgets the small interface also silently vanishes; it
   needs a test asserting every `app.exception_error_mapper` service
   implements it.
@@ -321,8 +322,8 @@ What makes it harder than the current decision:
 
 Switching means: remove `App\Http\ErrorCode` and its `models.names` alias,
 type `$code` back as `string` with the `ref`, add the describer and the
-small interface, and replace the enum cases used in mappers, the listener
-and the failure handlers with each one's own code. `#[ErrorResponse]`'s
+small interface, and replace the enum cases used in mappers and the
+factory's fallback with each one's own code. `#[ErrorResponse]`'s
 `code:` would become a plain string, no longer checked by the type system —
 only by the spec test's "exactly one known case" assertion.
 

@@ -14,7 +14,7 @@ use OpenApi\Undefined;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 /**
- * Documents the 401 AuthenticationExceptionErrorMapper answers with on every
+ * Documents the 401 AccessTokenRejectedExceptionErrorMapper answers with on every
  * operation that requires the JWT, inferred from the operation's own
  * `security` so the two can't drift: Nelmio's SecurityDescriber sets it
  * from #[IsGranted] on back-only actions, ProxyDescriber on the proxied

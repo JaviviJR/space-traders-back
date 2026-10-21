@@ -13,6 +13,11 @@ use App\Security\RefreshTokenCookieFactory;
  * A refresh token that is missing, expired or revoked. Besides the 401, the
  * response clears the refresh token cookie: a token rejected once will be
  * rejected again, so there's no point in the browser keeping on sending it.
+ *
+ * No WWW-Authenticate, although RFC 9110 asks for one on a 401: the refresh
+ * token travels in a cookie, so there is no HTTP authentication scheme to
+ * challenge with, and Bearer would be false (this endpoint doesn't accept
+ * an access token). Same reasoning as InvalidLoginCredentialsExceptionErrorMapper.
  */
 final class InvalidRefreshTokenExceptionErrorMapper implements ExceptionErrorMapperInterface
 {

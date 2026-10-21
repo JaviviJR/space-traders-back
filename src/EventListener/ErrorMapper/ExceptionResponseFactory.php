@@ -20,7 +20,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  *
  * Callers are only entry points that hand over the exception: the
  * kernel.exception hook (ExceptionListener) and failures that never reach
- * it, like LexikJWTAuthenticationBundle's (JwtAuthenticationFailureListener).
+ * it: LexikJWTAuthenticationBundle's (JwtAuthenticationFailureListener) and
+ * json_login's (LoginFailureHandler).
  */
 final class ExceptionResponseFactory
 {

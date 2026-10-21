@@ -18,7 +18,7 @@ hands to the envelope as-is.
 
 ## Entry points
 
-Listeners only hand the exception to the factory; they never decide a
+Entry points only hand the exception to the factory; they never decide a
 response themselves.
 
 - `ExceptionListener` (`kernel.exception`): every uncaught exception.
@@ -31,9 +31,23 @@ response themselves.
   from the firewall's entry point, which already runs inside
   `kernel.exception`, and an exception thrown there escapes the kernel
   (inferred from `vendor/` source, not documented).
+- `LoginFailureHandler` (`json_login`'s `failure_handler`): a failed login
+  is also answered inside the firewall, for the same reason.
 
 A new source of errors that bypasses `kernel.exception` gets another thin
 entry point that calls the factory, not its own envelope.
+
+An entry point may wrap the exception before handing it over, when the
+framework's exception class doesn't say where it came from: Symfony's
+`BadCredentialsException` is both a failed login and a JWT whose user no
+longer exists. The entry point is the only one that knows the origin, so it
+wraps the exception in one of our own (not a framework subclass, with the
+original as `previous`) and a mapper matches that. Translating the exception
+is all it does; the response is still decided by the mapper. Consequently,
+no mapper matches a generic framework class that can arrive from several
+origins (e.g. `AuthenticationException`). An exception whose meaning
+doesn't depend on its origin (an `HttpExceptionInterface`, our own domain
+exceptions) is handed over as-is.
 
 Anything unmapped → `500`, `internal_error`, a generic message (the real
 exception is never exposed). `500` is reserved for the back's own internal
@@ -51,7 +65,7 @@ failures; anything else that should reach the front gets a mapper.
    a case there for a new code, never a string literal — the enum is what
    the generated spec lists for the front (see "Error codes" in
    [openapi.md](openapi.md)). The same applies to any error body built
-   outside a mapper (e.g. a security failure handler).
+   outside a mapper.
 3. Choose the message deliberately: a fixed text by default. Reuse
    `getMessage()` only when the exception's message is written to be shown
    to the front (as `HttpExceptionInterface` messages are); a domain
@@ -126,13 +140,6 @@ controller.
 
 ## TODO
 
-- `LoginFailureHandler` still builds its error envelope itself, outside
-  `ExceptionResponseFactory`, and returns `http_error` for both its 401
-  (bad credentials) and its 403 (email not verified), so the front can only
-  tell them apart by status. Move it behind the factory with mappers and
-  codes of its own. First reconcile [authentication.md](authentication.md),
-  which says login bypasses Symfony's authenticators, with
-  `config/packages/security.yaml`, whose `login` firewall uses `json_login`.
 - `error.code`'s type is inconsistent across the two response kinds: a
   string slug for back-only errors (`ErrorResponseData`), a number from
   SpaceTraders' own catalog for relayed proxy errors (see

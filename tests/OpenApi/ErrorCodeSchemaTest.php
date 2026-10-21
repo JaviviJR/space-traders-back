@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\OpenApi;
 
 use App\Http\ErrorCode;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
+use App\Tests\Support\DumpsOpenApiSpec;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * The front's codegen reads error codes from the dumped spec, so this checks
@@ -16,6 +15,8 @@ use Symfony\Component\Console\Tester\CommandTester;
  */
 final class ErrorCodeSchemaTest extends KernelTestCase
 {
+    use DumpsOpenApiSpec;
+
     private const string ERROR_CODE_REF = '#/components/schemas/ErrorCode';
 
     public function testListsEveryErrorCodeAsAStringEnum(): void
@@ -105,36 +106,11 @@ final class ErrorCodeSchemaTest extends KernelTestCase
         self::assertSame(['200', '400'], array_map('strval', array_keys($responses)));
     }
 
-    private function dumpedSpec(): mixed
-    {
-        $tester = new CommandTester((new Application(self::bootKernel()))->find('nelmio:apidoc:dump'));
-        $tester->execute(['--format' => 'json']);
-        $tester->assertCommandIsSuccessful();
-
-        return json_decode($tester->getDisplay(), true, flags: \JSON_THROW_ON_ERROR);
-    }
-
     /**
      * @return array<array-key, mixed> $node's entries, or none if it isn't an array
      */
     private function children(mixed $node): array
     {
         return \is_array($node) ? $node : [];
-    }
-
-    /**
-     * Walks the decoded spec down $keys, or null as soon as one is missing.
-     */
-    private function at(mixed $node, string|int ...$keys): mixed
-    {
-        foreach ($keys as $key) {
-            if (!\is_array($node) || !\array_key_exists($key, $node)) {
-                return null;
-            }
-
-            $node = $node[$key];
-        }
-
-        return $node;
     }
 }

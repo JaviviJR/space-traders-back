@@ -6,9 +6,8 @@ namespace App\Tests\OpenApi;
 
 use App\Http\ErrorCode;
 use App\OpenApi\Describer\AuthenticationErrorResponseDescriber;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
+use App\Tests\Support\DumpsOpenApiSpec;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * The 401 of a rejected JWT isn't annotated on any controller:
@@ -18,6 +17,8 @@ use Symfony\Component\Console\Tester\CommandTester;
  */
 final class AuthenticationErrorResponseTest extends KernelTestCase
 {
+    use DumpsOpenApiSpec;
+
     public function testEveryOperationRequiringTheJwtDocumentsTheAuthenticationRequiredError(): void
     {
         $checked = 0;
@@ -99,30 +100,5 @@ final class AuthenticationErrorResponseTest extends KernelTestCase
         }
 
         return $operations;
-    }
-
-    private function dumpedSpec(): mixed
-    {
-        $tester = new CommandTester((new Application(self::bootKernel()))->find('nelmio:apidoc:dump'));
-        $tester->execute(['--format' => 'json']);
-        $tester->assertCommandIsSuccessful();
-
-        return json_decode($tester->getDisplay(), true, flags: \JSON_THROW_ON_ERROR);
-    }
-
-    /**
-     * Walks the decoded spec down $keys, or null as soon as one is missing.
-     */
-    private function at(mixed $node, string|int ...$keys): mixed
-    {
-        foreach ($keys as $key) {
-            if (!\is_array($node) || !\array_key_exists($key, $node)) {
-                return null;
-            }
-
-            $node = $node[$key];
-        }
-
-        return $node;
     }
 }

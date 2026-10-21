@@ -40,11 +40,15 @@ missing, extra or altered parameter, an unknown `id` and a tampered
 signature all return the same `400` `invalid_email_confirmation` body, so
 the endpoint doesn't reveal which part failed or which user ids exist.
 
-`POST /auth/login` returns **403** (`AccessDeniedHttpException`, raised as
-`EmailNotVerifiedException`) when the credentials are correct but
-`!isVerified` — deliberately different from the **401**
-(`UnauthorizedHttpException`) used for bad credentials, so the front can
-tell the two cases apart.
+`POST /auth/login` returns **403** `email_not_verified` when the credentials
+are correct but `!isVerified`: `UserVerificationChecker::checkPostAuth()`
+throws `EmailNotVerifiedException`, which runs only after the password
+check, so an unverified account isn't revealed to someone without its
+password. A wrong password or an unknown email is a **401**
+`invalid_credentials`, with the same body for both so the endpoint doesn't
+reveal which emails exist. The front must not treat that 401 like
+`authentication_required`: it's a form error, not a cue to try
+`/auth/refresh`.
 
 ## Tokens
 
@@ -80,7 +84,11 @@ out.
 
 ## Firewall
 
-- `stateless: true`, with the Lexik JWT authenticator.
+- `login` (`^/auth/login$`): stateless, Symfony's `json_login` with
+  `UserVerificationChecker` as user checker and `LoginSuccessHandler` /
+  `LoginFailureHandler` as handlers. The authenticator answers every JSON
+  request, so `LoginController` only runs for a non-JSON one (`415`).
+- `main`: `stateless: true`, with the Lexik JWT authenticator.
 - Public (no JWT required): `/auth/register`, `/auth/login`, `/auth/refresh`,
   `/auth/logout`, `/auth/confirm-email` (POST), `/auth/resend-confirmation`
   (POST). Everything else requires `ROLE_USER`.
@@ -102,9 +110,3 @@ Never reuse these values outside tests.
 
 - Login rate limiting / brute-force protection (password policy itself is
   decided: minimum 8 characters, enforced by `RegisterUserDto`).
-- Login bypasses Symfony's authenticator system entirely (`LoginService`
-  validates credentials by hand, no `Passport`/`AuthenticatorManager`). This
-  means `UserCheckerInterface` and other authenticator-level extension points
-  don't apply to login. Migrate login to a proper Symfony `Authenticator`
-  instead of hand-rolling credential checks — don't reinvent what the
-  framework already provides.

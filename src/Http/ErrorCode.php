@@ -18,8 +18,10 @@ enum ErrorCode: string
 {
     case AuthenticationRequired = 'authentication_required';
     case EmailAlreadyRegistered = 'email_already_registered';
+    case EmailNotVerified = 'email_not_verified';
     case HttpError = 'http_error';
     case InternalError = 'internal_error';
+    case InvalidCredentials = 'invalid_credentials';
     case InvalidEmailConfirmation = 'invalid_email_confirmation';
     case InvalidRefreshToken = 'invalid_refresh_token';
     case SpacetradersUnreachable = 'spacetraders_unreachable';
