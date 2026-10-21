@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Http\ErrorCode;
 use App\Http\ValidationErrorResponseData;
 use App\OpenApi\Attribute\DataResponse;
 use App\OpenApi\Attribute\ErrorResponse;
@@ -36,8 +37,8 @@ final class ConfirmEmailController extends AbstractController
     #[OA\Parameter(name: 'token', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'signature', in: 'query', required: true, schema: new OA\Schema(type: 'string'))]
     #[DataResponse(model: ConfirmEmailResponseData::class, status: 200, description: 'Email confirmed')]
-    #[ErrorResponse(status: 400, description: 'Invalid or expired confirmation signature')]
-    #[ErrorResponse(status: 422, description: 'Validation failed', model: ValidationErrorResponseData::class)]
+    #[ErrorResponse(status: 400, code: ErrorCode::InvalidEmailConfirmation, description: 'Invalid or expired confirmation signature')]
+    #[ErrorResponse(status: 422, code: ErrorCode::ValidationFailed, description: 'Validation failed', model: ValidationErrorResponseData::class)]
     public function __invoke(#[MapQueryString] ConfirmEmailDto $dto, Request $request): JsonResponse
     {
         $this->emailConfirmationService->confirm($request);

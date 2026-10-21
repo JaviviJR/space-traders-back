@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Security\Handler;
 
 use App\Http\EnvelopeResponseFactory;
+use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\EmailNotVerifiedException;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,9 +23,9 @@ final readonly class LoginFailureHandler implements AuthenticationFailureHandler
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         if ($exception instanceof EmailNotVerifiedException) {
-            return $this->envelope->error(new ErrorResponseData('http_error', $exception->getMessage()), 403);
+            return $this->envelope->error(new ErrorResponseData(ErrorCode::HttpError, $exception->getMessage()), 403);
         }
 
-        return $this->envelope->error(new ErrorResponseData('http_error', 'Invalid email or password.'), 401);
+        return $this->envelope->error(new ErrorResponseData(ErrorCode::HttpError, 'Invalid email or password.'), 401);
     }
 }

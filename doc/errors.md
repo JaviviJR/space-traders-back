@@ -27,8 +27,12 @@ failures; anything else that should reach the front gets a mapper.
    `#[AutoconfigureTag]`, so autoconfiguration registers it; no service
    definition needed.
 2. `supports()` matches the exception (usually an `instanceof`); `map()`
-   returns its status, a stable `code` (a `snake_case` slug, kept in a
-   `CODE` constant) and the public message.
+   returns its status, a stable `code` and the public message. The code is
+   a case of `App\Http\ErrorCode` (backing value: a `snake_case` slug): add
+   a case there for a new code, never a string literal — the enum is what
+   the generated spec lists for the front (see "Error codes" in
+   [openapi.md](openapi.md)). The same applies to any error body built
+   outside a mapper (e.g. a security failure handler).
 3. Choose the message deliberately: a fixed text by default. Reuse
    `getMessage()` only when the exception's message is written to be shown
    to the front (as `HttpExceptionInterface` messages are); a domain
@@ -42,8 +46,9 @@ failures; anything else that should reach the front gets a mapper.
    nullable field on `ErrorResponseData`, which every other error would then
    carry. The rest of the pipeline is unchanged: the subclass is still an
    `ErrorResponseData`. Document it on the affected endpoints with
-   `#[ErrorResponse(..., model: TheSubclass::class)]` (see
-   [openapi.md](openapi.md)).
+   `#[ErrorResponse(..., code: ErrorCode::TheCase, model: TheSubclass::class)]`
+   (see [openapi.md](openapi.md)). Every `#[ErrorResponse]` names its
+   `code:`, with or without a subclass.
 6. If the error response needs headers (e.g. a `Set-Cookie` clearing a
    rejected credential, or headers an `HttpExceptionInterface` carries), return
    them in `MappedError::$headers`; the listener passes them to the envelope.
@@ -51,6 +56,8 @@ failures; anything else that should reach the front gets a mapper.
 7. Add a unit test in `tests/EventListener/ErrorMapper/` (supports, doesn't
    support another exception, maps to the expected status/code/message), and
    assert the `code` in the functional test of the endpoint that triggers it.
+   No spec test is needed for a new case: `tests/OpenApi/ErrorCodeSchemaTest`
+   already checks that every `ErrorCode` case reaches the dumped spec.
 
 Anything specific to one mapper (why that status, why that priority, what it
 deliberately doesn't match) is documented in the mapper's own docblock, not

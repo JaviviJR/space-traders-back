@@ -7,6 +7,7 @@ namespace App\EventListener;
 use App\EventListener\ErrorMapper\ExceptionErrorMapperInterface;
 use App\EventListener\ErrorMapper\MappedError;
 use App\Http\EnvelopeResponseFactory;
+use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -28,8 +29,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
 #[AsEventListener(event: KernelEvents::EXCEPTION)]
 final class ExceptionListener
 {
-    private const string UNEXPECTED_ERROR_CODE = 'internal_error';
-
     /**
      * @param iterable<ExceptionErrorMapperInterface> $errorMappers
      */
@@ -66,6 +65,6 @@ final class ExceptionListener
             }
         }
 
-        return new MappedError(500, new ErrorResponseData(self::UNEXPECTED_ERROR_CODE, 'An unexpected error occurred.'));
+        return new MappedError(500, new ErrorResponseData(ErrorCode::InternalError, 'An unexpected error occurred.'));
     }
 }

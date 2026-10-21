@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
+use App\Http\ErrorCode;
 use App\OpenApi\Attribute\DataResponse;
 use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\AccessTokenResponseData;
@@ -39,8 +40,8 @@ final class LoginController extends AbstractController
         description: 'Access token issued. The refresh token is not in this body: it is set via a '
             .'Set-Cookie header (httpOnly, Path=/auth), see doc/authentication.md.',
     )]
-    #[ErrorResponse(status: 401, description: 'Invalid credentials')]
-    #[ErrorResponse(status: 403, description: 'Email not verified')]
+    #[ErrorResponse(status: 401, code: ErrorCode::HttpError, description: 'Invalid credentials')]
+    #[ErrorResponse(status: 403, code: ErrorCode::HttpError, description: 'Email not verified')]
     public function __invoke(): JsonResponse
     {
         throw new \LogicException('Unreachable: handled by json_login.');

@@ -39,6 +39,10 @@ extra fields (see "Adding a mapper" in [errors.md](errors.md)), pass it as
 `model:` on that status's `#[ErrorResponse]` so the schema shows what is
 actually sent; the other statuses keep the default.
 
+`ErrorResponse` also takes a required `code:` (an `App\Http\ErrorCode`
+case): the code that status returns on that endpoint. See "Per-response
+code" under "Error codes" below for why it's required.
+
 
 ## SpaceTraders (proxied) endpoints
 
@@ -152,6 +156,120 @@ couldn't alias to `Agent` because SpaceTraders already has one, hence
 of erroring, so check the dumped spec
 (`bin/console nelmio:apidoc:dump --format=json`) after adding an alias to
 confirm it landed as intended.
+
+## Error codes
+
+The front's codegen gets every possible `error.code` of back-only errors as a
+TS union, so it can branch on and translate them.
+
+**Decision:** `App\Http\ErrorResponseData::$code` is typed with the backed
+enum `App\Http\ErrorCode`, not `string`. Nelmio describes backed enums
+natively, as their values; the enum becomes one `ErrorCode` component
+(aliased in `models.names` like every other model) and `Error` plus every
+`ErrorResponseData` subclass reference it through `$ref`. `json_encode`
+writes a backed enum as its value, so the JSON the front receives is the
+same slug as with a plain string.
+
+Why this over generating the enum from the mappers (see "Alternative
+considered" below): the type system makes the spec complete by
+construction. No code path can build an error body with a code missing
+from the spec — including bodies built outside the mapper pipeline (the
+unmapped fallback in `ExceptionListener`, the security failure handlers).
+The accepted cost: every new code adds a case to one central enum, on top
+of the new mapper class. That's a data catalog, not a behaviour switch
+(nothing `match`es on it), but it is a shared file every error-adding
+change touches, and it couples `src/Http/` to every domain's codes.
+
+**Per-response code:** the shared `code` schema is the whole enum, and
+Swagger UI renders an enum's example as its first case — a wrong code on
+almost every endpoint. So `#[ErrorResponse]` requires the code that status
+returns and narrows `error` for that response only:
+`allOf: [ $ref Error (or the subclass), { code: enum [that one value] } ]`.
+Swagger UI then shows the real code, and the front's codegen types that
+response's error as the exact literal (`Error & { code: '...' }`), while
+`Error`, its subclasses and `ErrorCode` stay the shared components. Required
+rather than optional so an error response can't be documented without its
+code; typed as `ErrorCode` so it can't name a code outside the catalog. One
+code per response for now: when a status can return several, widen it to a
+list.
+
+`tests/OpenApi/ErrorCodeSchemaTest` dumps the spec and checks that the
+`ErrorCode` schema lists every case, that the error bodies reference it, and
+that every documented 4xx/5xx error response narrows `code` to exactly one
+known case — which also catches an error documented with a hand-written
+`#[OA\Response]` instead of `#[ErrorResponse]`. It can't detect the opposite
+drift — a case no code path emits anymore — which is harmless for the front
+(a documented code that never arrives), nor a narrowed code that doesn't
+match what the endpoint actually returns: the functional test of that
+endpoint asserts the real `code` (see "Adding a mapper" in
+[errors.md](errors.md)).
+
+**Scope:** back-only errors only. Relayed SpaceTraders errors keep their
+own numeric `code`, untouched (see [spacetraders-proxy.md](spacetraders-proxy.md)),
+and never go through `ErrorResponseData`; they must not be added to this
+enum (see the open `code` type TODO in [errors.md](errors.md)).
+
+**Front contract:** the union is closed in the spec, but the back can
+deploy a new code before the front regenerates its types. The front must
+treat `code` as open: check it against the known values and fall back to
+`message` (always safe to show) or a generic per-status text otherwise. A
+client generator that validates responses at runtime against the schema
+would reject an unknown value; keep that validation off for error bodies.
+OpenAPI 3.0 has no standard "open enum"; extensions like
+`x-extensible-enum` are conventions, not supported by Nelmio or most
+generators.
+
+### Alternative considered: enum generated from the mappers
+
+Kept here because it may be revisited if the central enum becomes a
+bottleneck (many domains adding codes, merge conflicts on `ErrorCode`).
+
+**How it would work:** a Nelmio `DescriberInterface` (tagged
+`nelmio_api_doc.describer.default`, like `ProxyDescriber`) receives the
+`app.exception_error_mapper` tagged iterator, collects every mapper's code
+and creates the `ErrorCode` component (`type: string`, `enum: [...]`)
+itself. `ErrorResponseData::$code` goes back to `string` and points at that
+component with a static `#[OA\Property(ref: '#/components/schemas/ErrorCode')]`,
+inherited by subclasses. Adding a mapper then needs no edit to any central
+file.
+
+Why a describer that *creates* the component rather than one that *patches*
+`Error`: describers run before Nelmio registers model schemas, then the
+swagger-php processor pipeline runs (`ApiDocGenerator::generate()` —
+inferred from `vendor/` source, not documented), so `Error` doesn't exist
+yet when a describer runs. A custom swagger-php processor (tag
+`nelmio_api_doc.swagger.processor`, also only found in `vendor/`, not in
+Nelmio's docs) runs late enough to patch it, but relies on undocumented
+machinery.
+
+How each mapper would expose its code, from weakest to preferred:
+
+- A public `CODE` constant read by reflection: nothing enforces it exists.
+- A method on `ExceptionErrorMapperInterface`: forces every mapper, but the
+  listener (the interface's real consumer) never calls it — an interface
+  segregation smell.
+- A small separate interface (e.g. `describedCodes(): list<string>`), the
+  same shape as `AugmentInterface::describedAugmentation()` for hooks: a
+  doc-time counterpart kept apart from the runtime interface, filtered with
+  `instanceof`. A list allows a mapper with several codes.
+
+What makes it harder than the current decision:
+
+- Codes emitted outside mappers (the listener's unmapped fallback, security
+  failure handlers) need their own source, or they silently vanish from the
+  spec. This is the drift the enum rules out by type.
+- A mapper that forgets the small interface also silently vanishes; it
+  needs a test asserting every `app.exception_error_mapper` service
+  implements it.
+- The spec test compares the dumped `ErrorCode` enum against the codes
+  collected from the registered mappers plus the non-mapper sources.
+
+Switching means: remove `App\Http\ErrorCode` and its `models.names` alias,
+type `$code` back as `string` with the `ref`, add the describer and the
+small interface, and replace the enum cases used in mappers, the listener
+and the failure handlers with each one's own code. `#[ErrorResponse]`'s
+`code:` would become a plain string, no longer checked by the type system —
+only by the spec test's "exactly one known case" assertion.
 
 ## TODO
 

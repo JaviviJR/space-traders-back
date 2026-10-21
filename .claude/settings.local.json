@@ -13,7 +13,10 @@
       "Bash(php bin/console lint:container)",
       "Bash(php bin/phpunit tests/EventListener tests/Controller/Auth/RegisterControllerTest.php)",
       "Bash(vendor/bin/php-cs-fixer fix *)",
-      "Bash(export XDEBUG_MODE=off)"
+      "Bash(export XDEBUG_MODE=off)",
+      "WebSearch",
+      "Bash(grep -v \"^ \\\\*\\\\|^/\\\\*\\\\*\\\\|^$\")",
+      "Bash(python3 -I -c ' *)"
     ]
   }
 }
