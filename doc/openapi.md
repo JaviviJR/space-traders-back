@@ -212,7 +212,7 @@ can return several, widen it to a list.
 response from `App\OpenApi\RouteArgumentDescriber\ValidationErrorResponseDescriber`,
 at the attribute's own `validationFailedStatusCode` — `422` for
 `#[MapRequestPayload]`, `404` for `#[MapQueryString]` unless set — with
-`ValidationError` as model and `validation_failed` as code, built with the
+`ApiErrorValidation` as model and `validation_failed` as code, built with the
 same `ErrorResponse`. Don't add an `#[ErrorResponse]` for it on the
 controller: the status comes from the attribute that decides it at runtime,
 so the two can't drift. The split: what follows from the action's signature

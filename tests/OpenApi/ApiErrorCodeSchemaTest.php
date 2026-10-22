@@ -43,8 +43,8 @@ final class ApiErrorCodeSchemaTest extends KernelTestCase
         $spec = $this->dumpedSpec();
 
         self::assertSame(self::ERROR_CODE_REF, $this->at($spec, 'components', 'schemas', 'ApiError', 'properties', 'code', '$ref'));
-        // ValidationError gets its code through ApiError, not its own copy.
-        self::assertSame('#/components/schemas/ApiError', $this->at($spec, 'components', 'schemas', 'ValidationError', 'allOf', 0, '$ref'));
+        // ApiErrorValidation gets its code through ApiError, not its own copy.
+        self::assertSame('#/components/schemas/ApiError', $this->at($spec, 'components', 'schemas', 'ApiErrorValidation', 'allOf', 0, '$ref'));
     }
 
     /**
@@ -98,7 +98,7 @@ final class ApiErrorCodeSchemaTest extends KernelTestCase
         foreach (['/auth/register', '/auth/resend-confirmation'] as $path) {
             $error = $this->at($spec, 'paths', $path, 'post', 'responses', '422', 'content', 'application/json', 'schema', 'properties', 'error');
 
-            self::assertSame('#/components/schemas/ValidationError', $this->at($error, 'allOf', 0, '$ref'), $path.' should document its 422 as ValidationError.');
+            self::assertSame('#/components/schemas/ApiErrorValidation', $this->at($error, 'allOf', 0, '$ref'), $path.' should document its 422 as ApiErrorValidation.');
             self::assertSame([ApiErrorCode::ValidationFailed->value], $this->at($error, 'allOf', 1, 'properties', 'code', 'enum'), $path);
         }
     }

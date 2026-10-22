@@ -26,7 +26,7 @@ nelmio_api_doc:
             - { alias: Empty, type: App\Security\Dto\EmptyResponseData }
             - { alias: ApiError, type: App\Http\ErrorResponseData }
             - { alias: ApiErrorCode, type: App\Http\ApiErrorCode }
-            - { alias: ValidationError, type: App\Http\ValidationErrorResponseData }
+            - { alias: ApiErrorValidation, type: App\Http\ValidationErrorResponseData }
             # "Agent" is already taken by SpaceTraders' own schema (injected by ProxyDescriber from
             # their vendored spec), so this one can't reuse that name without colliding.
             - { alias: AccountAgent, type: App\Agent\Dto\AgentResponseData }

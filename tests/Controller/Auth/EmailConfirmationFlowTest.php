@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Auth;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
@@ -56,7 +56,7 @@ final class EmailConfirmationFlowTest extends WebTestCase
         $browser
             ->post('/auth/login', HttpOptions::json($credentials))
             ->assertStatus(403)
-            ->assertJsonMatches('error.code', ErrorCode::EmailNotVerified->value)
+            ->assertJsonMatches('error.code', ApiErrorCode::EmailNotVerified->value)
         ;
 
         $browser
