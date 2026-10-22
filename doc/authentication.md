@@ -12,31 +12,26 @@ SpaceTraders requests pick which agent to act on.
 The SpaceTraders agent token is stored only in the back, encrypted. The front
 never sees it.
 
-A new `User` has `isVerified = false`. Registration triggers
-`RegistrationConfirmationMailer` (`src/Security/Email/RegistrationConfirmationMailer.php`),
-which uses `symfonycasts/verify-email-bundle`'s `VerifyEmailHelperInterface`
-to generate a signed confirmation link, then rebuilds it to point at
-`{FRONT_URL}/confirm-email?<signature query>` instead of the bundle's own
-backend route. `FRONT_URL` is an env var (e.g. `http://localhost:5173`).
+A new `User` has `isVerified = false`. Registration sends a confirmation
+email (`symfonycasts/verify-email-bundle`) whose link points at
+`{FRONT_URL}/confirm-email?<signature query>`, not at a backend route.
+`FRONT_URL` is an env var (e.g. `http://localhost:5173`).
 
-The `<signature query>` (`id`, `expires`, `token`, `signature`) is the query
-string of the **back's** own signed URL for route `app_confirm_email` — only
-the host changes, not the query. It's opaque to the front: the front's job is
-just to land on `{FRONT_URL}/confirm-email`, read those 4 params and forward
-them, unchanged, as the query string of `POST /auth/confirm-email` (see
-`ConfirmEmailDto`, bound with `#[MapQueryString]`). The controller passes the
-real `Request` it receives straight to `EmailConfirmationService`, which hands
-it to `VerifyEmailHelperInterface::validateEmailConfirmationFromRequest()`
-as-is. This only works because the front's request targets the exact same
-route/path that was signed — reconstructing a different URL (e.g. from a
-JSON body) would require rebuilding it with the router and risks drifting
-from whatever scheme/host was used at signing time.
+The `<signature query>` (`id`, `expires`, `token`, `signature`) is opaque to
+the front: its job is just to land on `{FRONT_URL}/confirm-email`, read those
+4 params and forward them, unchanged, as the query string of
+`POST /auth/confirm-email`. A missing, extra or altered parameter, an unknown
+`id` and a tampered signature all return the same `400`
+`invalid_email_confirmation` body, so the endpoint doesn't reveal which part
+failed or which user ids exist.
 
-`POST /auth/login` returns **403** (`AccessDeniedHttpException`, raised as
-`EmailNotVerifiedException`) when the credentials are correct but
-`!isVerified` — deliberately different from the **401**
-(`UnauthorizedHttpException`) used for bad credentials, so the front can
-tell the two cases apart.
+`POST /auth/login` returns **403** `email_not_verified` when the credentials
+are correct but `!isVerified`, and only then: an unverified account isn't
+revealed to someone without its password. A wrong password or an unknown email is a **401**
+`invalid_credentials`, with the same body for both so the endpoint doesn't
+reveal which emails exist. The front must not treat that 401 like
+`authentication_required`: it's a form error, not a cue to try
+`/auth/refresh`.
 
 ## Tokens
 
@@ -72,10 +67,18 @@ out.
 
 ## Firewall
 
-- `stateless: true`, with the Lexik JWT authenticator.
+- `login` (`^/auth/login$`): stateless, Symfony's `json_login` with
+  `UserVerificationChecker` as user checker and `LoginSuccessHandler` /
+  `LoginFailureHandler` as handlers.
+- `main`: `stateless: true`, with the Lexik JWT authenticator.
 - Public (no JWT required): `/auth/register`, `/auth/login`, `/auth/refresh`,
   `/auth/logout`, `/auth/confirm-email` (POST), `/auth/resend-confirmation`
   (POST). Everything else requires `ROLE_USER`.
+- A missing or rejected JWT (malformed, expired, or for a user that no
+  longer exists) returns `401` `authentication_required` in the error
+  envelope, with `WWW-Authenticate: Bearer`. All cases share one code: the
+  front tries `/auth/refresh` once, then sends the user to login. See
+  "Entry points" in [errors.md](errors.md).
 
 ## Testing
 
@@ -89,9 +92,3 @@ Never reuse these values outside tests.
 
 - Login rate limiting / brute-force protection (password policy itself is
   decided: minimum 8 characters, enforced by `RegisterUserDto`).
-- Login bypasses Symfony's authenticator system entirely (`LoginService`
-  validates credentials by hand, no `Passport`/`AuthenticatorManager`). This
-  means `UserCheckerInterface` and other authenticator-level extension points
-  don't apply to login. Migrate login to a proper Symfony `Authenticator`
-  instead of hand-rolling credential checks — don't reinvent what the
-  framework already provides.

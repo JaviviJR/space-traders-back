@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\SpaceTraders\Response;
 
 /**
- * Thrown by EnvelopeBuilder when extra fields can't be safely
+ * Thrown by HttpEnvelopeMerger when extra fields can't be safely
  * merged into SpaceTraders' own response body. Both cases are bugs, not
  * runtime conditions to recover from — fail loud and early instead of
  * silently dropping data or letting one side win unpredictably.

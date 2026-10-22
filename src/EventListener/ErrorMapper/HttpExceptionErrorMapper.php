@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -17,8 +18,6 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
  */
 final class HttpExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
-    private const string CODE = 'http_error';
-
     public function supports(\Throwable $exception): bool
     {
         return $exception instanceof HttpExceptionInterface;
@@ -30,7 +29,7 @@ final class HttpExceptionErrorMapper implements ExceptionErrorMapperInterface
 
         return new MappedError(
             $exception->getStatusCode(),
-            new ErrorResponseData(self::CODE, $exception->getMessage()),
+            new ErrorResponseData(ErrorCode::HttpError, $exception->getMessage()),
             $exception->getHeaders(),
         );
     }

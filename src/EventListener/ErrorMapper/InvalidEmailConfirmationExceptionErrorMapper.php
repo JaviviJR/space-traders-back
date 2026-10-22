@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\InvalidEmailConfirmationException;
 
@@ -16,8 +17,6 @@ use App\Security\Exception\InvalidEmailConfirmationException;
  */
 final class InvalidEmailConfirmationExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
-    private const string CODE = 'invalid_email_confirmation';
-
     public function supports(\Throwable $exception): bool
     {
         return $exception instanceof InvalidEmailConfirmationException;
@@ -25,6 +24,6 @@ final class InvalidEmailConfirmationExceptionErrorMapper implements ExceptionErr
 
     public function map(\Throwable $exception): MappedError
     {
-        return new MappedError(400, new ErrorResponseData(self::CODE, $exception->getMessage()));
+        return new MappedError(400, new ErrorResponseData(ErrorCode::InvalidEmailConfirmation, $exception->getMessage()));
     }
 }

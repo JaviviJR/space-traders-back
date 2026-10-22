@@ -15,6 +15,19 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * The one catch-all route for every SpaceTraders-proxied endpoint (see
+ * "Proxy design" in doc/spacetraders-proxy.md).
+ *
+ * Its route is kept out of the generated OpenAPI document by
+ * nelmio_api_doc.yaml's areas.path_patterns: documented by reflection, it
+ * would be redundant with, and confusing next to, the synthetic operations
+ * ProxyDescriber injects. #[OA\Hidden] would be the natural fit but doesn't
+ * exist in zircote/swagger-php (checked in vendor/: absent in 6.12.0 and 6.16.0); Nelmio's
+ * #[Areas] with with_attribute: true would work, but it's built for
+ * splitting a document into several rendered areas, more machinery than
+ * hiding one route needs.
+ */
 final class SpaceTradersProxyController extends AbstractController
 {
     public function __construct(

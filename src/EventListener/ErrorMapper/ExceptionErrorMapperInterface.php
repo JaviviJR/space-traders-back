@@ -8,10 +8,10 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
  * One class per kind of exception that needs its own (status, code,
- * message) story. ExceptionListener stays a thin kernel.exception hook: it
- * just finds the first mapper whose supports() agrees and uses its map().
- * Add a new exception case by adding a new implementation, not by editing
- * the listener.
+ * message) story. ExceptionResponseFactory finds the first mapper whose
+ * supports() agrees and uses its map(); the entry points that call it stay
+ * thin. Add a new exception case by adding a new implementation, not by
+ * editing the factory.
  */
 #[AutoconfigureTag('app.exception_error_mapper')]
 interface ExceptionErrorMapperInterface

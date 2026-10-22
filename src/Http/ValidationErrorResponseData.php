@@ -16,7 +16,7 @@ final readonly class ValidationErrorResponseData extends ErrorResponseData
      * @param array<string, list<string>> $violations
      */
     public function __construct(
-        string $code,
+        ErrorCode $code,
         string $message,
         public array $violations,
     ) {

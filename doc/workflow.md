@@ -18,7 +18,7 @@ How the user works with Claude on this project. Applies to every session.
   whether it's a new file, a small edit or a large rewrite. Explain what
   changed and why, listing every file affected, so the user knows what to
   review. The user reviews the actual change with `git diff` in VSCode.
-- Design rationale: when a change is driven by a design pattern, a SOLID
+- Design rationale: when a code change is driven by a design pattern, a SOLID
   principle, an architecture decision or a code-quality improvement — however
   small, including a rename or extracting a method — split the explanation in
   two: what the change does (functional effect) and why this design
@@ -26,12 +26,13 @@ How the user works with Claude on this project. Applies to every session.
   solves, or which principle it applies, and why a simpler alternative wasn't
   enough. Always explicit, even for small changes. A proposal without the
   second part is incomplete.
-  - Revisit note: tried as "always explicit" starting 2026-10-08. After a few
-    sessions, consider switching to "only for structural changes
-    (interfaces, patterns, layers)" if "always" turns out noisy for trivial
-    changes.
-- When a decision is closed, write it to the relevant `doc/*.md` file and reply
-  with a one-line summary.
+  - Not for corrections that involve no design choice (a stale reference, a
+    typo, a fact that doesn't match the code, moving text by applying a rule
+    already written down): one line naming the rule applied is enough.
+- When a decision is closed, propose where to record it: the place AGENTS.md's
+  "Architecture decisions" rule says, or this file for working agreements.
+  Ask before writing (see "Confirmations"), then reply with a one-line
+  summary.
 - Ask for confirmation on doc/*.md updates separately from the confirmation on
   the implementation change itself, even when they're part of the same
   proposal. Implementing something and documenting it are different

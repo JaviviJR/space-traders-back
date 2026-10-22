@@ -18,7 +18,7 @@ top-level fields, or set its own response headers. SpaceTraders' response
 headers are not forwarded at all; the front must not depend on them.
 
 A sibling field colliding with one of SpaceTraders' own top-level keys is a
-bug, not a runtime condition to resolve silently — `App\SpaceTraders\Response\EnvelopeBuilder`
+bug, not a runtime condition to resolve silently — `App\SpaceTraders\Response\HttpEnvelopeMerger`
 (see "Proxy design" below) throws rather than letting either side win
 unpredictably.
 
@@ -81,29 +81,17 @@ every back-only endpoint converge on going out —
 builds a Symfony `JsonResponse`.
 
 Merging a hook's extra fields into SpaceTraders' raw body is
-`App\SpaceTraders\Response\EnvelopeBuilder`'s job, the only consumer of that logic:
-pass-through untouched when there's nothing to add; otherwise decode just
-enough to merge the extra fields in as siblings, throwing
-`EnvelopeMergeException` on a key collision or on an upstream body that
-doesn't decode to a JSON object — both are bugs, not conditions to silently
-resolve. `EnvelopeResponseFactory` doesn't know about any of this: its
-back-only `success()`/`error()` just `json_encode` their payload directly —
-a response with nothing to protect doesn't need the merge machinery.
+`App\SpaceTraders\Response\HttpEnvelopeMerger`'s job, used only by the proxy;
+`EnvelopeResponseFactory`'s back-only `success()`/`error()` don't go through
+it — a response with nothing to protect doesn't need the merge machinery.
 
-`App\SpaceTraders\Proxy\ProxyService` orchestrates one forwarded request: resolves
-`?Agent` from `agentId` if present (404/403 as described above), picks the
-first matching hook (if any), runs `beforeForward`/`afterForward` around the
-gateway call (substituting `Authorization` with the resolved agent's
-decrypted token only when there is one), asks the hook for extra data when it
-implements `App\SpaceTraders\Response\AugmentInterface`, and hands the result to
-`App\SpaceTraders\Response\EnvelopeBuilder`.
+`App\SpaceTraders\Proxy\ProxyService` orchestrates one forwarded request,
+from resolving the agent to handing the result to the merger.
 
 `App\SpaceTraders\Proxy\GatewayInterface` / `App\SpaceTraders\Proxy\Gateway` wraps
 `HttpClientInterface`: a 4xx/5xx from SpaceTraders is relayed as-is, not
 translated — only genuine transport failures (timeout, DNS, connection)
-become `App\SpaceTraders\Exception\ApiException`. Kept as an interface despite one
-implementation because it's the test seam the proxy/hook tests fake against,
-instead of spinning up `MockHttpClient` each time.
+become `App\SpaceTraders\Exception\ApiException`.
 
 ## TODO
 

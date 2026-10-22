@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\EmailAlreadyRegisteredException;
 
@@ -15,8 +16,6 @@ use App\Security\Exception\EmailAlreadyRegisteredException;
  */
 final class EmailAlreadyRegisteredExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
-    private const string CODE = 'email_already_registered';
-
     public function supports(\Throwable $exception): bool
     {
         return $exception instanceof EmailAlreadyRegisteredException;
@@ -24,6 +23,6 @@ final class EmailAlreadyRegisteredExceptionErrorMapper implements ExceptionError
 
     public function map(\Throwable $exception): MappedError
     {
-        return new MappedError(409, new ErrorResponseData(self::CODE, 'This email is already registered.'));
+        return new MappedError(409, new ErrorResponseData(ErrorCode::EmailAlreadyRegistered, 'This email is already registered.'));
     }
 }

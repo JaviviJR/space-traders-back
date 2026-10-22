@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use App\SpaceTraders\Exception\ApiException;
 
@@ -15,8 +16,6 @@ use App\SpaceTraders\Exception\ApiException;
  */
 final class SpaceTradersApiExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
-    private const string CODE = 'spacetraders_unreachable';
-
     public function supports(\Throwable $exception): bool
     {
         return $exception instanceof ApiException;
@@ -24,6 +23,6 @@ final class SpaceTradersApiExceptionErrorMapper implements ExceptionErrorMapperI
 
     public function map(\Throwable $exception): MappedError
     {
-        return new MappedError(502, new ErrorResponseData(self::CODE, 'SpaceTraders is currently unreachable.'));
+        return new MappedError(502, new ErrorResponseData(ErrorCode::SpacetradersUnreachable, 'SpaceTraders is currently unreachable.'));
     }
 }

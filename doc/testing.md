@@ -8,7 +8,7 @@ debugging for the IDE), so coverage is enabled per-run instead of changing
 that default: `composer test-coverage` sets `XDEBUG_MODE=coverage` only for
 that command, leaving IDE debugging untouched for every other run.
 
-Reports are configured in `phpunit.dist.xml` (`<coverage>`): an HTML report
+Reports are configured in `phpunit.coverage.xml` (`<coverage>`): an HTML report
 in `var/coverage/html` (already covered by the `/var/` entry in `.gitignore`)
 and a text summary printed to the console.
 
@@ -23,14 +23,8 @@ composer test-coverage
 [Foundry](https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html)
 (`zenstruck/foundry`) is installed (`require-dev`) for test model factories,
 instead of building entities by hand or reaching into the `EntityManager`
-from tests.
-
-## Test factories
-
-`UserFactory` (`src/Factory/UserFactory.php`) is the first Foundry factory;
-it defaults `isVerified` to `true`, so factory-made users don't need manual
-verification in tests. New entities that need test fixtures should get
-their own Foundry factory too, for consistency.
+from tests. Every entity that needs test fixtures gets its own factory in
+`src/Factory/`.
 
 ## Test doubles
 
@@ -72,12 +66,6 @@ Criteria for choosing between PHPUnit's generated doubles (`createStub()` /
 
 - Revisit the test doubles guidance above once more of the suite is written;
   it's based on one service's tests (`App\Tests\SpaceTraders\Proxy\ProxyServiceTest`,
-  `App\Tests\SpaceTraders\Response\EnvelopeBuilderTest`) and may need adjusting as other patterns
+  `App\Tests\SpaceTraders\Response\HttpEnvelopeMergerTest`) and may need adjusting as other patterns
   show up.
-- If the suite grows and per-run coverage becomes slow, switch to
-  [PCOV](https://github.com/krakjam/pcov) instead of Xdebug for coverage.
-  PCOV only instruments coverage (no step debugging, no profiling), which
-  makes it faster than Xdebug for this specific job, at the cost of one more
-  extension to install and maintain alongside Xdebug in
-  `docker/php/Dockerfile`. Not needed today; revisit if coverage runs become
-  a bottleneck.
+- Switch to PCOV for coverage if coverage runs become slow.

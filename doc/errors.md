@@ -1,7 +1,7 @@
 # Errors
 
-A single `kernel.exception` listener (`ExceptionListener`) converts every
-uncaught exception into the same envelope as any other response —
+Every error response is built in one place, `ExceptionResponseFactory`: it
+turns an exception into the same envelope as any other response —
 `{"error": {"code", "message"}}` — via `EnvelopeResponseFactory::error()`,
 instead of Symfony's default error shape. `code` is a stable,
 machine-readable identifier for the front to branch on; `message` is
@@ -10,11 +10,38 @@ human-readable and safe to expose.
 Deciding the response for a given exception is delegated to
 `ExceptionErrorMapperInterface` (`supports()` + `map()`): one class per kind
 of exception, tagged `app.exception_error_mapper` and injected into the
-listener as a priority-ordered `#[AutowireIterator]`, trying each
+factory as a priority-ordered `#[AutowireIterator]`, trying each
 `supports()` in order and using the first match — the same shape Symfony
 itself uses for Normalizers. `map()` returns a `MappedError`: the HTTP
-status plus the public body as an `ErrorResponseData`, which the listener
+status plus the public body as an `ErrorResponseData`, which the factory
 hands to the envelope as-is.
+
+## Entry points
+
+Entry points only hand the exception to the factory; they never decide a
+response themselves.
+
+- `ExceptionListener` (`kernel.exception`): every uncaught exception.
+- `JwtAuthenticationFailureListener` (LexikJWTAuthenticationBundle's JWT
+  failure events): Lexik answers a rejected JWT from inside the firewall, so
+  it never reaches `kernel.exception`.
+- `LoginFailureHandler` (`json_login`'s `failure_handler`): a failed login
+  is also answered inside the firewall, for the same reason.
+
+A new source of errors that bypasses `kernel.exception` gets another thin
+entry point that calls the factory, not its own envelope.
+
+An entry point may wrap the exception before handing it over, when the
+framework's exception class doesn't say where it came from: Symfony's
+`BadCredentialsException` is both a failed login and a JWT whose user no
+longer exists. The entry point is the only one that knows the origin, so it
+wraps the exception in one of our own (not a framework subclass, with the
+original as `previous`) and a mapper matches that. Translating the exception
+is all it does; the response is still decided by the mapper. Consequently,
+no mapper matches a generic framework class that can arrive from several
+origins (e.g. `AuthenticationException`). An exception whose meaning
+doesn't depend on its origin (an `HttpExceptionInterface`, our own domain
+exceptions) is handed over as-is.
 
 Anything unmapped → `500`, `internal_error`, a generic message (the real
 exception is never exposed). `500` is reserved for the back's own internal
@@ -27,8 +54,12 @@ failures; anything else that should reach the front gets a mapper.
    `#[AutoconfigureTag]`, so autoconfiguration registers it; no service
    definition needed.
 2. `supports()` matches the exception (usually an `instanceof`); `map()`
-   returns its status, a stable `code` (a `snake_case` slug, kept in a
-   `CODE` constant) and the public message.
+   returns its status, a stable `code` and the public message. The code is
+   a case of `App\Http\ErrorCode` (backing value: a `snake_case` slug): add
+   a case there for a new code, never a string literal — the enum is what
+   the generated spec lists for the front (see "Error codes" in
+   [openapi.md](openapi.md)). The same applies to any error body built
+   outside a mapper.
 3. Choose the message deliberately: a fixed text by default. Reuse
    `getMessage()` only when the exception's message is written to be shown
    to the front (as `HttpExceptionInterface` messages are); a domain
@@ -42,8 +73,8 @@ failures; anything else that should reach the front gets a mapper.
    nullable field on `ErrorResponseData`, which every other error would then
    carry. The rest of the pipeline is unchanged: the subclass is still an
    `ErrorResponseData`. Document it on the affected endpoints with
-   `#[ErrorResponse(..., model: TheSubclass::class)]` (see
-   [openapi.md](openapi.md)).
+   `#[ErrorResponse(..., code: ErrorCode::TheCase, model: TheSubclass::class)]`
+   (see "Error codes" in [openapi.md](openapi.md)).
 6. If the error response needs headers (e.g. a `Set-Cookie` clearing a
    rejected credential, or headers an `HttpExceptionInterface` carries), return
    them in `MappedError::$headers`; the listener passes them to the envelope.
@@ -51,6 +82,8 @@ failures; anything else that should reach the front gets a mapper.
 7. Add a unit test in `tests/EventListener/ErrorMapper/` (supports, doesn't
    support another exception, maps to the expected status/code/message), and
    assert the `code` in the functional test of the endpoint that triggers it.
+   No spec test is needed for a new case: `tests/OpenApi/ErrorCodeSchemaTest`
+   already checks that every `ErrorCode` case reaches the dumped spec.
 
 Anything specific to one mapper (why that status, why that priority, what it
 deliberately doesn't match) is documented in the mapper's own docblock, not
@@ -97,14 +130,6 @@ controller.
 
 ## TODO
 
-- Known leak of localized messages, accepted for now: once a translator
-  exists, LexikJWTAuthenticationBundle translates its own authentication
-  failure message with the `security` domain. Its own keys (`Invalid JWT
-  Token`, `Expired JWT Token`) have no catalog entry and stay in English, but
-  a valid JWT for a deleted user returns Symfony's `Username could not be
-  found.` translated (e.g. Spanish with `Accept-Language: es`). Revisit if it
-  causes problems — e.g. a listener on Lexik's `JWT_INVALID`/`JWT_EXPIRED`
-  events that resets the untranslated message.
 - `error.code`'s type is inconsistent across the two response kinds: a
   string slug for back-only errors (`ErrorResponseData`), a number from
   SpaceTraders' own catalog for relayed proxy errors (see

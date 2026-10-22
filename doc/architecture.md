@@ -15,8 +15,7 @@ talks to this back, never to `api.spacetraders.io`.
 
 ## Contract
 
-This back is a Backend for Frontend (BFF) for the Vue front. It exposes two
-kinds of endpoints.
+The back exposes two kinds of endpoints.
 
 ### SpaceTraders endpoints
 
@@ -32,8 +31,7 @@ gets called over the network: user registration, login, token refresh and
 logout never touch SpaceTraders — their contract is entirely ours.
 
 `GET /api/agents` is also back-only: it lists the authenticated user's
-linked agents straight from this back's DB (`id`, `symbol`, `faction`,
-`createdAt`), no SpaceTraders call involved.
+linked agents straight from this back's DB, no SpaceTraders call involved.
 
 **Agent registration (`POST /api/spacetraders/register`) is not back-only.**
 It goes through the catch-all proxy like any other SpaceTraders endpoint
@@ -57,10 +55,9 @@ so cross-origin requests need CORS headers. Handled by `NelmioCorsBundle`
 (`config/packages/nelmio_cors.yaml`), not hand-written headers in
 controllers or the kernel.
 
-Allowed origin is `%env(CORS_ALLOW_ORIGIN)%`, currently set in the committed
-`.env` to `^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$` — any port on
-localhost/127.0.0.1, since the front's dev port can vary. This is a dev-only
-default.
+Allowed origin is `%env(CORS_ALLOW_ORIGIN)%`. The committed `.env` default
+accepts any port on localhost/127.0.0.1, since the front's dev port can
+vary. This is a dev-only default.
 
 ## Tests and contract
 

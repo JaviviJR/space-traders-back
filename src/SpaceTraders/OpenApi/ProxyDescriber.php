@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\SpaceTraders\OpenApi;
 
+use App\OpenApi\Describer\AuthenticationErrorResponseDescriber;
 use App\SpaceTraders\Response\AugmentationSchema;
 use App\SpaceTraders\Response\AugmentInterface;
 use App\SpaceTraders\RouteHookInterface;
@@ -24,7 +25,9 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
  * (vendored at resources/spacetraders/openapi.json, see doc/openapi.md) —
  * the schemas are never hand-transcribed, so the contract-fidelity rule in
  * doc/spacetraders-proxy.md ("the back does not add, remove or rename fields") holds
- * in the docs too.
+ * in the docs too. They are deserialized with zircote/swagger-php's own
+ * OpenApi\Serializer, into the same annotation objects the #[OA\...]
+ * attributes would produce, so Nelmio merges them like any other operation.
  *
  * Any App\SpaceTraders\Hook that also implements
  * App\SpaceTraders\Response\AugmentInterface adds its extra top-level fields
@@ -37,9 +40,11 @@ final class ProxyDescriber implements DescriberInterface
     private const string BASE_PATH = '/api/spacetraders';
 
     /**
-     * The representative subset documented in this first pass (see the
-     * "Pick which SpaceTraders operations are in scope" decision in
-     * doc/openapi.md). Expand this list to document more operations.
+     * The representative subset documented in this first pass (see
+     * "Operations in scope" in doc/openapi.md): server status, agent
+     * registration and listing ships, picked to exercise both plain
+     * pass-through operations and one with a hook augmentation. Expand this
+     * list to document more operations.
      *
      * @var list<array{method: string, sourcePath: string}>
      */
@@ -111,6 +116,12 @@ final class ProxyDescriber implements DescriberInterface
             );
 
             $targetOperation->mergeProperties($deserialized);
+
+            // The front authenticates every proxied call with this back's
+            // JWT, never with a SpaceTraders token: SpaceTraders' own
+            // security requirements describe the upstream hop, not this
+            // contract. Request/response fields are left untouched.
+            $targetOperation->security = [[AuthenticationErrorResponseDescriber::SECURITY_SCHEME => []]];
 
             if (!Undefined::isDefault($targetOperation->operationId)) {
                 $targetOperation->operationId = 'spacetraders_'.$targetOperation->operationId;

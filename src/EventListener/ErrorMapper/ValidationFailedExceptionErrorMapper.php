@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ErrorCode;
 use App\Http\ValidationErrorResponseData;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -27,7 +28,6 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 #[AsTaggedItem(priority: 10)]
 final class ValidationFailedExceptionErrorMapper implements ExceptionErrorMapperInterface
 {
-    private const string CODE = 'validation_failed';
     private const string GLOBAL_KEY = '_global';
 
     public function supports(\Throwable $exception): bool
@@ -50,7 +50,7 @@ final class ValidationFailedExceptionErrorMapper implements ExceptionErrorMapper
 
         return new MappedError(
             $exception->getStatusCode(),
-            new ValidationErrorResponseData(self::CODE, 'Validation failed.', $violations),
+            new ValidationErrorResponseData(ErrorCode::ValidationFailed, 'Validation failed.', $violations),
         );
     }
 }
