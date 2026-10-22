@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
+use App\Http\ApiErrorCode;
 use App\Http\EnvelopeResponseFactory;
-use App\Http\ErrorCode;
 use App\OpenApi\Attribute\DataResponse;
 use App\OpenApi\Attribute\ErrorResponse;
 use App\Security\Dto\AccessTokenResponseData;
@@ -39,7 +39,7 @@ final class RefreshController extends AbstractController
     )]
     #[ErrorResponse(
         status: 401,
-        code: ErrorCode::InvalidRefreshToken,
+        code: ApiErrorCode::InvalidRefreshToken,
         description: 'Missing, invalid, expired or revoked refresh token. '
             .'The refresh token cookie is cleared via Set-Cookie on this response.',
     )]

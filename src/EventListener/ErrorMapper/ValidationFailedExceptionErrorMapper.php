@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ValidationErrorResponseData;
 use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -50,7 +50,7 @@ final class ValidationFailedExceptionErrorMapper implements ExceptionErrorMapper
 
         return new MappedError(
             $exception->getStatusCode(),
-            new ValidationErrorResponseData(ErrorCode::ValidationFailed, 'Validation failed.', $violations),
+            new ValidationErrorResponseData(ApiErrorCode::ValidationFailed, 'Validation failed.', $violations),
         );
     }
 }

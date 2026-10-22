@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
+use App\Http\ApiErrorCode;
 use App\Http\EnvelopeResponseFactory;
-use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -54,6 +54,6 @@ final class ExceptionResponseFactory
             }
         }
 
-        return new MappedError(500, new ErrorResponseData(ErrorCode::InternalError, 'An unexpected error occurred.'));
+        return new MappedError(500, new ErrorResponseData(ApiErrorCode::InternalError, 'An unexpected error occurred.'));
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller\Auth;
 
 use App\Factory\UserFactory;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Cookie;
 use Zenstruck\Browser\HttpOptions;
@@ -53,14 +53,14 @@ final class LoginControllerTest extends WebTestCase
             ->assertHeaderEquals('WWW-Authenticate', null)
         ;
 
-        $this->assertError($browser, ErrorCode::InvalidCredentials, 'Invalid email or password.');
+        $this->assertError($browser, ApiErrorCode::InvalidCredentials, 'Invalid email or password.');
     }
 
     public function testLoginWithAnUnknownEmailIsTheSameInvalidCredentialsError(): void
     {
         $browser = $this->attemptLogin('login-never-registered@example.com', 'password123')->assertStatus(401);
 
-        $this->assertError($browser, ErrorCode::InvalidCredentials, 'Invalid email or password.');
+        $this->assertError($browser, ApiErrorCode::InvalidCredentials, 'Invalid email or password.');
     }
 
     public function testLoginWithAnUnverifiedEmailIsAnEmailNotVerifiedError(): void
@@ -69,7 +69,7 @@ final class LoginControllerTest extends WebTestCase
 
         $browser = $this->attemptLogin('login-unverified@example.com', 'password123')->assertStatus(403);
 
-        $this->assertError($browser, ErrorCode::EmailNotVerified, 'Email address is not verified.');
+        $this->assertError($browser, ApiErrorCode::EmailNotVerified, 'Email address is not verified.');
     }
 
     public function testLoginWithAnUnverifiedEmailAndTheWrongPasswordDoesNotRevealTheAccountState(): void
@@ -78,7 +78,7 @@ final class LoginControllerTest extends WebTestCase
 
         $browser = $this->attemptLogin('login-unverified-wrong@example.com', 'not-the-right-password')->assertStatus(401);
 
-        $this->assertError($browser, ErrorCode::InvalidCredentials, 'Invalid email or password.');
+        $this->assertError($browser, ApiErrorCode::InvalidCredentials, 'Invalid email or password.');
     }
 
     public function testLoginWithANonJsonBodyIsAnUnsupportedMediaTypeError(): void
@@ -90,7 +90,7 @@ final class LoginControllerTest extends WebTestCase
             ->assertStatus(415)
         ;
 
-        $this->assertError($browser, ErrorCode::HttpError, 'The request body must be JSON.');
+        $this->assertError($browser, ApiErrorCode::HttpError, 'The request body must be JSON.');
     }
 
     private function attemptLogin(string $email, string $password): KernelBrowser
@@ -98,7 +98,7 @@ final class LoginControllerTest extends WebTestCase
         return $this->browser()->post('/auth/login', HttpOptions::json(['email' => $email, 'password' => $password]));
     }
 
-    private function assertError(KernelBrowser $browser, ErrorCode $code, string $message): void
+    private function assertError(KernelBrowser $browser, ApiErrorCode $code, string $message): void
     {
         self::assertSame(['error' => ['code' => $code->value, 'message' => $message]], $browser->json()->decoded());
     }

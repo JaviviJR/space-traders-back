@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\InvalidLoginCredentialsException;
 
@@ -28,6 +28,6 @@ final class InvalidLoginCredentialsExceptionErrorMapper implements ExceptionErro
 
     public function map(\Throwable $exception): MappedError
     {
-        return new MappedError(401, new ErrorResponseData(ErrorCode::InvalidCredentials, 'Invalid email or password.'));
+        return new MappedError(401, new ErrorResponseData(ApiErrorCode::InvalidCredentials, 'Invalid email or password.'));
     }
 }

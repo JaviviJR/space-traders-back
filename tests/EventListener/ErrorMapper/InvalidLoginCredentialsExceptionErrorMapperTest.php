@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\InvalidLoginCredentialsExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Security\Exception\InvalidLoginCredentialsException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
@@ -27,7 +27,7 @@ final class InvalidLoginCredentialsExceptionErrorMapperTest extends TestCase
         $mapped = (new InvalidLoginCredentialsExceptionErrorMapper())->map($this->exception());
 
         self::assertSame(401, $mapped->status);
-        self::assertSame(ErrorCode::InvalidCredentials, $mapped->body->code);
+        self::assertSame(ApiErrorCode::InvalidCredentials, $mapped->body->code);
         self::assertSame('Invalid email or password.', $mapped->body->message);
         self::assertSame([], $mapped->headers);
     }

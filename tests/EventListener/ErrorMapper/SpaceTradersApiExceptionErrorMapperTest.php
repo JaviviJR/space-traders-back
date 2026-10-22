@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\SpaceTradersApiExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\SpaceTraders\Exception\ApiException;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,7 @@ final class SpaceTradersApiExceptionErrorMapperTest extends TestCase
         $mapped = (new SpaceTradersApiExceptionErrorMapper())->map(new ApiException(0, ''));
 
         self::assertSame(502, $mapped->status);
-        self::assertSame(ErrorCode::SpacetradersUnreachable, $mapped->body->code);
+        self::assertSame(ApiErrorCode::SpacetradersUnreachable, $mapped->body->code);
         self::assertSame('SpaceTraders is currently unreachable.', $mapped->body->message);
     }
 }

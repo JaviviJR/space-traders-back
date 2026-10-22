@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\AccessTokenRejectedException;
 
@@ -32,7 +32,7 @@ final class AccessTokenRejectedExceptionErrorMapper implements ExceptionErrorMap
     {
         return new MappedError(
             401,
-            new ErrorResponseData(ErrorCode::AuthenticationRequired, 'Missing or invalid access token.'),
+            new ErrorResponseData(ApiErrorCode::AuthenticationRequired, 'Missing or invalid access token.'),
             ['WWW-Authenticate' => 'Bearer'],
         );
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\EmailNotVerifiedException;
 
@@ -25,6 +25,6 @@ final class EmailNotVerifiedExceptionErrorMapper implements ExceptionErrorMapper
 
     public function map(\Throwable $exception): MappedError
     {
-        return new MappedError(403, new ErrorResponseData(ErrorCode::EmailNotVerified, 'Email address is not verified.'));
+        return new MappedError(403, new ErrorResponseData(ApiErrorCode::EmailNotVerified, 'Email address is not verified.'));
     }
 }

@@ -17,7 +17,10 @@
       "WebSearch",
       "Bash(grep -v \"^ \\\\*\\\\|^/\\\\*\\\\*\\\\|^$\")",
       "Bash(python3 -I -c ' *)",
-      "Bash(php bin/phpunit tests/Controller/Auth/EmailConfirmationFlowTest.php tests/Controller/Auth/ResendConfirmationControllerTest.php)"
+      "WebFetch(domain:zircote.github.io)",
+      "WebFetch(domain:zircote.com)",
+      "Bash(bin/console cache:clear -q)",
+      "Bash(php bin/phpunit tests/OpenApi)"
     ]
   }
 }
