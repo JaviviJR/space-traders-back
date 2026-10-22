@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\AccessTokenRejectedExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Security\Exception\AccessTokenRejectedException;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\ExpiredTokenException;
 use PHPUnit\Framework\TestCase;
@@ -45,7 +45,7 @@ final class AccessTokenRejectedExceptionErrorMapperTest extends TestCase
         );
 
         self::assertSame(401, $mapped->status);
-        self::assertSame(ErrorCode::AuthenticationRequired, $mapped->body->code);
+        self::assertSame(ApiErrorCode::AuthenticationRequired, $mapped->body->code);
         self::assertSame('Missing or invalid access token.', $mapped->body->message);
         self::assertSame(['WWW-Authenticate' => 'Bearer'], $mapped->headers);
     }

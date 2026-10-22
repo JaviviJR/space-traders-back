@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\OpenApi\Describer;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\OpenApi\Attribute\ErrorResponse;
 use Nelmio\ApiDocBundle\Describer\DescriberInterface;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
@@ -95,7 +95,7 @@ final class AuthenticationErrorResponseDescriber implements DescriberInterface
         try {
             return new ErrorResponse(
                 status: 401,
-                code: ErrorCode::AuthenticationRequired,
+                code: ApiErrorCode::AuthenticationRequired,
                 description: 'Missing or invalid access token',
             );
         } finally {

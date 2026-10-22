@@ -16,7 +16,11 @@
       "Bash(export XDEBUG_MODE=off)",
       "WebSearch",
       "Bash(grep -v \"^ \\\\*\\\\|^/\\\\*\\\\*\\\\|^$\")",
-      "Bash(python3 -I -c ' *)"
+      "Bash(python3 -I -c ' *)",
+      "WebFetch(domain:zircote.github.io)",
+      "WebFetch(domain:zircote.com)",
+      "Bash(bin/console cache:clear -q)",
+      "Bash(php bin/phpunit tests/OpenApi)"
     ]
   }
 }

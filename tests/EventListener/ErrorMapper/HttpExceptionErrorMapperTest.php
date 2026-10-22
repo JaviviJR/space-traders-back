@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\HttpExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -27,7 +27,7 @@ final class HttpExceptionErrorMapperTest extends TestCase
         $mapped = (new HttpExceptionErrorMapper())->map(new NotFoundHttpException('Agent not found.'));
 
         self::assertSame(404, $mapped->status);
-        self::assertSame(ErrorCode::HttpError, $mapped->body->code);
+        self::assertSame(ApiErrorCode::HttpError, $mapped->body->code);
         self::assertSame('Agent not found.', $mapped->body->message);
         self::assertSame([], $mapped->headers);
     }

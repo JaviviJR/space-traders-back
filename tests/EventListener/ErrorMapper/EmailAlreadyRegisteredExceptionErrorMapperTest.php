@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\EmailAlreadyRegisteredExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Security\Exception\EmailAlreadyRegisteredException;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,7 @@ final class EmailAlreadyRegisteredExceptionErrorMapperTest extends TestCase
         $mapped = (new EmailAlreadyRegisteredExceptionErrorMapper())->map(EmailAlreadyRegisteredException::withEmail('taken@example.com'));
 
         self::assertSame(409, $mapped->status);
-        self::assertSame(ErrorCode::EmailAlreadyRegistered, $mapped->body->code);
+        self::assertSame(ApiErrorCode::EmailAlreadyRegistered, $mapped->body->code);
         self::assertSame('This email is already registered.', $mapped->body->message);
     }
 }

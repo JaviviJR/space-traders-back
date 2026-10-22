@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\InvalidEmailConfirmationExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Security\Exception\InvalidEmailConfirmationException;
 use PHPUnit\Framework\TestCase;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\ExpiredSignatureException;
@@ -29,7 +29,7 @@ final class InvalidEmailConfirmationExceptionErrorMapperTest extends TestCase
         $mapped = (new InvalidEmailConfirmationExceptionErrorMapper())->map($exception);
 
         self::assertSame(400, $mapped->status);
-        self::assertSame(ErrorCode::InvalidEmailConfirmation, $mapped->body->code);
+        self::assertSame(ApiErrorCode::InvalidEmailConfirmation, $mapped->body->code);
         self::assertSame((new ExpiredSignatureException())->getReason(), $mapped->body->message);
     }
 

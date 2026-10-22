@@ -14,7 +14,7 @@ namespace App\Http;
  * Relayed SpaceTraders errors are not covered: their numeric `code` comes
  * from SpaceTraders' own catalog and never goes through ErrorResponseData.
  */
-enum ErrorCode: string
+enum ApiErrorCode: string
 {
     case AuthenticationRequired = 'authentication_required';
     case EmailAlreadyRegistered = 'email_already_registered';

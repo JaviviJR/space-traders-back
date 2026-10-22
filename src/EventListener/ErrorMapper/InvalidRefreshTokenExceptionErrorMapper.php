@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\InvalidRefreshTokenException;
 use App\Security\RefreshTokenCookieFactory;
@@ -35,7 +35,7 @@ final class InvalidRefreshTokenExceptionErrorMapper implements ExceptionErrorMap
     {
         return new MappedError(
             401,
-            new ErrorResponseData(ErrorCode::InvalidRefreshToken, 'The refresh token is missing, expired or revoked.'),
+            new ErrorResponseData(ApiErrorCode::InvalidRefreshToken, 'The refresh token is missing, expired or revoked.'),
             ['Set-Cookie' => (string) $this->cookieFactory->clear()],
         );
     }

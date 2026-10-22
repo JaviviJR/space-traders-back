@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\OpenApi;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\OpenApi\Describer\AuthenticationErrorResponseDescriber;
 use App\Tests\Support\DumpsOpenApiSpec;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -30,8 +30,8 @@ final class AuthenticationErrorResponseTest extends KernelTestCase
 
             $error = $this->at($operation, 'responses', '401', 'content', 'application/json', 'schema', 'properties', 'error');
 
-            self::assertSame('#/components/schemas/Error', $this->at($error, 'allOf', 0, '$ref'), $where.' should document its 401 as Error.');
-            self::assertSame([ErrorCode::AuthenticationRequired->value], $this->at($error, 'allOf', 1, 'properties', 'code', 'enum'), $where);
+            self::assertSame('#/components/schemas/ApiError', $this->at($error, 'allOf', 0, '$ref'), $where.' should document its 401 as ApiError.');
+            self::assertSame([ApiErrorCode::AuthenticationRequired->value], $this->at($error, 'allOf', 1, 'properties', 'code', 'enum'), $where);
             ++$checked;
         }
 

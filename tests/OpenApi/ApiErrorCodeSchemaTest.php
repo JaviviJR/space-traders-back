@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\OpenApi;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Tests\Support\DumpsOpenApiSpec;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
  * The front's codegen reads error codes from the dumped spec, so this checks
- * the spec itself: every ErrorCode case is listed, every error body's
+ * the spec itself: every ApiErrorCode case is listed, every error body's
  * `code` points at that one schema instead of a plain string, and every
  * documented 4xx/5xx error response narrows `code` to exactly one known case
  * and carries it as `example` (which also catches an error documented with a
@@ -21,20 +21,20 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  * doesn't match what the endpoint returns: that's the endpoint's functional
  * test.
  */
-final class ErrorCodeSchemaTest extends KernelTestCase
+final class ApiErrorCodeSchemaTest extends KernelTestCase
 {
     use DumpsOpenApiSpec;
 
-    private const string ERROR_CODE_REF = '#/components/schemas/ErrorCode';
+    private const string ERROR_CODE_REF = '#/components/schemas/ApiErrorCode';
 
     public function testListsEveryErrorCodeAsAStringEnum(): void
     {
         $spec = $this->dumpedSpec();
 
-        self::assertSame('string', $this->at($spec, 'components', 'schemas', 'ErrorCode', 'type'));
+        self::assertSame('string', $this->at($spec, 'components', 'schemas', 'ApiErrorCode', 'type'));
         self::assertSame(
-            array_map(static fn (ErrorCode $code): string => $code->value, ErrorCode::cases()),
-            $this->at($spec, 'components', 'schemas', 'ErrorCode', 'enum'),
+            array_map(static fn (ApiErrorCode $code): string => $code->value, ApiErrorCode::cases()),
+            $this->at($spec, 'components', 'schemas', 'ApiErrorCode', 'enum'),
         );
     }
 
@@ -42,8 +42,9 @@ final class ErrorCodeSchemaTest extends KernelTestCase
     {
         $spec = $this->dumpedSpec();
 
-        self::assertSame(self::ERROR_CODE_REF, $this->at($spec, 'components', 'schemas', 'Error', 'properties', 'code', '$ref'));
-        self::assertSame(self::ERROR_CODE_REF, $this->at($spec, 'components', 'schemas', 'ValidationError', 'properties', 'code', '$ref'));
+        self::assertSame(self::ERROR_CODE_REF, $this->at($spec, 'components', 'schemas', 'ApiError', 'properties', 'code', '$ref'));
+        // ValidationError gets its code through ApiError, not its own copy.
+        self::assertSame('#/components/schemas/ApiError', $this->at($spec, 'components', 'schemas', 'ValidationError', 'allOf', 0, '$ref'));
     }
 
     /**
@@ -55,7 +56,7 @@ final class ErrorCodeSchemaTest extends KernelTestCase
     public function testEveryDocumentedErrorResponseNarrowsItsCodeToOneErrorCode(): void
     {
         $spec = $this->dumpedSpec();
-        $knownCodes = array_map(static fn (ErrorCode $code): string => $code->value, ErrorCode::cases());
+        $knownCodes = array_map(static fn (ApiErrorCode $code): string => $code->value, ApiErrorCode::cases());
         $checked = 0;
 
         foreach ($this->children($this->at($spec, 'paths')) as $path => $operations) {
@@ -76,7 +77,7 @@ final class ErrorCodeSchemaTest extends KernelTestCase
                     self::assertSame(
                         $enum[0],
                         $this->at($error, 'allOf', 1, 'properties', 'code', 'example'),
-                        $where.' should carry its code as example, or Swagger UI shows the first ErrorCode case.',
+                        $where.' should carry its code as example, or Swagger UI shows the first ApiErrorCode case.',
                     );
                     ++$checked;
                 }
@@ -98,7 +99,7 @@ final class ErrorCodeSchemaTest extends KernelTestCase
             $error = $this->at($spec, 'paths', $path, 'post', 'responses', '422', 'content', 'application/json', 'schema', 'properties', 'error');
 
             self::assertSame('#/components/schemas/ValidationError', $this->at($error, 'allOf', 0, '$ref'), $path.' should document its 422 as ValidationError.');
-            self::assertSame([ErrorCode::ValidationFailed->value], $this->at($error, 'allOf', 1, 'properties', 'code', 'enum'), $path);
+            self::assertSame([ApiErrorCode::ValidationFailed->value], $this->at($error, 'allOf', 1, 'properties', 'code', 'enum'), $path);
         }
     }
 
