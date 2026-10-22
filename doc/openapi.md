@@ -130,13 +130,23 @@ as `AgentResponseData` instead of a clean `Agent`-like name.
 
 **Every new back-only request DTO or response data class must get a clean
 alias in `config/packages/nelmio_api_doc.yaml`'s `models.names`**, named after
-what the class contains, not after its PHP role:
+the operation it belongs to: the action's `operationId` in PascalCase plus
+`Request` for the request body or `Response` for the `data` model. The front's
+generated client then reads `registerUser(RegisterUserRequest):
+RegisterUserResponse`, and naming a new model is mechanical, not a judgement
+call:
 
 ```yaml
 models:
     names:
-        - { alias: RegisterUser, type: App\Security\Dto\RegisterUserDto }
+        - { alias: RegisterUserRequest, type: App\Security\Dto\RegisterUserDto }
+        - { alias: RegisterUserResponse, type: App\Security\Dto\RegisterResponseData }
 ```
+
+A model shared by several operations can't follow that rule: Nelmio gives a
+class a single alias, so it can't be named after each operation without
+duplicating the class. Name it after its content, keeping the role suffix.
+Cross-cutting models that belong to no operation keep a plain content name.
 
 This has to be the YAML alias list, not a per-controller
 `new Model(type: ..., name: '...')` on the `#[OA\RequestBody]` /
@@ -153,9 +163,9 @@ to look at, not two.
 
 Pick a name that doesn't collide with an existing schema — in particular
 anything SpaceTraders' own vendored spec already defines (injected by
-`App\SpaceTraders\OpenApi\ProxyDescriber`, see above): `AgentResponseData`
-couldn't alias to `Agent` because SpaceTraders already has one, hence
-`AccountAgent`. Avoid names of JavaScript/TypeScript globals too, which the
+`App\SpaceTraders\OpenApi\ProxyDescriber`, see above), e.g. `Agent`.
+Content-named shared models are the ones at risk; the `Request`/`Response`
+suffixes make it unlikely for the rest. Avoid names of JavaScript/TypeScript globals too, which the
 generated types would shadow: hence `ApiError`, not `Error`. Nelmio
 silently suffixes a colliding name (`Agent2`) instead of erroring, so check
 the dumped spec (`bin/console nelmio:apidoc:dump --format=json`) after
