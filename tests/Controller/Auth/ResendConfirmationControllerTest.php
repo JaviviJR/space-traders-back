@@ -27,6 +27,9 @@ final class ResendConfirmationControllerTest extends WebTestCase
         ;
 
         self::assertEmailCount(1);
+        $email = self::getMailerMessage();
+        self::assertNotNull($email);
+        self::assertEmailAddressContains($email, 'To', 'resend-unverified@example.com');
     }
 
     public function testResendingForAnAlreadyVerifiedUserQueuesNoEmail(): void

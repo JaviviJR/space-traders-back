@@ -16,7 +16,8 @@
       "Bash(export XDEBUG_MODE=off)",
       "WebSearch",
       "Bash(grep -v \"^ \\\\*\\\\|^/\\\\*\\\\*\\\\|^$\")",
-      "Bash(python3 -I -c ' *)"
+      "Bash(python3 -I -c ' *)",
+      "Bash(php bin/phpunit tests/Controller/Auth/EmailConfirmationFlowTest.php tests/Controller/Auth/ResendConfirmationControllerTest.php)"
     ]
   }
 }

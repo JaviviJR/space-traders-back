@@ -43,20 +43,21 @@ final class SpaceTradersProxyControllerTest extends WebTestCase
                     ->withHeader('Authorization', 'Bearer '.$token),
             )
             ->assertSuccessful()
+            ->assertJsonMatches('data.agent.symbol', 'FLOW-AGENT')
+            ->assertJsonMatches('data.token', 'raw-spacetraders-token')
         ;
 
-        /** @var array{data: array{agent: array{symbol: string}, token: string}, agentId: mixed} $body */
-        $body = $browser->json()->decoded();
-        self::assertSame('FLOW-AGENT', $body['data']['agent']['symbol']);
-        self::assertSame('raw-spacetraders-token', $body['data']['token']);
-        self::assertIsInt($body['agentId']);
+        // Not assertJsonMatches: it compares with ==, which would let a
+        // numeric string through.
+        $agentId = $browser->json()->search('agentId');
+        self::assertIsInt($agentId);
 
         /** @var AgentRepository $agentRepository */
         $agentRepository = static::getContainer()->get(AgentRepository::class);
         $persistedAgent = $agentRepository->findBySymbol('FLOW-AGENT');
 
         self::assertInstanceOf(Agent::class, $persistedAgent);
-        self::assertSame($body['agentId'], $persistedAgent->getId());
+        self::assertSame($agentId, $persistedAgent->getId());
         self::assertSame('register-flow@example.com', $persistedAgent->getUser()->getEmail());
     }
 
@@ -73,11 +74,8 @@ final class SpaceTradersProxyControllerTest extends WebTestCase
         $browser
             ->get('/api/spacetraders', HttpOptions::create()->withHeader('Authorization', 'Bearer '.$token))
             ->assertSuccessful()
+            ->assertJsonMatches('status', 'SpaceTraders is currently online')
         ;
         self::assertSame('', $gateway->lastPath());
-
-        /** @var array{status: string} $body */
-        $body = $browser->json()->decoded();
-        self::assertSame('SpaceTraders is currently online', $body['status']);
     }
 }
