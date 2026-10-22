@@ -11,22 +11,24 @@ nelmio_api_doc:
             security:
                 bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } # Inferred per-route from #[IsGranted] (see doc/openapi.md)
     models:
-        # Clean schema names for the generated spec (and the front's codegen), so internal PHP
-        # naming conventions (Dto for request payloads, *ResponseData for the back-only envelope
-        # marker, see App\Http\ResponseData) don't leak as suffixes into front-facing type names.
+        # Front-facing schema names for the generated spec (and the front's codegen); naming rules in
+        # doc/openapi.md ("Schema names").
         # Also covers #[MapRequestPayload] classes: Nelmio registers those under their bare class
         # name even when the controller's own #[OA\RequestBody] already names the model, so without
         # this alias both an orphan "XxxDto" and the clean name would show up in components/schemas.
         names:
-            - { alias: RegisterUser, type: App\Security\Dto\RegisterUserDto }
-            - { alias: ResendConfirmation, type: App\Security\Dto\ResendConfirmationDto }
-            - { alias: RegisteredUser, type: App\Security\Dto\RegisterResponseData }
-            - { alias: EmailConfirmation, type: App\Security\Dto\ConfirmEmailResponseData }
-            - { alias: AccessToken, type: App\Security\Dto\AccessTokenResponseData }
+            - { alias: RegisterUserRequest, type: App\Security\Dto\RegisterUserDto }
+            - { alias: RegisterUserResponse, type: App\Security\Dto\RegisterResponseData }
+            - { alias: ResendConfirmationRequest, type: App\Security\Dto\ResendConfirmationDto }
+            - { alias: ConfirmEmailResponse, type: App\Security\Dto\ConfirmEmailResponseData }
+            # Shared by login and refreshToken: one alias per class, so it's named after its content.
+            - { alias: AccessTokenResponse, type: App\Security\Dto\AccessTokenResponseData }
+            # Generic on purpose, reusable by any response with `data: {}`, even though only
+            # resendConfirmation uses it today: not ResendConfirmationResponse.
             - { alias: Empty, type: App\Security\Dto\EmptyResponseData }
             - { alias: ApiError, type: App\Http\ErrorResponseData }
             - { alias: ApiErrorCode, type: App\Http\ApiErrorCode }
-            - { alias: ValidationError, type: App\Http\ValidationErrorResponseData }
-            # "Agent" is already taken by SpaceTraders' own schema (injected by ProxyDescriber from
-            # their vendored spec), so this one can't reuse that name without colliding.
-            - { alias: AccountAgent, type: App\Agent\Dto\AgentResponseData }
+            - { alias: ApiErrorValidation, type: App\Http\ValidationErrorResponseData }
+            # TODO: provisional name, revisit when the front consumes listAgents. It's each item of
+            # `data`, not the response itself, and ties a domain model to one operation.
+            - { alias: ListAgentsResponseItem, type: App\Agent\Dto\AgentResponseData }

@@ -39,12 +39,9 @@ final class AgentControllerTest extends WebTestCase
         $browser
             ->get('/api/agents', HttpOptions::create()->withHeader('Authorization', 'Bearer '.$otherToken))
             ->assertSuccessful()
+            ->assertJsonMatches('length(data)', 1)
+            ->assertJsonMatches('data[0].symbol', 'OTHER-AGENT')
         ;
-
-        /** @var array{data: list<array{symbol: string}>} $data */
-        $data = $browser->json()->decoded();
-        self::assertCount(1, $data['data']);
-        self::assertSame('OTHER-AGENT', $data['data'][0]['symbol']);
     }
 
     public function testListingAgentsReturnsAllAgentsForTheCurrentUserInOrder(): void
@@ -61,16 +58,8 @@ final class AgentControllerTest extends WebTestCase
         $browser
             ->get('/api/agents', HttpOptions::create()->withHeader('Authorization', 'Bearer '.$token))
             ->assertSuccessful()
+            ->assertJsonMatches('data[*].symbol', ['AGENT-ONE', 'AGENT-TWO', 'AGENT-THREE'])
         ;
-
-        /** @var array{data: list<array{symbol: string}>} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertCount(3, $data['data']);
-        self::assertSame(
-            ['AGENT-ONE', 'AGENT-TWO', 'AGENT-THREE'],
-            array_column($data['data'], 'symbol'),
-        );
     }
 
     private function userByEmail(string $email): User

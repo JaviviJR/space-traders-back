@@ -45,29 +45,21 @@ final class ConfirmEmailControllerTest extends WebTestCase
         $tamperedQuery = preg_replace('/signature=[^&]+/', 'signature=not-a-valid-signature', $query);
         self::assertNotNull($tamperedQuery);
 
-        $browser = $this->browser()
+        $this->browser()
             ->post('/auth/confirm-email?'.$tamperedQuery)
             ->assertStatus(400)
+            ->assertJsonMatches('error.code', 'invalid_email_confirmation')
         ;
-
-        /** @var array{error: array{code: string, message: string}} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertSame('invalid_email_confirmation', $data['error']['code']);
     }
 
     public function testConfirmingWithoutAQueryReturnsTheInvalidLinkErrorWithoutViolations(): void
     {
-        $browser = $this->browser()
+        $this->browser()
             ->post('/auth/confirm-email')
             ->assertStatus(400)
+            ->assertJsonMatches('error.code', 'invalid_email_confirmation')
+            ->json()->assertMissing('error.violations')
         ;
-
-        /** @var array{error: array<string, mixed>} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertSame('invalid_email_confirmation', $data['error']['code']);
-        self::assertArrayNotHasKey('violations', $data['error']);
     }
 
     public function testConfirmingAnUnknownUserIdFailsExactlyLikeATamperedSignature(): void

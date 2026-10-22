@@ -62,6 +62,30 @@ Criteria for choosing between PHPUnit's generated doubles (`createStub()` /
   methods (and, since PHP 8.4, declared property hooks), not arbitrary
   public properties. Just instantiate a real, typed fixture object.
 
+## Asserting JSON responses
+
+`mtdowling/jmespath.php` is installed (`require-dev`) so zenstruck/browser's
+[JSON assertions](https://github.com/zenstruck/browser#json) take a JMESPath
+selector. Pick the assertion by what the test checks:
+
+- **Individual fields**: `assertJsonMatches('error.code', ...)` on the
+  browser, and `json()->assertMissing('data.password')` for a key that must
+  not be there. The selector lives in the assertion, so a failure names it,
+  instead of an `@var array{...}` shape that PHPStan trusts but nothing
+  checks, and that fails with "Undefined array key" when the body drifts.
+- **The exact body is the contract** (e.g. an error response that must carry
+  nothing else, or two responses that must be indistinguishable): compare the
+  whole `json()->decoded()` with `assertSame`. It catches extra keys and type
+  changes that field-by-field matching doesn't.
+- **Extracting a value** to use later (an access token, an id to compare with
+  the database): `json()->search()` (or `decoded()`), narrowed with an
+  `assertIs*()` since it returns `mixed`.
+
+`assertJsonMatches` compares with `==`, not `===` (it goes through
+zenstruck/assert's `equals()`): `assertJsonMatches('id', 1)` passes for
+`"1"`. When the type is part of what's tested, use `search()` plus
+`assertIsInt()`/`assertSame()` instead.
+
 ## TODO
 
 - Revisit the test doubles guidance above once more of the suite is written;

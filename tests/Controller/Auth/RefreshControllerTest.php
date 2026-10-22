@@ -34,16 +34,12 @@ final class RefreshControllerTest extends WebTestCase
 
     public function testRefreshWithoutACookieReturnsUnauthorizedAndClearsTheCookie(): void
     {
-        $browser = $this->browser()
+        $this->browser()
             ->post('/auth/refresh')
             ->assertStatus(401)
             ->assertHeaderContains('Set-Cookie', 'refresh_token=deleted')
             ->assertHeaderContains('Set-Cookie', 'Max-Age=0')
+            ->assertJsonMatches('error.code', 'invalid_refresh_token')
         ;
-
-        /** @var array{error: array{code: string, message: string}} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertSame('invalid_refresh_token', $data['error']['code']);
     }
 }

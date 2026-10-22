@@ -29,15 +29,12 @@ final class RegisterControllerTest extends WebTestCase
                 'accountToken' => 'some-account-token',
             ]))
             ->assertStatus(201)
+            ->assertJsonMatches('data.email', 'register-happy@example.com')
+            ->assertJsonMatches('data.name', 'Happy Register')
+            ->json()
+            ->assertMissing('data.password')
+            ->assertMissing('data.accountToken')
         ;
-
-        /** @var array{data: array<string, mixed>} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertSame('register-happy@example.com', $data['data']['email']);
-        self::assertSame('Happy Register', $data['data']['name']);
-        self::assertArrayNotHasKey('password', $data['data']);
-        self::assertArrayNotHasKey('accountToken', $data['data']);
 
         /** @var UserRepository $userRepository */
         $userRepository = static::getContainer()->get(UserRepository::class);
@@ -61,14 +58,13 @@ final class RegisterControllerTest extends WebTestCase
                 'accountToken' => 'some-account-token',
             ]))
             ->assertStatus(422)
+            ->assertJsonMatches('error.code', 'validation_failed')
+            ->assertJsonMatches('keys(error.violations)', ['password'])
         ;
 
-        /** @var array{error: array{code: string, message: string, violations: array<string, list<string>>}} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertSame('validation_failed', $data['error']['code']);
-        self::assertSame(['password'], array_keys($data['error']['violations']));
-        self::assertStringContainsString('8 characters', $data['error']['violations']['password'][0]);
+        $message = $browser->json()->search('error.violations.password[0]');
+        self::assertIsString($message);
+        self::assertStringContainsString('8 characters', $message);
     }
 
     public function testAWrongMethodReturnsMethodNotAllowedWithTheAllowedOnes(): void
@@ -86,11 +82,10 @@ final class RegisterControllerTest extends WebTestCase
         $payload = ['name' => 'Register Duplicate', 'email' => 'register-duplicate@example.com', 'password' => 'password123', 'accountToken' => 'some-account-token'];
 
         $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(201);
-        $browser->post('/auth/register', HttpOptions::json($payload))->assertStatus(409);
-
-        /** @var array{error: array{code: string, message: string}} $data */
-        $data = $browser->json()->decoded();
-
-        self::assertSame('email_already_registered', $data['error']['code']);
+        $browser
+            ->post('/auth/register', HttpOptions::json($payload))
+            ->assertStatus(409)
+            ->assertJsonMatches('error.code', 'email_already_registered')
+        ;
     }
 }
