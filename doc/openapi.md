@@ -35,7 +35,21 @@ extra fields (see "Adding a mapper" in [errors.md](errors.md)), pass it as
 `model:` on that status's `#[ErrorResponse]` so the schema shows what is
 actually sent; the other statuses keep the default.
 
-`ErrorResponse` also takes a required `code:` (an `App\Http\ErrorCode`
+A `ResponseData` subclass declares its parent on the class with
+`#[OA\Schema(allOf: [new OA\Schema(ref: new Model(type: Parent::class))])]`,
+so the spec (and the front's codegen) shows it extends the parent's schema
+instead of an unrelated one. Accepted cost: the inherited properties are
+still repeated inside that `allOf`. Nelmio reads every property of a model,
+inherited ones included, even with a class-level `#[OA\Schema]` ("a
+`type="object"` will still read all a models properties", Nelmio's
+[FAQ](https://symfony.com/bundles/NelmioApiDocBundle/current/faq.html)), and
+swagger-php's `Inheritance` augmenter, which would drop them, doesn't run
+under Nelmio ([modes](https://zircote.github.io/swagger-php/guide/modes.html)).
+A custom model describer could emit the `allOf` without the repetition;
+revisit it if subclasses multiply or the front's codegen trips on the
+duplicated properties.
+
+`ErrorResponse` also takes a required `code:` (an `App\Http\ApiErrorCode`
 case): the code that status returns on that endpoint. See "Per-response
 code" under "Error codes" below for why it's required.
 
@@ -141,10 +155,21 @@ Pick a name that doesn't collide with an existing schema — in particular
 anything SpaceTraders' own vendored spec already defines (injected by
 `App\SpaceTraders\OpenApi\ProxyDescriber`, see above): `AgentResponseData`
 couldn't alias to `Agent` because SpaceTraders already has one, hence
-`AccountAgent`. Nelmio silently suffixes a colliding name (`Agent2`) instead
-of erroring, so check the dumped spec
-(`bin/console nelmio:apidoc:dump --format=json`) after adding an alias to
-confirm it landed as intended.
+`AccountAgent`. Avoid names of JavaScript/TypeScript globals too, which the
+generated types would shadow: hence `ApiError`, not `Error`. Nelmio
+silently suffixes a colliding name (`Agent2`) instead of erroring, so check
+the dumped spec (`bin/console nelmio:apidoc:dump --format=json`) after
+adding an alias to confirm it landed as intended.
+
+**A model reached only through a property ignores its alias:** its schema
+is named after the class's short name. Nelmio matches an alias by a hash
+that includes the serialization context, and a model reached through a
+property is registered with that property's context, so the hash differs
+from the alias's (inferred from `vendor/` source, `ClassDescriber` and
+`Model::getHash()`, not documented). For such a model (e.g. an enum typed
+on a property), name the PHP class after the schema the front should see:
+hence the enum is `App\Http\ApiErrorCode`, not `ErrorCode` aliased. Keep its
+alias in `models.names` anyway, for the one-mechanism rule above.
 
 ## Error codes
 
@@ -152,10 +177,10 @@ The front's codegen gets every possible `error.code` of back-only errors as a
 TS union, so it can branch on and translate them.
 
 **Decision:** `App\Http\ErrorResponseData::$code` is typed with the backed
-enum `App\Http\ErrorCode`, not `string`. Nelmio describes backed enums
-natively, as their values; the enum becomes one `ErrorCode` component
-(aliased in `models.names` like every other model) and `Error` plus every
-`ErrorResponseData` subclass reference it through `$ref`. `json_encode`
+enum `App\Http\ApiErrorCode`, not `string`. Nelmio describes backed enums
+natively, as their values; the enum becomes one `ApiErrorCode` component
+(named after the class, see "Schema names" above) and `ApiError` plus
+every `ErrorResponseData` subclass reference it through `$ref`. `json_encode`
 writes a backed enum as its value, so the JSON the front receives is the
 same slug as with a plain string.
 
@@ -168,7 +193,7 @@ of the new mapper class. That's a data catalog, not a behaviour switch
 (nothing `match`es on it), but it is a shared file every error-adding
 change touches, and it couples `src/Http/` to every domain's codes.
 Revisit if the central enum becomes a bottleneck (many domains adding
-codes, merge conflicts on `ErrorCode`).
+codes, merge conflicts on `ApiErrorCode`).
 
 **Per-response code:** the shared `code` schema is the whole enum, and
 Swagger UI renders an enum's example as its first case — a wrong code on
@@ -176,9 +201,9 @@ almost every endpoint. So `#[ErrorResponse]` requires the code that status
 returns and narrows `error` for that response only (`allOf` the shared
 model plus a single-value `code` enum carrying that value as `example`).
 The front's codegen types that response's error as the exact literal
-(`Error & { code: '...' }`); `Error`, its subclasses and `ErrorCode` stay
+(`ApiError & { code: '...' }`); `ApiError`, its subclasses and `ApiErrorCode` stay
 the shared components. Required rather than optional so an error response
-can't be documented without its code; typed as `ErrorCode` so it can't name
+can't be documented without its code; typed as `ApiErrorCode` so it can't name
 a code outside the catalog. One code per response for now: when a status
 can return several, widen it to a list.
 
@@ -218,7 +243,7 @@ generated client always sends a well-formed body with its content type, so
 listing them on every endpoint with a payload would add noise to the
 contract, not information.
 
-`tests/OpenApi/ErrorCodeSchemaTest` guards the spec side (every case listed,
+`tests/OpenApi/ApiErrorCodeSchemaTest` guards the spec side (every case listed,
 every documented error narrowed to one known code). Whether a narrowed code
 matches what the endpoint actually returns is the endpoint's functional
 test (see "Adding a mapper" in [errors.md](errors.md)).

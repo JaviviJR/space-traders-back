@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\ValidationFailedExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ValidationErrorResponseData;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -43,7 +43,7 @@ final class ValidationFailedExceptionErrorMapperTest extends TestCase
         $mapped = (new ValidationFailedExceptionErrorMapper())->map($exception);
 
         self::assertSame(422, $mapped->status);
-        self::assertSame(ErrorCode::ValidationFailed, $mapped->body->code);
+        self::assertSame(ApiErrorCode::ValidationFailed, $mapped->body->code);
         self::assertSame('Validation failed.', $mapped->body->message);
         self::assertInstanceOf(ValidationErrorResponseData::class, $mapped->body);
         self::assertSame(

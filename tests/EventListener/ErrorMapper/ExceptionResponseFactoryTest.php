@@ -7,8 +7,8 @@ namespace App\Tests\EventListener\ErrorMapper;
 use App\EventListener\ErrorMapper\ExceptionErrorMapperInterface;
 use App\EventListener\ErrorMapper\ExceptionResponseFactory;
 use App\EventListener\ErrorMapper\MappedError;
+use App\Http\ApiErrorCode;
 use App\Http\EnvelopeResponseFactory;
-use App\Http\ErrorCode;
 use App\Http\ErrorResponseData;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,7 +25,7 @@ final class ExceptionResponseFactoryTest extends KernelTestCase
         self::assertSame(409, $response->getStatusCode());
         self::assertSame('first', $response->headers->get('X-Mapper'));
         self::assertSame(
-            ['error' => ['code' => ErrorCode::HttpError->value, 'message' => 'Mapped.']],
+            ['error' => ['code' => ApiErrorCode::HttpError->value, 'message' => 'Mapped.']],
             $this->decoded($response),
         );
     }
@@ -37,7 +37,7 @@ final class ExceptionResponseFactoryTest extends KernelTestCase
 
         self::assertSame(500, $response->getStatusCode());
         self::assertSame(
-            ['error' => ['code' => ErrorCode::InternalError->value, 'message' => 'An unexpected error occurred.']],
+            ['error' => ['code' => ApiErrorCode::InternalError->value, 'message' => 'An unexpected error occurred.']],
             $this->decoded($response),
         );
     }
@@ -75,7 +75,7 @@ final class ExceptionResponseFactoryTest extends KernelTestCase
 
             public function map(\Throwable $exception): MappedError
             {
-                return new MappedError($this->status, new ErrorResponseData(ErrorCode::HttpError, 'Mapped.'), $this->headers);
+                return new MappedError($this->status, new ErrorResponseData(ApiErrorCode::HttpError, 'Mapped.'), $this->headers);
             }
         };
     }

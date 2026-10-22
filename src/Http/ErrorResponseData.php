@@ -7,7 +7,7 @@ namespace App\Http;
 /**
  * Sibling of a successful ResponseData under the `error` top-level key.
  * $code is a stable, machine-readable identifier for the front to branch on
- * (typed as ErrorCode so the generated spec lists every possible value);
+ * (typed as ApiErrorCode so the generated spec lists every possible value);
  * $message is human-readable and safe to expose (never a raw exception
  * message for unexpected failures).
  *
@@ -18,7 +18,7 @@ namespace App\Http;
 readonly class ErrorResponseData implements ResponseData
 {
     public function __construct(
-        public ErrorCode $code,
+        public ApiErrorCode $code,
         public string $message,
     ) {
     }

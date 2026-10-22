@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\OpenApi\RouteArgumentDescriber;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ValidationErrorResponseData;
 use App\OpenApi\Attribute\ErrorResponse;
 use Nelmio\ApiDocBundle\OpenApiPhp\Util;
@@ -62,7 +62,7 @@ final class ValidationErrorResponseDescriber implements RouteArgumentDescriberIn
         try {
             return new ErrorResponse(
                 status: $status,
-                code: ErrorCode::ValidationFailed,
+                code: ApiErrorCode::ValidationFailed,
                 description: 'Validation failed',
                 model: ValidationErrorResponseData::class,
             );

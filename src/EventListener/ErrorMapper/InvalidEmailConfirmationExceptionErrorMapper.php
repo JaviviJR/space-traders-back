@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener\ErrorMapper;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Http\ErrorResponseData;
 use App\Security\Exception\InvalidEmailConfirmationException;
 
@@ -24,6 +24,6 @@ final class InvalidEmailConfirmationExceptionErrorMapper implements ExceptionErr
 
     public function map(\Throwable $exception): MappedError
     {
-        return new MappedError(400, new ErrorResponseData(ErrorCode::InvalidEmailConfirmation, $exception->getMessage()));
+        return new MappedError(400, new ErrorResponseData(ApiErrorCode::InvalidEmailConfirmation, $exception->getMessage()));
     }
 }

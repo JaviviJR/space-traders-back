@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\EventListener\ErrorMapper;
 
 use App\EventListener\ErrorMapper\InvalidRefreshTokenExceptionErrorMapper;
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use App\Security\Exception\InvalidRefreshTokenException;
 use App\Security\RefreshTokenCookieFactory;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +27,7 @@ final class InvalidRefreshTokenExceptionErrorMapperTest extends TestCase
         $mapped = $this->mapper()->map(InvalidRefreshTokenException::becauseNotFoundOrInvalid());
 
         self::assertSame(401, $mapped->status);
-        self::assertSame(ErrorCode::InvalidRefreshToken, $mapped->body->code);
+        self::assertSame(ApiErrorCode::InvalidRefreshToken, $mapped->body->code);
         self::assertSame('The refresh token is missing, expired or revoked.', $mapped->body->message);
         self::assertSame(['Set-Cookie' => (string) (new RefreshTokenCookieFactory())->clear()], $mapped->headers);
     }

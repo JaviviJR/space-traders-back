@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Http\ErrorCode;
+use App\Http\ApiErrorCode;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -55,7 +55,7 @@ final class AuthenticationRequiredTest extends WebTestCase
         // Accept-Language: es on purpose: for a deleted user Lexik would
         // otherwise answer with Symfony's translated "Invalid credentials.".
         self::assertSame(
-            ['error' => ['code' => ErrorCode::AuthenticationRequired->value, 'message' => 'Missing or invalid access token.']],
+            ['error' => ['code' => ApiErrorCode::AuthenticationRequired->value, 'message' => 'Missing or invalid access token.']],
             $browser->json()->decoded(),
         );
     }
