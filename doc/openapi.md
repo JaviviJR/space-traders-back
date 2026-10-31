@@ -45,9 +45,6 @@ inherited ones included, even with a class-level `#[OA\Schema]` ("a
 [FAQ](https://symfony.com/bundles/NelmioApiDocBundle/current/faq.html)), and
 swagger-php's `Inheritance` augmenter, which would drop them, doesn't run
 under Nelmio ([modes](https://zircote.github.io/swagger-php/guide/modes.html)).
-A custom model describer could emit the `allOf` without the repetition;
-revisit it if subclasses multiply or the front's codegen trips on the
-duplicated properties.
 
 `ErrorResponse` also takes a required `code:` (an `App\Http\ApiErrorCode`
 case): the code that status returns on that endpoint. See "Per-response
@@ -194,16 +191,14 @@ every `ErrorResponseData` subclass reference it through `$ref`. `json_encode`
 writes a backed enum as its value, so the JSON the front receives is the
 same slug as with a plain string.
 
-Why this over generating the enum from the mappers: the type system makes
-the spec complete by construction. No code path can build an error body
-with a code missing from the spec — including bodies built outside the
-mappers (the factory's unmapped fallback).
+Why a central enum: the type system makes the spec complete by
+construction. No code path can build an error body with a code missing
+from the spec — including bodies built outside the mappers (the factory's
+unmapped fallback).
 The accepted cost: every new code adds a case to one central enum, on top
 of the new mapper class. That's a data catalog, not a behaviour switch
 (nothing `match`es on it), but it is a shared file every error-adding
 change touches, and it couples `src/Http/` to every domain's codes.
-Revisit if the central enum becomes a bottleneck (many domains adding
-codes, merge conflicts on `ApiErrorCode`).
 
 **Per-response code:** the shared `code` schema is the whole enum, and
 Swagger UI renders an enum's example as its first case — a wrong code on

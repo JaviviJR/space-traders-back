@@ -7,7 +7,8 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/implement.md"
 user-invocable: true
-disable-model-invocation: false
+# Project override: re-apply after a spec-kit upgrade (doc/workflow.md → Spec-kit features).
+disable-model-invocation: true
 ---
 
 

@@ -92,4 +92,3 @@ zenstruck/assert's `equals()`): `assertJsonMatches('id', 1)` passes for
   it's based on one service's tests (`App\Tests\SpaceTraders\Proxy\ProxyServiceTest`,
   `App\Tests\SpaceTraders\Response\HttpEnvelopeMergerTest`) and may need adjusting as other patterns
   show up.
-- Switch to PCOV for coverage if coverage runs become slow.

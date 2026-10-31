@@ -142,7 +142,10 @@ things up in the project instead of relying on memory:
   its official documentation first. Fall back to the installed source and
   docblocks under `vendor/` only when the docs don't settle the question or
   don't cover the installed version, and label what you report from there as
-  a code-derived inference, not a documented guarantee.
+  a code-derived inference, not a documented guarantee. For a concrete bug,
+  also search the library's GitHub issues and discussions for the exact
+  problem before reading `vendor/` to work out a fix. Reading the source to
+  diagnose a cause is fine; ask the user before applying a fix derived from it.
 
 ## Architecture decisions
 
@@ -168,17 +171,45 @@ loaded automatically: read only the ones whose trigger matches the task.
 - [doc/testing.md](doc/testing.md): read before writing or changing tests,
   test factories or test doubles, or touching coverage setup.
 
-When a decision changes, update the relevant file in the same change.
+## Where documentation lives
 
-These files record the generic mechanism and how to add a new case (steps,
-rules, conventions), not an inventory of concrete implementations. Don't list
-each mapper, handler, hook or strategy there; anything specific to one
-implementation (why that status, that priority, what it deliberately doesn't
-match) goes in that class's own docblock. Touch the `.md` only when the
-mechanism or one of its rules changes, not when a new implementation is added.
+- `doc/*.md` and this file describe the generic mechanism and how to add a
+  case (steps, rules, conventions), not an inventory of implementations.
+  Don't list each mapper, handler, hook, strategy, route or DTO field there,
+  nor copy literal config values (URLs, env vars, bundle options): say what
+  they do and point to the file. Touch a `.md` only when the mechanism or one
+  of its rules changes, not when a new implementation is added.
+- When a decision is closed or changes, record it in the same change that
+  applies it:
+  - A mechanism that applies to several classes: the `doc/*.md` whose
+    trigger in "Architecture decisions" covers it.
+  - Something specific to one class (why that status, that priority, what it
+    deliberately doesn't match): a docblock on that class when it's about the
+    whole class, a one-line `//` next to the line when it's a local trap.
+    Only write it when removing it would likely lead a future reader to
+    "simplify" the code back into the problem it avoids.
+- A single case never becomes a `doc/*.md` rule. When a second case appears,
+  propose to the user whether to generalize it into `doc/` or keep a docblock
+  in each class.
+- Record only what was decided: what won't be done isn't recorded. A
+  feature's rejected alternatives live in its spec-kit `research.md`; a
+  tooling or workflow decision outside any feature may keep a one-sentence
+  rejected alternative with the condition to revisit it, next to the
+  decision. When a decision changes, rewrite the existing text instead of
+  appending a note.
+
+## Conflicts between sources
+
+When two sources disagree (two skills, a skill and this file, memory and this
+file, or any of them and the official docs), tell the user before acting: name
+both sources, quote what each says, and say which one you will follow and why.
 
 ## Working agreements
 
 How the user wants to work with Claude (confirmations, proposals, installs,
-language). Read [doc/workflow.md](doc/workflow.md) at the start of every
-session.
+commits, spec-kit features, language), imported below. The import only works
+as a bare line, never inside backticks; if `doc/workflow.md`'s content isn't
+in context at session start, Read it before substantive work and tell the user
+the import broke.
+
+@doc/workflow.md
