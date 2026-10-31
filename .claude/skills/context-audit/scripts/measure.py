@@ -159,7 +159,7 @@ def main():
     for pattern in ("**/CLAUDE.md", "AGENTS.md", "*.md", "doc/**/*.md",
                     ".specify/**/*.md", "specs/**/*.md", "docker/*.md"):
         candidates.update(p.resolve() for p in root.glob(pattern)
-                          if "node_modules" not in p.parts)
+                          if not {"node_modules", "vendor"} & set(p.parts))
     if mem.is_dir():
         candidates.update(p.resolve() for p in mem.glob("*.md"))
 
