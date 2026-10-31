@@ -39,7 +39,11 @@ Don't propose these again unless their condition changed; mention them in one
 line if the numbers moved.
 
 - `specs/**` stays in Spanish: see the "Revisit" note in `doc/workflow.md` →
-  "Language".
+  "Language". Claude doesn't remind the user at the first feature: a proactive
+  reminder was rejected, the revisit happens only when the user asks.
+- `.specify/memory/constitution.md` isn't imported from CLAUDE.md: it would add
+  ~670 tokens per session to an index that only points to AGENTS.md and
+  `doc/*.md`, and only the `speckit-*` skills read it.
 - `doc/workflow.md` → "Spec-kit features" stays always-loaded: moving it to an
   on-demand doc saves ~450 tokens per session, but if its trigger is missed,
   the spec-kit skills run without the language rule and nothing warns.

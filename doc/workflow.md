@@ -75,6 +75,26 @@ How the user works with Claude on this project. Applies to every session.
   at once), say so explicitly and propose how to resolve it (parallel blocks,
   merging blocks, asking for a decision first) instead of forcing a
   sequence.
+- Block prompts: only when the user asks for them ("sácame los prompts en
+  doc" or similar) after blocks were presented, never on Claude's own
+  initiative. Write one prompt per block, numbered in order
+  (`01-<block-slug>.md`, …), in `doc/prompts/<branch>/`; if the branch name
+  contains `/`, ask before creating nested folders. Each prompt stands alone,
+  in English, for a fresh session:
+  - points to AGENTS.md and the applicable `doc/*.md` instead of copying chat
+    history;
+  - states the closed decisions the block depends on, with their why and the
+    rejected alternatives, and says not to reopen them;
+  - lists every file to touch and what changes in each;
+  - names the tests covering the block (new or updated, with path) and the
+    checks that must end clean (PHPUnit, PHPStan, php-cs-fixer);
+  - keeps the block's full explanation, not condensed.
+
+  Each block must leave the project compiling and tests green on its own; if
+  the presented split doesn't, regroup the blocks and tell the user what moved
+  and why. `doc/prompts/` is on-request only: don't read, review or link it
+  from any other `.md` unless the user asks. Not for spec-kit features: those
+  use their Sessions table and `/feature-session` ("Spec-kit features").
 
 ## Checks and commits
 

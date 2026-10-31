@@ -85,10 +85,3 @@ selector. Pick the assertion by what the test checks:
 zenstruck/assert's `equals()`): `assertJsonMatches('id', 1)` passes for
 `"1"`. When the type is part of what's tested, use `search()` plus
 `assertIsInt()`/`assertSame()` instead.
-
-## TODO
-
-- Revisit the test doubles guidance above once more of the suite is written;
-  it's based on one service's tests (`App\Tests\SpaceTraders\Proxy\ProxyServiceTest`,
-  `App\Tests\SpaceTraders\Response\HttpEnvelopeMergerTest`) and may need adjusting as other patterns
-  show up.
