@@ -26,10 +26,7 @@ use OpenApi\Attributes as OA;
  *
  * Checked by running the Swagger UI bundled with Nelmio (its resolver and
  * sample generator) on the dumped spec: derived from that vendor/ code, not
- * from Swagger UI's docs. Two other fixes were rejected: reordering the
- * allOf also worked there, but only because its merge lets the first branch
- * win; an `example` on the whole `error` object would have to invent the
- * subclass fields (`violations`).
+ * from Swagger UI's docs.
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class ErrorResponse extends OA\Response
