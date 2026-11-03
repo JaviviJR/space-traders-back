@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Auth;
 
+use App\Entity\RefreshToken;
 use App\Factory\UserFactory;
 use App\Http\ApiErrorCode;
+use App\Security\EventListener\RememberMeChoiceListener;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Cookie;
 use Zenstruck\Browser\HttpOptions;
 use Zenstruck\Browser\KernelBrowser;
 use Zenstruck\Browser\Test\HasBrowser;
 use Zenstruck\Foundry\Attribute\ResetDatabase;
+
+use function Zenstruck\Foundry\Persistence\repository;
 
 #[ResetDatabase]
 final class LoginControllerTest extends WebTestCase
@@ -93,9 +99,71 @@ final class LoginControllerTest extends WebTestCase
         $this->assertError($browser, ApiErrorCode::HttpError, 'The request body must be JSON.');
     }
 
-    private function attemptLogin(string $email, string $password): KernelBrowser
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function malformedRememberMeProvider(): iterable
     {
-        return $this->browser()->post('/auth/login', HttpOptions::json(['email' => $email, 'password' => $password]));
+        yield 'text' => ['yes'];
+        yield 'number' => [1];
+        yield 'explicit null' => [null];
+    }
+
+    #[DataProvider('malformedRememberMeProvider')]
+    public function testLoginWithAMalformedRememberMeIsAnHttpErrorWithoutSession(mixed $rememberMe): void
+    {
+        UserFactory::createOne(['email' => 'login-malformed-remember@example.com']);
+
+        $browser = $this->attemptLogin('login-malformed-remember@example.com', 'password123', [RememberMeChoiceListener::FIELD => $rememberMe])
+            ->assertStatus(400)
+        ;
+
+        $this->assertError($browser, ApiErrorCode::HttpError, 'The key "rememberMe" must be a boolean.');
+        self::assertSame([], $browser->client()->getResponse()->headers->getCookies());
+        repository(RefreshToken::class)->assert()->empty();
+    }
+
+    #[DataProvider('malformedRememberMeProvider')]
+    public function testMalformedRememberMeWinsOverAWrongPassword(mixed $rememberMe): void
+    {
+        UserFactory::createOne(['email' => 'login-malformed-remember-wrong@example.com']);
+
+        $browser = $this->attemptLogin('login-malformed-remember-wrong@example.com', 'not-the-right-password', [RememberMeChoiceListener::FIELD => $rememberMe])
+            ->assertStatus(400)
+        ;
+
+        $this->assertError($browser, ApiErrorCode::HttpError, 'The key "rememberMe" must be a boolean.');
+    }
+
+    #[DataProvider('malformedRememberMeProvider')]
+    public function testMalformedRememberMeWinsOverAnUnverifiedEmail(mixed $rememberMe): void
+    {
+        UserFactory::createOne(['email' => 'login-malformed-remember-unverified@example.com', 'isVerified' => false]);
+
+        $browser = $this->attemptLogin('login-malformed-remember-unverified@example.com', 'password123', [RememberMeChoiceListener::FIELD => $rememberMe])
+            ->assertStatus(400)
+        ;
+
+        $this->assertError($browser, ApiErrorCode::HttpError, 'The key "rememberMe" must be a boolean.');
+    }
+
+    #[TestWith([true])]
+    #[TestWith([false])]
+    public function testLoginAcceptsABooleanRememberMe(bool $rememberMe): void
+    {
+        UserFactory::createOne(['email' => 'login-boolean-remember@example.com']);
+
+        $this->attemptLogin('login-boolean-remember@example.com', 'password123', [RememberMeChoiceListener::FIELD => $rememberMe])
+            ->assertStatus(200)
+        ;
+    }
+
+    /**
+     * @param array<string, mixed> $extra
+     */
+    private function attemptLogin(string $email, string $password, array $extra = []): KernelBrowser
+    {
+        return $this->browser()->post('/auth/login', HttpOptions::json(['email' => $email, 'password' => $password] + $extra));
     }
 
     private function assertError(KernelBrowser $browser, ApiErrorCode $code, string $message): void
