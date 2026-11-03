@@ -7,6 +7,11 @@ How the user works with Claude on this project. Applies to every session.
 - Ask explicit confirmation before writing any file, or running commands that
   change state. This applies regardless of whether the file is tracked by
   git.
+- Exception: invoking a `/speckit-*` skill authorizes writing that phase's
+  artifacts in `specs/<NNN-feature>/` and `.specify/feature.json` without
+  asking; the user reviews them with `git diff` before the next phase. Any
+  other file the skill would touch (code, `doc/`, templates, the
+  constitution) still needs confirmation.
 - Option answers are not approval. Approval for one change does not extend to
   the next.
 - Related changes may be grouped into one proposal, provided each change is
@@ -106,6 +111,8 @@ How the user works with Claude on this project. Applies to every session.
   work is done and verified, say so and stop. When the work is split into
   blocks, say when a block ends so the user can commit there. The only
   exception is a `/feature-session` (see "Spec-kit features").
+- Commits Claude makes carry no `Co-Authored-By` trailer or other AI
+  attribution line, whatever Claude Code's default says.
 
 ## Spec-kit features
 
