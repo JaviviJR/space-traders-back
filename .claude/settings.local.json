@@ -22,7 +22,9 @@
       "Bash(bin/console cache:clear -q)",
       "Bash(php bin/phpunit tests/OpenApi)",
       "Bash(.specify/scripts/bash/setup-plan.sh --json)",
-      "Bash(bin/console config:dump-reference lexik_jwt_authentication)"
+      "Bash(bin/console config:dump-reference lexik_jwt_authentication)",
+      "WebFetch(domain:github.github.com)",
+      "WebFetch(domain:github.github.io)"
     ]
   }
 }

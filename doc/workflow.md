@@ -211,14 +211,37 @@ How the user works with Claude on this project. Applies to every session.
   `/speckit-implement`.
 - Never run `/speckit-implement`: it runs every phase in one go and creates or
   rewrites ignore files (here, appends to `.gitignore` and creates a
-  `.dockerignore` because of `docker/*/Dockerfile`). Its skill, and the
-  deprecated `speckit-taskstoissues`, carry `disable-model-invocation: true`
-  so only the user can launch them and their descriptions stay out of every
-  session's context. A spec-kit upgrade regenerates `.claude/skills/speckit-*`:
-  after one, check that both still have it. Rejected: the Claude
-  integration's `--no-model-invocation` option (survives upgrades, but makes
-  every `speckit-*` skill user-only); revisit if the manual check gets missed
-  after an upgrade.
+  `.dockerignore` because of `docker/*/Dockerfile`).
+- Spec-kit's behaviour is changed only through the mechanisms spec-kit
+  provides (template overrides in `.specify/templates/overrides/`, presets,
+  integration options, `.specify/extensions.yml`); files it generates
+  (`.claude/skills/speckit-*`, `.specify/templates/*.md`, `.specify/scripts/`)
+  are never edited by hand, so an upgrade never undoes a project change.
+- Every core `speckit-*` skill is user-invocable only: the Claude
+  integration's `--no-model-invocation` option, stored in
+  `.specify/integration.json` and re-applied by every
+  `specify integration upgrade claude`, writes
+  `disable-model-invocation: true` into them, so Claude can't launch
+  `/speckit-implement` on its own (e.g. when `speckit-analyze` or
+  `speckit-converge` suggest it) and their descriptions stay out of every
+  session's context. The user launches every phase anyway. Check it again
+  when (see the [Claude integration docs](https://github.github.io/spec-kit/integrations/claude.html)):
+  - a preset is installed, removed or updated: it resets the affected skills;
+    re-apply with `specify integration upgrade claude --force`;
+  - an upgrade passes `--integration-options`: it replaces the stored ones,
+    so repeat `--no-model-invocation`;
+  - an extension's mandatory hook runs a core command: the option breaks
+    that hook and has to be dropped.
+
+  Rejected: Claude Code's `skillOverrides` setting (targets only the
+  chosen skills, but lives outside spec-kit); revisit if Claude needs to
+  launch a `speckit-*` skill on its own.
+- The spec-kit CLI isn't installed on the host or in the php container: the
+  user runs it from the repo root on the host with
+  `uvx --from git+https://github.com/github/spec-kit.git@v<version> specify …`,
+  `<version>` being the one in `.specify/integration.json`, so a command like
+  `integration upgrade` doesn't silently pull newer templates and skills.
+  Upgrading spec-kit means raising that version on purpose.
 
 ## Language
 

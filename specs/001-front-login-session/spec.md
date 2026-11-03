@@ -14,6 +14,7 @@
 
 - Q: ¿Con qué error se rechaza un «recordarme» no booleano en el login? → A: 400 `http_error` (body mal formado), igual que un email o contraseña que no son texto en ese endpoint; no 422 `validation_failed`, que es el de los endpoints que validan su body como DTO.
 - Q: ¿Cómo se llama el campo «recordarme» en el body del login? → A: `rememberMe`, en camelCase como `accessToken`.
+- Q: ¿Documenta la especificación de la API el 400 `http_error` de un `rememberMe` no booleano? → A: No. Es un error de transporte, como un email o una contraseña mal formados en el login, y esos no se documentan (doc/openapi.md → "Error codes"). FR-009 documenta `rememberMe` como booleano opcional, falso por defecto, y el comportamiento de la cookie en cada modo. El 400 en tiempo de ejecución (FR-007) no cambia.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -91,7 +92,7 @@ El token de acceso caduca a los 15 minutos, como ya promete la documentación de
 - **FR-006**: La caducidad de una sesión MUST fijarse en el login y MUST NOT ampliarse con su uso (renovaciones del token de acceso). El modo no se guarda aparte: lo determina la caducidad propia de la sesión.
 - **FR-007**: El back MUST rechazar un login cuyo «recordarme» no sea booleano como body mal formado: 400 con código `http_error` y el formato de error del back, el mismo trato que da a un email o contraseña que no son texto en ese endpoint (no 422 `validation_failed`, reservado a los endpoints que validan su body como DTO), sin iniciar sesión ni fijar cookie.
 - **FR-008**: Los tokens de acceso MUST caducar 15 minutos después de emitirse.
-- **FR-009**: La especificación de la API del login MUST documentar el campo `rememberMe` (opcional, booleano, falso por defecto), el error 400 `http_error` por valor inválido y el comportamiento de la cookie en cada modo.
+- **FR-009**: La especificación de la API del login MUST documentar el campo `rememberMe` (opcional, booleano, falso por defecto) y el comportamiento de la cookie en cada modo. El 400 `http_error` de FR-007 no se documenta, igual que los demás errores de transporte del login (email o contraseña mal formados).
 - **FR-010**: La documentación del back (autenticación y CORS) MUST reflejar las duraciones de ambos modos, el token de acceso de 15 minutos y la admisión de credenciales en CORS, en el mismo cambio que los aplica.
 - **FR-011**: El comportamiento existente MUST mantenerse: refresh token sin rotación, cierre de sesión idempotente que revoca solo la sesión presentada, mismas respuestas 401/403 del login y revocación de todas las sesiones al resetear el universo.
 
@@ -120,4 +121,4 @@ El token de acceso caduca a los 15 minutos, como ya promete la documentación de
 - La renovación no vuelve a fijar la cookie (comportamiento actual), así que una cookie de sesión no se convierte en persistente al renovar.
 - Las sesiones ya emitidas antes del cambio conservan su caducidad de 30 días; no se migran.
 - Fuera de alcance: rotación del refresh token, configuración de producción (dominios reales, orígenes por entorno, cookies entre sites distintos) y cualquier cambio en el front.
-- Decisiones cerradas que no se reabren (sus alternativas descartadas irán a `research.md` en `/speckit-plan`): credenciales en el CORS del back con origen explícito (descartado: proxy de desarrollo con mismo origen); «recordarme» como campo booleano opcional del login, falso por defecto, sin guardar el modo (descartados: no ofrecer la opción, y el «remember me» nativo del framework); token de acceso de 15 minutos configurado en la librería de JWT (descartado: dejar 1 hora y corregir la doc).
+- Decisiones cerradas que no se reabren: credenciales en el CORS del back con origen explícito (descartado: proxy de desarrollo con mismo origen); «recordarme» como campo booleano opcional del login, falso por defecto, sin guardar el modo (descartados: no ofrecer la opción, y el «remember me» nativo del framework); token de acceso de 15 minutos configurado en la librería de JWT (descartado: dejar 1 hora y corregir la doc).
