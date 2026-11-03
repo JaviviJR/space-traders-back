@@ -192,7 +192,8 @@ loaded automatically: read only the ones whose trigger matches the task.
   propose to the user whether to generalize it into `doc/` or keep a docblock
   in each class.
 - Record only what was decided: what won't be done isn't recorded. A
-  feature's rejected alternatives live in its spec-kit `research.md`; a
+  feature's rejected alternatives live in its spec-kit `research.workflow.md`
+  (see `doc/workflow.md` → "Spec-kit features"); a
   tooling or workflow decision outside any feature may keep a one-sentence
   rejected alternative with the condition to revisit it, next to the
   decision. When a decision changes, rewrite the existing text instead of

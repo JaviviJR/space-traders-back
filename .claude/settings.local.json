@@ -20,7 +20,9 @@
       "WebFetch(domain:zircote.github.io)",
       "WebFetch(domain:zircote.com)",
       "Bash(bin/console cache:clear -q)",
-      "Bash(php bin/phpunit tests/OpenApi)"
+      "Bash(php bin/phpunit tests/OpenApi)",
+      "Bash(.specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(bin/console config:dump-reference lexik_jwt_authentication)"
     ]
   }
 }

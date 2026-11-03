@@ -120,6 +120,59 @@ How the user works with Claude on this project. Applies to every session.
   `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks` and `/speckit-analyze`,
   each reviewed by the user before the next. Its artifacts live in
   `specs/<NNN-feature>/`.
+- `/speckit-clarify` questions: when any option contradicts or relies on a
+  rule in AGENTS.md or a `doc/*.md`, or a closed decision (e.g. the spec's
+  Assumptions); changes the HTTP contract (status, error code, a field's name
+  or type, what OpenAPI documents); picks a component or mechanism (framework
+  feature vs own code, a library); or changes persisted data or needs a
+  migration, the question follows "Proposals → Options" before the skill's
+  table: per option, what it does, what the official docs say (or that they
+  have no stance), how the resulting code compares and the condition that
+  would make another option win. This replaces the skill's one-line-per-option
+  format for those questions. Pure-behaviour questions (a value, a duration, a
+  text, an on/off) keep the skill's format; when in doubt, use the full one.
+  The table, `**Recommended:**`, answering by letter, the 5-question limit and
+  writing `spec.md` after each answer stay as the skill says.
+- `/speckit-plan` decisions: a decision with several viable approaches is
+  presented in chat following "Proposals" (options, docs, code comparison,
+  recommendation), one at a time per "Steps and installs", before writing
+  the research files (see "Two research files" below), which then record the
+  closed decision.
+- A conflict that surfaces during `/speckit-plan` (a requirement that
+  contradicts a `doc/*.md` rule, AGENTS.md, a closed decision or a
+  constitution gate) is presented to the user per "Proposals → Options",
+  with three routes; the user picks one:
+  1. Change the spec: it goes back through `/speckit-clarify`, which records
+     it in Clarifications, and then `/speckit-plan` resumes. The plan never
+     edits `spec.md` itself.
+  2. Change the project rule (`doc/*.md` or AGENTS.md): a doc change with its
+     own confirmation, then the plan goes on.
+  3. Keep the exception: the plan justifies it in its "Complexity Tracking"
+     section, as the constitution requires, and goes on.
+- Two research files (for now): each `/speckit-plan` writes the same
+  decisions twice in `specs/<NNN-feature>/`, to compare what this project's
+  rules change against spec-kit's default:
+  - `research.md`: as spec-kit writes it, untouched: in English, with its
+    scope (`NEEDS CLARIFICATION` items, dependencies, integrations) and its
+    `Decision` / `Rationale` / `Alternatives considered` format. The
+    `speckit-*` skills read this one, since the scripts look it up by name.
+  - `research.workflow.md`: applying AGENTS.md and this file: content in
+    Spanish (structural keywords in English, see "Language"); it also
+    carries the spec's closed decisions with their rejected alternatives;
+    each `Rationale` cites the official docs or the `vendor/` file it rests
+    on, labelling the latter as a code-derived inference; and each decision
+    says where else it gets recorded (docblock, `//` or `doc/*.md`, per
+    AGENTS.md → "Where documentation lives"). `/feature-session` and
+    AGENTS.md use this one.
+
+  Revisit when the user says the comparison no longer adds anything; then
+  decide whether existing `research.md` files are deleted or kept.
+- Deviations from spec-kit: when a rule in AGENTS.md or this file makes
+  Claude depart from what a `speckit-*` skill says (skip, replace, add or
+  reorder a step), Claude says so at that moment. If a written rule already
+  resolves it, one line naming the skill step, the project rule and which one
+  is followed. If not, the full "Conflicts between sources" procedure in
+  AGENTS.md, waiting for the user's answer before acting.
 - `/speckit-tasks` groups tasks by user story (each story touches every layer
   it needs), not by layer, and ends with a "Sessions" table (from
   `.specify/templates/overrides/tasks-template.md`) whose "Command" column
@@ -166,35 +219,6 @@ How the user works with Claude on this project. Applies to every session.
   integration's `--no-model-invocation` option (survives upgrades, but makes
   every `speckit-*` skill user-only); revisit if the manual check gets missed
   after an upgrade.
-
-## Subagents
-
-- Never launch a subagent (the `Agent` tool, any `subagent_type`) without asking
-  first and getting an explicit yes/no. This applies even when the task looks
-  like a good fit for one; the user has no prior experience judging that
-  tradeoff and wants to decide every time.
-- The ask must let the user pick one of:
-  - Approve launching the subagent as proposed.
-  - Ask why a subagent is needed for this step, before deciding.
-  - Do the work themselves (run the command, read the file, etc.) and paste the
-    result back, instead of a subagent doing it.
-- State plainly what the subagent would do and why delegating it helps (e.g.
-  keeps noisy tool output out of the main context), so the user can make an
-  informed choice or do it manually instead.
-- When proposing a subagent, also propose a model for it, based on how much
-  judgment the task needs:
-  - Cheap model (haiku): the task has a closed, verifiable outcome and no
-    design decisions — searching for a file/symbol, reading and summarizing a
-    log or long file, running a command and reporting its output, mechanical
-    multi-file edits (rename, reformat), checking whether something exists.
-  - Default/stronger model: the task requires architecture or design choices,
-    debugging with a non-obvious cause, reviewing code for subtle bugs, writing
-    real business logic, or touches anything hard to undo (migrations,
-    security, auth) where a near-correct answer could lead to a costly wrong
-    decision.
-  - Rule of thumb: if the expected result can be stated as one closed,
-    checkable sentence, the cheap model is enough; if the subagent has to
-    resolve ambiguity or make a design call, use the default model.
 
 ## Language
 

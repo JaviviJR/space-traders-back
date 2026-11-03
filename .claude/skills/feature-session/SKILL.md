@@ -25,7 +25,7 @@ session, stop and ask.
 2. Read `<feature dir>/tasks.md`. The "Sessions" tables (the main one and one per
    `Convergence` phase, if any) say which tasks belong to this session and how it closes. Check that every task of earlier sessions is marked `[X]`;
    if not, stop and tell the user which ones are missing.
-3. Read `<feature dir>/spec.md` and `plan.md`, and from `research.md` only the decisions
+3. Read `<feature dir>/spec.md` and `plan.md`, and from `research.workflow.md` only the decisions
    cited by this session's tasks. Read the `doc/*.md` files whose `AGENTS.md` trigger
    matches the work.
 4. Implement only this session's tasks, one proposal per task or per closely related group
