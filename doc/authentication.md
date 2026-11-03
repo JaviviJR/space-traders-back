@@ -38,10 +38,19 @@ reveal which emails exist. The front must not treat that 401 like
 | Token | Format | Lifetime | Client side | Server side |
 |---|---|---|---|---|
 | Access | JWT signed with RS256 | 15 min | Front memory, `Authorization: Bearer` | Not stored |
-| Refresh | Opaque random string, 256 bits | 30 days | Cookie `httpOnly; Secure; SameSite=Strict; Path=/auth` | SHA-256 hash in DB (Doctrine) |
+| Refresh | Opaque random string, 256 bits | 30 days with `rememberMe`, 24 hours without it, counted from the login | Cookie `httpOnly; Secure; SameSite=Strict; Path=/auth`: persistent with `rememberMe`, a session cookie (no `Expires`) without it | SHA-256 hash in DB (Doctrine) |
 
 - The access token is issued by `lexik/jwt-authentication-bundle`.
 - The refresh token is implemented by us.
+- `POST /auth/login` takes an optional boolean `rememberMe` (missing means
+  `false`). With `true`, the cookie is persistent and the session lasts 30
+  days from the login. Without it or with `false`, the cookie is a session
+  cookie that the browser drops when it closes, and the server stops
+  accepting that session 24 hours after the login even if the browser kept
+  the cookie. A non-boolean `rememberMe` is a `400` `http_error`, like an
+  email or password that isn't a string, and wins over the 401/403 above;
+  `RememberMeChoiceListener` explains why it runs before the credentials
+  check.
 - The cookie's `Path` is `/auth` (not `/auth/refresh`), so it also reaches
   `/auth/login` and `/auth/logout` — logout needs to read it to know which
   session to revoke.
@@ -57,6 +66,9 @@ out.
   the others.
 - A refresh call re-validates the same token (not expired, not revoked) and
   issues a new access token. The refresh token itself doesn't change.
+- A session's expiry is fixed at login and never extended by use. A refresh
+  doesn't set the cookie again, so a session cookie never turns persistent.
+  The mode isn't stored: the token's `expiresAt` is all there is.
 - Logout reads the presented cookie and revokes only that one token — the
   other sessions stay valid. No cookie or an unknown hash → idempotent 204,
   no error. Logout does not require the access token (JWT); the cookie alone

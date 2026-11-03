@@ -7,6 +7,7 @@ namespace App\Security\Handler;
 use App\Entity\User;
 use App\Http\EnvelopeResponseFactory;
 use App\Security\Dto\AccessTokenResponseData;
+use App\Security\EventListener\RememberMeChoiceListener;
 use App\Security\RefreshTokenCookieFactory;
 use App\Security\RefreshTokenService;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,11 +29,15 @@ final readonly class LoginSuccessHandler implements AuthenticationSuccessHandler
         /** @var User $user */
         $user = $token->getUser();
 
-        $pair = $this->refreshTokenService->issue($user);
+        // Already validated as bool-or-missing by RememberMeChoiceListener; missing means false.
+        $rememberMe = $request->getPayload()->getBoolean(RememberMeChoiceListener::FIELD);
+
+        $pair = $this->refreshTokenService->issue($user, $rememberMe);
+        $cookie = $this->cookieFactory->create($pair->refreshToken, $rememberMe ? $pair->refreshTokenExpiresAt : null);
 
         return $this->envelope->success(
             new AccessTokenResponseData($pair->accessToken),
-            headers: ['Set-Cookie' => (string) $this->cookieFactory->create($pair->refreshToken, $pair->refreshTokenExpiresAt)],
+            headers: ['Set-Cookie' => (string) $cookie],
         );
     }
 }

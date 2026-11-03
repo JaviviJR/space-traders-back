@@ -12,13 +12,18 @@ use Zenstruck\Browser\KernelBrowser;
  */
 trait AuthenticatesClient
 {
-    private function login(KernelBrowser $browser, string $email, string $password = 'password123'): string
+    /**
+     * @param bool|null $rememberMe null leaves the field out of the body
+     */
+    private function login(KernelBrowser $browser, string $email, string $password = 'password123', ?bool $rememberMe = null): string
     {
+        $payload = ['email' => $email, 'password' => $password];
+        if (null !== $rememberMe) {
+            $payload['rememberMe'] = $rememberMe;
+        }
+
         $browser
-            ->post('/auth/login', HttpOptions::json([
-                'email' => $email,
-                'password' => $password,
-            ]))
+            ->post('/auth/login', HttpOptions::json($payload))
             ->assertSuccessful()
         ;
 
