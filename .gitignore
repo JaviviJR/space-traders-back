@@ -26,6 +26,7 @@ phpstan.neon
 ###< lexik/jwt-authentication-bundle ###
 
 /doc/prompts/
+/doc/project/node_modules/
 
 ###> friendsofphp/php-cs-fixer ###
 /.php-cs-fixer.php
