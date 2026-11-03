@@ -7,4 +7,6 @@ nelmio_cors:
         expose_headers: ['Link']
         max_age: 3600
     paths:
+        # Must stay before '^/' (first matching regex wins); scope follows the refresh cookie's Path=/auth.
+        '^/auth/': { allow_credentials: true }
         '^/': null

@@ -53,11 +53,11 @@ Sin tareas: no hay entidades, columnas ni migraciones nuevas (data-model.md) y n
 
 ### Implementation for User Story 1
 
-- [ ] T001 [US1] En `config/packages/nelmio_cors.yaml`, añadir bajo `paths` la entrada `'^/auth/': { allow_credentials: true }` **antes** de `'^/': null` (Nelmio usa la primera regex que coincide y combina sus opciones sobre `defaults` con `array_merge`, así que origen, métodos y cabeceras siguen saliendo de `defaults`). Añadir un comentario `#` de una línea junto a la entrada: el orden importa y el ámbito sigue al `Path=/auth` de la cookie del refresh token (research.workflow.md → D2). No tocar `defaults` ni `CORS_ALLOW_ORIGIN`.
+- [X] T001 [US1] En `config/packages/nelmio_cors.yaml`, añadir bajo `paths` la entrada `'^/auth/': { allow_credentials: true }` **antes** de `'^/': null` (Nelmio usa la primera regex que coincide y combina sus opciones sobre `defaults` con `array_merge`, así que origen, métodos y cabeceras siguen saliendo de `defaults`). Añadir un comentario `#` de una línea junto a la entrada: el orden importa y el ámbito sigue al `Path=/auth` de la cookie del refresh token (research.workflow.md → D2). No tocar `defaults` ni `CORS_ALLOW_ORIGIN`.
 
 ### Tests for User Story 1
 
-- [ ] T002 [US1] Crear `tests/Controller/Auth/AuthCorsTest.php` (`WebTestCase` + zenstruck/browser, `#[ResetDatabase]`, usuario verificado con `UserFactory`; seguir doc/testing.md). Casos, con un origen permitido por la regex de `CORS_ALLOW_ORIGIN` (p. ej. `http://localhost:5173`):
+- [X] T002 [US1] Crear `tests/Controller/Auth/AuthCorsTest.php` (`WebTestCase` + zenstruck/browser, `#[ResetDatabase]`, usuario verificado con `UserFactory`; seguir doc/testing.md). Casos, con un origen permitido por la regex de `CORS_ALLOW_ORIGIN` (p. ej. `http://localhost:5173`):
   - preflight `OPTIONS` con `Access-Control-Request-Method: POST` a `/auth/login`, `/auth/refresh` y `/auth/logout` (data provider) → `Access-Control-Allow-Origin: http://localhost:5173` y `Access-Control-Allow-Credentials: true`; el preflight no lo bloquea el firewall;
   - `POST /auth/login` real con credenciales correctas → 200 con ambas cabeceras y `Set-Cookie` de `refresh_token`;
   - `POST /auth/refresh` y `POST /auth/logout` reales enviando esa cookie → 200 / 204 con ambas cabeceras;
@@ -67,7 +67,7 @@ Sin tareas: no hay entidades, columnas ni migraciones nuevas (data-model.md) y n
 
 ### Documentation for User Story 1
 
-- [ ] T003 [US1] Actualizar `doc/architecture.md` → sección "CORS" (FR-010): el CORS admite credenciales solo bajo `/auth/` y devuelve el origen concreto que hace la petición, nunca un comodín; el ámbito sigue al `Path` de la cookie del refresh token; apuntar a `config/packages/nelmio_cors.yaml` sin copiar valores literales de config (AGENTS.md → "Where documentation lives"). Reescribir el texto existente si contradice esto, no añadir una nota. Confirmación separada de T001.
+- [X] T003 [US1] Actualizar `doc/architecture.md` → sección "CORS" (FR-010): el CORS admite credenciales solo bajo `/auth/` y devuelve el origen concreto que hace la petición, nunca un comodín; el ámbito sigue al `Path` de la cookie del refresh token; apuntar a `config/packages/nelmio_cors.yaml` sin copiar valores literales de config (AGENTS.md → "Where documentation lives"). Reescribir el texto existente si contradice esto, no añadir una nota. Confirmación separada de T001.
 
 **Checkpoint**: US1 funcional y probada por sí sola (`php bin/phpunit tests/Controller/Auth/AuthCorsTest.php`).
 
