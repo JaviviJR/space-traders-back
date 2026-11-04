@@ -64,6 +64,12 @@ RUN apt-get install -y --no-install-recommends xz-utils \
 # pinned to a release: https://docs.astral.sh/uv/guides/integration/docker/
 COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
 
+# RUN executes as root, so by default uv would put the tool under /root/.local,
+# which the `developer` user can neither read nor has on PATH. Install it
+# system-wide instead: https://docs.astral.sh/uv/reference/environment/
+RUN UV_TOOL_DIR=/opt/uv/tools UV_TOOL_BIN_DIR=/usr/local/bin \
+    uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v1.3.0
+
 RUN install-php-extensions xdebug
 
 COPY --chmod=0644 xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
