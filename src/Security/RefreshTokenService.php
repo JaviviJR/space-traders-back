@@ -13,6 +13,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Psr\Clock\ClockInterface;
 
+/**
+ * Non-rotating on purpose: a refresh re-validates the same token and issues a
+ * new access token, with no token family and no reuse or theft detection.
+ * Accepted trade-off: a stolen refresh token stays valid until it expires or
+ * the user logs out. A session's expiry is fixed at login and never extended
+ * by use.
+ */
 final class RefreshTokenService
 {
     private const REMEMBER_ME_TTL = '+30 days';

@@ -15,6 +15,17 @@ nelmio_api_doc:
         # Also covers #[MapRequestPayload] classes: Nelmio registers those under their bare class
         # name even when the controller's own #[OA\RequestBody] already names the model, so without
         # this alias both an orphan "XxxDto" and the clean name would show up in components/schemas.
+        #
+        # Every back-only request DTO and response data class gets an alias here (one mechanism,
+        # even for response-only classes). Naming rule: the action's operationId in PascalCase plus
+        # `Request` (request body) or `Response` (the `data` model). A class shared by several
+        # operations is named after its content instead. Avoid names SpaceTraders' vendored spec
+        # already defines (e.g. `Agent`) and JS/TS globals (hence `ApiError`, not `Error`): Nelmio
+        # silently renames a collision to `Agent2`, so check `bin/console nelmio:apidoc:dump
+        # --format=json` after adding one.
+        # A model reached only through a property (e.g. an enum) ignores its alias and is named
+        # after the class's short name, so name the PHP class as the front should see it (hence
+        # App\Http\ApiErrorCode). Keep its alias anyway.
         names:
             - { alias: RegisterUserRequest, type: App\Security\Dto\RegisterUserDto }
             - { alias: RegisterUserResponse, type: App\Security\Dto\RegisterResponseData }
