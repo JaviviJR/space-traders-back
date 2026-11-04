@@ -16,19 +16,3 @@ How the user works with Claude on this project. Applies to every session.
   as one closed, checkable sentence; use the default model when the subagent
   has to resolve ambiguity or make a design call.
 
-## Options
-
-Why: the user picks knowing what each choice costs.
-
-- When a decision has several viable approaches, explain each one before the
-  user picks: what it does, and what the official docs recommend about it
-  (check them first), or say explicitly that they have no stance and it's a
-  project decision.
-- For each option, compare the resulting code: which is simpler and which adds
-  complexity that may be unnecessary (extra state, coordination, files
-  touched). Say under which condition another option would win.
-- Project rules are defaults, not dogma: when an option clashes with one, say
-  under which condition breaking it would pay off on simplicity grounds.
-- End with a recommendation.
-- Decisions go one at a time: present one, wait for the user's answer, then
-  the next.
