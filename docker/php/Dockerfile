@@ -59,6 +59,11 @@ RUN apt-get install -y --no-install-recommends xz-utils \
     && corepack enable
 # --- END manual Node.js install ---
 
+# uv/uvx, used to run spec-kit's `specify` CLI pinned to a release
+# (see spec-kit-implementation/GUIDE.md). Copied from uv's distroless image,
+# pinned to a release: https://docs.astral.sh/uv/guides/integration/docker/
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
+
 RUN install-php-extensions xdebug
 
 COPY --chmod=0644 xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
@@ -76,9 +81,6 @@ RUN mkdir -p /home/developer/.local/share/phpactor \
     && chown -R developer:developer /home/developer/.local/share/phpactor
 
 RUN git config --global --add safe.directory /opt/phpactor
-
-## Install Python3 for Claude
-# RUN apt-get install -y --no-install-recommends python3
 
 FROM base AS prod
 
