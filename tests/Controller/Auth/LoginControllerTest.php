@@ -41,8 +41,9 @@ final class LoginControllerTest extends WebTestCase
             ->assertSuccessful()
         ;
 
-        /** @var array{data: array{accessToken: string}} $data */
+        /** @var array{data: array<string, mixed>} $data */
         $data = $browser->json()->decoded();
+        self::assertSame(['accessToken'], array_keys($data['data']), 'The refresh token must travel only in the cookie.');
         self::assertNotEmpty($data['data']['accessToken']);
 
         $cookie = $browser->client()->getResponse()->headers->getCookies()[0] ?? null;

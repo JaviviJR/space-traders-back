@@ -1,0 +1,316 @@
+{
+  "workflow": "companion",
+  "specName": "User Login",
+  "branch": "speckit-companion",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-04T18:15:26.674Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-04T18:18:27.127Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-04T18:18:27.207Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-04T18:18:27.283Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-04T18:18:27.370Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-04T18:18:27.451Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-04T18:19:49.678Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-04T18:20:32.672Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-04T18:20:48.825Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-04T18:21:08.170Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-04T18:21:08.200Z"
+    }
+  ],
+  "livingSpecs": {
+    "loaded": [
+      "session-access",
+      "account-registration",
+      "api-error-contract"
+    ],
+    "loadedRequirements": {
+      "session-access": [
+        "Signing in returns an access token and sets a refresh cookie",
+        "Remember me decides how long the session lasts",
+        "Wrong credentials and unverified accounts are refused without leaking account state",
+        "Refreshing issues a new access token while the session is alive",
+        "Signing out ends only the current session and always succeeds",
+        "Signing in again starts a new session and leaves the old one alone",
+        "Everything outside sign-up, sign-in and the docs requires a valid access token"
+      ],
+      "account-registration": [
+        "A person registers with name, email, password and SpaceTraders account token"
+      ],
+      "api-error-contract": [
+        "Every response from the back's own endpoints is an envelope",
+        "Failures answered inside the firewall use the same envelope"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "session-access",
+        "reason": "behaviour unchanged; spec documents it and agrees with every requirement"
+      },
+      {
+        "name": "account-registration",
+        "reason": "read for context only; registration is out of scope"
+      },
+      {
+        "name": "api-error-contract",
+        "reason": "read for context only; envelope behaviour unchanged"
+      }
+    ]
+  },
+  "last_action": "all 3 tasks done, 158/158 tests pass, phpstan and cs-check clean",
+  "coverage": {
+    "FR-001": {
+      "title": "A verified person signs in with email and password and gets a 15-minute access token",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testLoginReturnsAnAccessTokenAndSetsTheRefreshCookie",
+        "testTheAccessTokenExpiresFifteenMinutesAfterItIsIssued"
+      ]
+    },
+    "FR-002": {
+      "title": "The refresh token comes only in a protected cookie, never in the body",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testLoginReturnsAnAccessTokenAndSetsTheRefreshCookie"
+      ]
+    },
+    "FR-003": {
+      "title": "Remember me: 30-day persistent session; otherwise browser session capped at 24 hours",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testRememberMeIssuesAPersistentCookieAndAThirtyDaySession",
+        "testWithoutRememberMeTheCookieIsASessionCookieAndTheSessionLastsTwentyFourHours;tests/Controller/Auth/RefreshControllerTest.php::testRefreshIsAcceptedBeforeTheSessionExpires",
+        "testRefreshIsRejectedAndTheCookieClearedOnceTheSessionExpires"
+      ]
+    },
+    "FR-004": {
+      "title": "A non-boolean remember me is refused with 400 http_error before credentials are checked",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testLoginWithAMalformedRememberMeIsAnHttpErrorWithoutSession",
+        "testMalformedRememberMeWinsOverAWrongPassword",
+        "testMalformedRememberMeWinsOverAnUnverifiedEmail"
+      ]
+    },
+    "FR-005": {
+      "title": "Wrong password and unknown email get the same 401 invalid_credentials",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testLoginWithTheWrongPasswordIsAnInvalidCredentialsError",
+        "testLoginWithAnUnknownEmailIsTheSameInvalidCredentialsError"
+      ]
+    },
+    "FR-006": {
+      "title": "An unverified account gets 403 email_not_verified only with the right password",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testLoginWithAnUnverifiedEmailIsAnEmailNotVerifiedError",
+        "testLoginWithAnUnverifiedEmailAndTheWrongPasswordDoesNotRevealTheAccountState"
+      ]
+    },
+    "FR-007": {
+      "title": "A non-JSON login body gets 415",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testLoginWithANonJsonBodyIsAnUnsupportedMediaTypeError"
+      ]
+    },
+    "FR-008": {
+      "title": "Refresh returns a new access token without a new cookie or a longer session",
+      "tests": [
+        "tests/Controller/Auth/RefreshControllerTest.php::testRefreshWithAValidCookieReturnsANewAccessToken",
+        "testRefreshingNeitherResetsTheCookieNorExtendsTheSession"
+      ]
+    },
+    "FR-009": {
+      "title": "A missing, unknown, expired or revoked refresh cookie gets 401 invalid_refresh_token and is cleared",
+      "tests": [
+        "tests/Controller/Auth/RefreshControllerTest.php::testRefreshWithoutACookieReturnsUnauthorizedAndClearsTheCookie",
+        "testRefreshIsRejectedAndTheCookieClearedOnceTheSessionExpires;tests/Security/RefreshTokenServiceTest.php::testVerifyingATokenThatWasNeverIssuedThrows"
+      ]
+    },
+    "FR-010": {
+      "title": "Sign-out ends only the current session, clears the cookie and always answers 204",
+      "tests": [
+        "tests/Controller/Auth/LogoutControllerTest.php::testLogoutRevokesOnlyTheSessionItWasCalledFrom",
+        "testLogoutWithAnUnknownCookieIsANoOp",
+        "testLogoutWithoutACookieIsANoOp"
+      ]
+    },
+    "FR-011": {
+      "title": "Each sign-in starts a new session and leaves existing ones working",
+      "tests": [
+        "tests/Controller/Auth/LoginControllerTest.php::testANewLoginWithAPreviousCookieStartsANewSessionAndLeavesTheOldOneAlone"
+      ]
+    },
+    "FR-012": {
+      "title": "Non-public routes require a valid access token and refuse others with the same 401 authentication_required",
+      "tests": [
+        "tests/Controller/AuthenticationRequiredTest.php::testARejectedAccessTokenIsAnAuthenticationRequiredError"
+      ]
+    },
+    "FR-013": {
+      "title": "Every error uses the standard error envelope, including firewall-decided ones",
+      "tests": [
+        "tests/Controller/AuthenticationRequiredTest.php::testARejectedAccessTokenIsAnAuthenticationRequiredError;tests/Controller/Auth/LoginControllerTest.php::testLoginWithTheWrongPasswordIsAnInvalidCredentialsError"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 0,
+    "projectedTasks": 3,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "brute-force throttling on login",
+    "current-user endpoint",
+    "sign out on all devices",
+    "registration and email confirmation"
+  ],
+  "context": [
+    "living spec: session-access",
+    "living spec: account-registration",
+    "living spec: api-error-contract",
+    "area: src/Controller/Auth, src/Security, config/packages/security.yaml",
+    "constraint: retroactive spec, no code changes (user choice)"
+  ],
+  "intent": "Document the existing sign-in session behaviour (login, remember me, refresh, logout, protected routes) as a retroactive spec",
+  "approach": "No code changes; map each FR to the existing auth tests and confirm they pass",
+  "telemetryInstanceId": "43fade63-2043-4469-8536-bf5facf856e9",
+  "selectedAt": "2026-11-04T18:15:26.674Z",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Mapped FR-001..FR-013 to existing tests; added the missing body-shape assertion for FR-002",
+      "files": [
+        "tests/Controller/Auth/LoginControllerTest.php"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Full suite passes: 158 tests, 621 assertions, 0 failures",
+      "files": [
+        "tests/"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Spec and session-access living spec agree in every requirement; no edit needed",
+      "files": [
+        "capabilities/session-access/session-access.spec.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full test suite",
+      "command": "composer test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.1,
+      "result": "Faker seed used: 146686 · Xdebug: [Step Debug] Could not connect to debugging client. Tried: localhost:9004 (through xdebug.client_host/xdebug.client_port). · Xdebug: [Step Debug] Could not connect to debugging client. Tried: localhost:9004 (through xdebug.client_host/xdebug.client_port)."
+    },
+    {
+      "what": "phpstan",
+      "command": "composer phpstan",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 1.0,
+      "result": "Note: Using configuration file /home/developer/app/phpstan.dist.neon. ·    0/130 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% ·  130/130 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%"
+    },
+    {
+      "what": "coding standard",
+      "command": "composer cs-check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.6,
+      "result": "   0/135 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0% ·   14/135 [▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░]  10% ·  135/135 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%"
+    },
+    {
+      "what": "Spec FR-001..FR-013 compared with capabilities/session-access/session-access.spec.md",
+      "result": "no contradictions"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Added one assertion that the login body carries only accessToken",
+      "why": "FR-002 (refresh token never in the body) had no test asserting absence",
+      "rejected": "leaving FR-002 covered only by the cookie assertions"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Public access to /api/doc (part of FR-012) has no dedicated test; other public auth routes are exercised anonymously by their own tests",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Retroactive login spec verified: 13/13 requirements map to passing tests; one FR-002 assertion added"
+    }
+  }
+}
