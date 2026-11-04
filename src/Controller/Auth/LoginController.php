@@ -52,7 +52,7 @@ final class LoginController extends AbstractController
             .'Set-Cookie header (httpOnly, Secure, SameSite=Strict, Path=/auth). With rememberMe: true, '
             .'a persistent cookie that expires 30 days after this login. Without rememberMe or with '
             .'false, a session cookie (no Expires) that the server stops accepting 24 hours after this '
-            .'login. Refreshing never extends either. See doc/authentication.md.',
+            .'login. Refreshing never extends either.',
     )]
     #[ErrorResponse(status: 401, code: ApiErrorCode::InvalidCredentials, description: 'Invalid credentials')]
     #[ErrorResponse(status: 403, code: ApiErrorCode::EmailNotVerified, description: 'Email not verified')]

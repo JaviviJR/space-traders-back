@@ -6,12 +6,11 @@ in use, and read `symfony.lock` to see which recipes ran.
 ## Stack
 
 - Persistence: Doctrine ORM.
-- Interface: a JSON API for the Vue front, no server-rendered pages (see
-  [doc/architecture.md](doc/architecture.md)).
-- Auth: SecurityBundle, `json_login` plus LexikJWTAuthenticationBundle (see
-  [doc/authentication.md](doc/authentication.md)).
+- Interface: a JSON API for a Vue SPA, no server-rendered pages. The back is a
+  Backend for Frontend in front of the SpaceTraders API.
+- Auth: SecurityBundle, `json_login` plus LexikJWTAuthenticationBundle.
 
-If a task doesn't specify something else, ask rather than guess.
+If a task leaves anything else unspecified, ask rather than guess.
 
 ## Adding features: Flex, not hand-wiring
 
@@ -19,8 +18,8 @@ Install new capabilities with `composer require <package>` (e.g. `symfony/lock`,
 `symfony/messenger`, `orm-pack`) and let the Flex recipe register the bundle and
 generate its config. Don't hand-edit `config/bundles.php` or hand-write a bundle's
 base config; that's what the recipe is for. Don't skip a good-fit component just
-because it isn't installed yet; installing it is one command, which the user
-runs (see [doc/workflow.md](doc/workflow.md)).
+because it isn't installed yet; installing it is one command, which the user runs
+(see [doc/workflow.md](doc/workflow.md)).
 
 ## Conventions
 
@@ -49,42 +48,19 @@ Three specifics worth spelling out, because they are easy to get wrong:
 
 - Bind request data with `#[MapRequestPayload]` / `#[MapQueryString]` on action
   arguments, which wires up Serializer and Validator for you, instead of calling
-  `json_decode()` or `SerializerInterface` by hand. If neither package is
-  installed yet, `composer require` them rather than falling back to manual
-  parsing.
+  `json_decode()` or `SerializerInterface` by hand.
 - Use constructor property promotion, and `readonly` for DTOs and value objects.
   Don't mark a service `readonly` if it might become `lazy: true`: a lazy proxy
   can't extend a `readonly` class.
 - Use `symfony/lock` (`LockFactory`) for mutual exclusion. A hand-built flag or
   lock file looks fine in review and is usually wrong under concurrency.
 
-## Design principles
-
-Write code that follows SOLID. Concretely:
-
-- **Single responsibility.** A class has one reason to change. Controllers
-  only translate HTTP to a service call; business rules live in services.
-- **Open/closed.** Add behaviour by adding a class, not by editing a switch.
-  Use tagged iterators or `#[AsTaggedItem]` for strategies and handlers.
-- **Liskov substitution.** Implementations honour their interface contract.
-  No new exceptions or stricter preconditions in a subtype.
-- **Interface segregation.** Keep interfaces small and role-specific. Don't
-  force a class to implement methods it doesn't use.
-- **Dependency inversion.** Depend on abstractions, injected through the
-  constructor. Let autowiring resolve them; use `#[Target]` or `#[Autowire]`
-  when the type alone is ambiguous.
-
-Don't introduce an interface for a class with a single implementation unless
-it's a boundary to an external system or a seam needed for tests. Prefer the
-smallest design that satisfies these principles.
-
 ## Everyday workflow
 
 - The development environment runs in the Docker containers defined in
-  `docker/compose.yml`. Claude's shell already runs inside the php container,
-  so commands below run as-is there (`bin/console ...`); `docker` isn't
-  available from it. If the containers are stopped, ask the user to start
-  them (`./dev up` from the host).
+  `docker/compose.yml`. Your shell already runs inside the php container, so
+  `bin/console ...` runs as-is there; `docker` isn't available from it. If the
+  containers are stopped, ask the user to start them (`./dev up` from the host).
 - When something fails, read `var/log/dev.log` and the web profiler
   (`/_profiler`) before changing code.
 - Prefer `bin/console make:*` with every argument passed up front and
@@ -93,18 +69,18 @@ smallest design that satisfies these principles.
   input, hand-write the code instead.
 - Schema changes go through migrations (`bin/console make:migration`, then
   `doctrine:migrations:migrate`), never `doctrine:schema:update` or
-  hand-written SQL.
-- Don't run migrations without asking first.
+  hand-written SQL. Ask before running a migration.
 - `.env` is committed and holds defaults only. Real secrets belong in `.env.local`
   (git-ignored) or the secrets vault (`bin/console secrets:set`), read via
   `%env(...)%`.
 
 ## Testing
 
-Functional/HTTP tests extend `WebTestCase`; service-level tests extend `KernelTestCase`. Run
-`php bin/phpunit` (falls back to `vendor/bin/phpunit`). A feature isn't done
-until it has a test that exercises it the way a caller would, an HTTP request for
-a controller or a service call for a service, not just "it didn't throw."
+Functional/HTTP tests extend `WebTestCase`; service-level tests extend
+`KernelTestCase`. Run `php bin/phpunit` (falls back to `vendor/bin/phpunit`). A
+feature isn't done until it has a test that exercises it the way a caller would,
+an HTTP request for a controller or a service call for a service, not just "it
+didn't throw."
 
 ## Code style
 
@@ -113,14 +89,11 @@ superset). Run `vendor/bin/php-cs-fixer fix`.
 
 ## Static analysis
 
-- PHPStan runs at level 9 over `bin/`, `config/`, `public/`, `src/` and `tests/`
-  (config in `phpstan.dist.neon`). Run `composer phpstan` inside the php
-  container (from the host: `./dev exec php composer phpstan`).
-- A code change isn't done until PHPStan reports no errors. Fix the cause; don't
-  add `@phpstan-ignore` or `ignoreErrors` entries without asking first.
-- The Symfony extension reads `var/cache/dev/App_KernelDevDebugContainer.xml`. If
-  PHPStan complains about unknown services, regenerate the dev cache
-  (`bin/console cache:warmup`) before changing code.
+PHPStan at level 9 (`phpstan.dist.neon`), run with `composer phpstan`. A change
+isn't done until it reports no errors. Fix the cause; don't add
+`@phpstan-ignore` or `ignoreErrors` entries without asking first. If it
+complains about unknown services, regenerate the dev container
+(`bin/console cache:warmup`) before changing code.
 
 ## Discover, don't guess
 
@@ -131,86 +104,17 @@ things up in the project instead of relying on memory:
 - `bin/console debug:router`, `debug:container`, `debug:autowiring <name>`,
   `debug:config <bundle>`, `config:dump-reference <bundle>`: what exists and how
   it is configured.
-- `bin/console lint:container`, plus `lint:twig templates/` and
-  `lint:yaml config/` where those packages are installed: validate before running.
+- `bin/console lint:container`, `lint:twig templates/` and `lint:yaml config/`:
+  validate before running.
+- Read the installed source and docblocks under `vendor/`.
 - Docs: https://symfony.com/doc/current/ (switch to the version matching
-  `composer.json` if it differs). Symfony itself has no `llms.txt`, but some
-  dependencies do — prefer it as the entry point when one exists:
-  `https://phpstan.org/llms.txt` (PHPStan) and
-  `https://symfonycasts.com/llms.txt` (symfonycasts/verify-email-bundle).
-- For any dependency in `composer.json` (Symfony components included), consult
-  its official documentation first. Fall back to the installed source and
-  docblocks under `vendor/` only when the docs don't settle the question or
-  don't cover the installed version, and label what you report from there as
-  a code-derived inference, not a documented guarantee. For a concrete bug,
-  also search the library's GitHub issues and discussions for the exact
-  problem before reading `vendor/` to work out a fix. Reading the source to
-  diagnose a cause is fine; ask the user before applying a fix derived from it.
-
-## Architecture decisions
-
-Read these before designing or generating code that touches their area. They
-record decisions already made; don't re-open them without asking. They are not
-loaded automatically: read only the ones whose trigger matches the task.
-
-- [doc/architecture.md](doc/architecture.md): read before designing a new
-  endpoint or feature, deciding whether an endpoint is SpaceTraders-proxied or
-  back-only, or touching CORS. BFF role and the overall response contract.
-- [doc/spacetraders-proxy.md](doc/spacetraders-proxy.md): read before touching
-  anything that calls SpaceTraders: the catch-all proxy, route hooks,
-  augmentations, `X-Agent-Id`, the gateway or rate limiting.
-- [doc/errors.md](doc/errors.md): read before adding an exception mapper,
-  throwing a new domain exception, touching validation or its translated
-  messages, or changing error responses.
-- [doc/authentication.md](doc/authentication.md): read before touching login,
-  registration, JWT or refresh tokens, the user/agent model, agent token
-  storage, or firewall rules.
-- [doc/openapi.md](doc/openapi.md): read before adding or changing an
-  endpoint's OpenAPI attributes, request/response DTOs, or the SpaceTraders
-  spec describer.
-- [doc/testing.md](doc/testing.md): read before writing or changing tests,
-  test factories or test doubles, or touching coverage setup.
-
-## Where documentation lives
-
-- `doc/*.md` and this file describe the generic mechanism and how to add a
-  case (steps, rules, conventions), not an inventory of implementations.
-  Don't list each mapper, handler, hook, strategy, route or DTO field there,
-  nor copy literal config values (URLs, env vars, bundle options): say what
-  they do and point to the file. Touch a `.md` only when the mechanism or one
-  of its rules changes, not when a new implementation is added.
-- When a decision is closed or changes, record it in the same change that
-  applies it:
-  - A mechanism that applies to several classes: the `doc/*.md` whose
-    trigger in "Architecture decisions" covers it.
-  - Something specific to one class (why that status, that priority, what it
-    deliberately doesn't match): a docblock on that class when it's about the
-    whole class, a one-line `//` next to the line when it's a local trap.
-    Only write it when removing it would likely lead a future reader to
-    "simplify" the code back into the problem it avoids.
-- A single case never becomes a `doc/*.md` rule. When a second case appears,
-  propose to the user whether to generalize it into `doc/` or keep a docblock
-  in each class.
-- Record only what was decided: what won't be done isn't recorded. A
-  feature's rejected alternatives live in its spec-kit `research.workflow.md`
-  (see `doc/workflow.md` → "Spec-kit features"); a
-  tooling or workflow decision outside any feature may keep a one-sentence
-  rejected alternative with the condition to revisit it, next to the
-  decision. When a decision changes, rewrite the existing text instead of
-  appending a note.
-
-## Conflicts between sources
-
-When two sources disagree (two skills, a skill and this file, memory and this
-file, or any of them and the official docs), tell the user before acting: name
-both sources, quote what each says, and say which one you will follow and why.
+  `composer.json` if it differs).
 
 ## Working agreements
 
-How the user wants to work with Claude (confirmations, proposals, installs,
-commits, spec-kit features, language), imported below. The import only works
-as a bare line, never inside backticks; if `doc/workflow.md`'s content isn't
-in context at session start, Read it before substantive work and tell the user
-the import broke.
+How the user wants to work with Claude, imported below. The import only works as
+a bare line, never inside backticks; if `doc/workflow.md`'s content isn't in
+context at session start, Read it before substantive work and tell the user the
+import broke.
 
 @doc/workflow.md

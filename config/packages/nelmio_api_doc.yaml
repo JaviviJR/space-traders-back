@@ -9,10 +9,9 @@ nelmio_api_doc:
             path_patterns:
                 - ^/(api(?!/doc$)(?!/spacetraders)|auth) # Accepts routes under /api (except /api/doc and /api/spacetraders, hand-documented by App\SpaceTraders\OpenApi\ProxyDescriber) and /auth
             security:
-                bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } # Inferred per-route from #[IsGranted] (see doc/openapi.md)
+                bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } # Inferred per-route from #[IsGranted]
     models:
-        # Front-facing schema names for the generated spec (and the front's codegen); naming rules in
-        # doc/openapi.md ("Schema names").
+        # Front-facing schema names for the generated spec (and the front's codegen).
         # Also covers #[MapRequestPayload] classes: Nelmio registers those under their bare class
         # name even when the controller's own #[OA\RequestBody] already names the model, so without
         # this alias both an orphan "XxxDto" and the clean name would show up in components/schemas.
