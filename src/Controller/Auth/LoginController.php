@@ -33,6 +33,14 @@ final class LoginController extends AbstractController
             properties: [
                 new OA\Property(property: 'email', type: 'string', format: 'email'),
                 new OA\Property(property: 'password', type: 'string'),
+                new OA\Property(
+                    property: 'rememberMe',
+                    description: 'Keep the session after the browser closes. true: the session lasts 30 days from '
+                        .'this login. Omitted or false: the session ends when the browser closes, and at the '
+                        .'latest 24 hours after this login.',
+                    type: 'boolean',
+                    default: false,
+                ),
             ],
             required: ['email', 'password'],
         ),
@@ -41,7 +49,10 @@ final class LoginController extends AbstractController
         model: AccessTokenResponseData::class,
         status: 200,
         description: 'Access token issued. The refresh token is not in this body: it is set via a '
-            .'Set-Cookie header (httpOnly, Path=/auth), see doc/authentication.md.',
+            .'Set-Cookie header (httpOnly, Secure, SameSite=Strict, Path=/auth). With rememberMe: true, '
+            .'a persistent cookie that expires 30 days after this login. Without rememberMe or with '
+            .'false, a session cookie (no Expires) that the server stops accepting 24 hours after this '
+            .'login. Refreshing never extends either. See doc/authentication.md.',
     )]
     #[ErrorResponse(status: 401, code: ApiErrorCode::InvalidCredentials, description: 'Invalid credentials')]
     #[ErrorResponse(status: 403, code: ApiErrorCode::EmailNotVerified, description: 'Email not verified')]

@@ -30,7 +30,7 @@ Resultado esperado: todo en verde, PHPStan sin errores. Qué cubre cada test: ta
 Base: `http://localhost:<puerto del back>`, origen del front `http://localhost:5173`. Contrato completo en [contracts/auth-session.md](contracts/auth-session.md).
 
 1. **Preflight con credenciales (US1-4)**: `curl -i -X OPTIONS -H 'Origin: http://localhost:5173' -H 'Access-Control-Request-Method: POST' <base>/auth/login` → `Access-Control-Allow-Origin: http://localhost:5173` y `Access-Control-Allow-Credentials: true`.
-2. **Origen no permitido (US1-5)**: mismo comando con `Origin: http://evil.example` → sin ninguna de las dos cabeceras.
+2. **Origen no permitido (US1-5)**: mismo comando con `Origin: http://evil.example` → sin `Access-Control-Allow-Origin`. `Access-Control-Allow-Credentials: true` puede salir igualmente en el preflight (NelmioCors la pone antes de comprobar el origen), pero no tiene efecto: sin `Allow-Origin` el navegador rechaza la respuesta.
 3. **Login persistente (US2-1)**: `POST /auth/login` con `"rememberMe": true` y `Origin` permitido → 200, `Set-Cookie` con `expires` a 30 días, cabeceras CORS con credenciales.
 4. **Login de sesión (US2-2)**: sin `rememberMe` → `Set-Cookie` sin `expires` ni `Max-Age`.
 5. **`rememberMe` mal formado (US2-5)**: `"rememberMe": "yes"`, incluso con contraseña incorrecta → 400 `http_error`, sin `Set-Cookie`.

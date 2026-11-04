@@ -8,6 +8,7 @@ use App\Entity\RefreshToken;
 use App\Factory\UserFactory;
 use App\Http\ApiErrorCode;
 use App\Security\EventListener\RememberMeChoiceListener;
+use App\Tests\Support\ReadsAccessToken;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -25,6 +26,7 @@ final class LoginControllerTest extends WebTestCase
 {
     use ClockSensitiveTrait;
     use HasBrowser;
+    use ReadsAccessToken;
 
     public function testLoginReturnsAnAccessTokenAndSetsTheRefreshCookie(): void
     {
@@ -50,6 +52,17 @@ final class LoginControllerTest extends WebTestCase
         self::assertTrue($cookie->isHttpOnly());
         self::assertTrue($cookie->isSecure());
         self::assertSame(Cookie::SAMESITE_STRICT, $cookie->getSameSite());
+    }
+
+    public function testTheAccessTokenExpiresFifteenMinutesAfterItIsIssued(): void
+    {
+        UserFactory::createOne(['email' => 'login-token-ttl@example.com']);
+
+        $browser = $this->attemptLogin('login-token-ttl@example.com', 'password123')->assertStatus(200);
+
+        $accessToken = $browser->json()->search('data.accessToken');
+        self::assertIsString($accessToken);
+        self::assertSame(900, $this->accessTokenLifetime($accessToken));
     }
 
     public function testLoginWithTheWrongPasswordIsAnInvalidCredentialsError(): void

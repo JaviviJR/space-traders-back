@@ -7,6 +7,7 @@ namespace App\Tests\Controller\Auth;
 use App\Entity\RefreshToken;
 use App\Factory\UserFactory;
 use App\Tests\Support\AuthenticatesClient;
+use App\Tests\Support\ReadsAccessToken;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -23,6 +24,7 @@ final class RefreshControllerTest extends WebTestCase
     use AuthenticatesClient;
     use ClockSensitiveTrait;
     use HasBrowser;
+    use ReadsAccessToken;
 
     private const ONE_DAY = 24 * 3600;
     private const THIRTY_DAYS = 30 * self::ONE_DAY;
@@ -41,6 +43,19 @@ final class RefreshControllerTest extends WebTestCase
         self::assertNotEmpty($data['data']['accessToken']);
 
         $browser->post('/auth/refresh')->assertSuccessful();
+    }
+
+    public function testTheRefreshedAccessTokenExpiresFifteenMinutesAfterItIsIssued(): void
+    {
+        $browser = $this->browser();
+        UserFactory::createOne(['email' => 'refresh-token-ttl@example.com']);
+        $this->login($browser, 'refresh-token-ttl@example.com');
+
+        $browser->post('/auth/refresh')->assertSuccessful();
+
+        $accessToken = $browser->json()->search('data.accessToken');
+        self::assertIsString($accessToken);
+        self::assertSame(900, $this->accessTokenLifetime($accessToken));
     }
 
     public function testRefreshWithoutACookieReturnsUnauthorizedAndClearsTheCookie(): void

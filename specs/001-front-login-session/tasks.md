@@ -113,14 +113,14 @@ Sin tareas: no hay entidades, columnas ni migraciones nuevas (data-model.md) y n
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] En `config/packages/lexik_jwt_authentication.yaml`, añadir `token_ttl: 900` (decisión cerrada S3; comprobar la clave con `bin/console config:dump-reference lexik_jwt_authentication`).
-- [ ] T016 [P] [US3] En `src/Controller/Auth/LoginController.php`, en el `OA\RequestBody` inline: añadir `new OA\Property(property: 'rememberMe', type: 'boolean', default: false, description: …)` sin incluirla en `required` (que sigue siendo `['email', 'password']`); reescribir la `description` del `DataResponse` 200 para explicar ambos modos: con `rememberMe: true`, cookie persistente que caduca a los 30 días del login; sin él o con `false`, cookie de sesión (sin `Expires`) que el servidor deja de aceptar a las 24 horas del login. No documentar el 400 `http_error` (doc/openapi.md → "Error codes"; spec FR-009). Sin DTO nuevo ni alias en `models.names`.
+- [X] T015 [US3] En `config/packages/lexik_jwt_authentication.yaml`, añadir `token_ttl: 900` (decisión cerrada S3; comprobar la clave con `bin/console config:dump-reference lexik_jwt_authentication`).
+- [X] T016 [P] [US3] En `src/Controller/Auth/LoginController.php`, en el `OA\RequestBody` inline: añadir `new OA\Property(property: 'rememberMe', type: 'boolean', default: false, description: …)` sin incluirla en `required` (que sigue siendo `['email', 'password']`); reescribir la `description` del `DataResponse` 200 para explicar ambos modos: con `rememberMe: true`, cookie persistente que caduca a los 30 días del login; sin él o con `false`, cookie de sesión (sin `Expires`) que el servidor deja de aceptar a las 24 horas del login. No documentar el 400 `http_error` (doc/openapi.md → "Error codes"; spec FR-009). Sin DTO nuevo ni alias en `models.names`.
 
 ### Tests for User Story 3
 
-- [ ] T017 [US3] En `tests/Controller/Auth/LoginControllerTest.php`: decodificar el payload del `accessToken` (segmento base64url) de un login correcto y comprobar `exp - iat === 900` (sin hora simulada: Lexik usa su propio `NativeClock`, research.workflow.md → D4).
-- [ ] T018 [P] [US3] En `tests/Controller/Auth/RefreshControllerTest.php`: el `accessToken` de un `POST /auth/refresh` correcto cumple `exp - iat === 900`.
-- [ ] T019 [P] [US3] Crear `tests/OpenApi/LoginRequestSchemaTest.php` (`KernelTestCase` con el trait `tests/Support/DumpsOpenApiSpec.php`, como `tests/OpenApi/AuthenticationErrorResponseTest.php`): en el request body de la operación `login`, `rememberMe` es `type: boolean`, `default: false` y no está en `required`; `email` y `password` siguen en `required`; la descripción del 200 menciona ambos modos de cookie.
+- [X] T017 [US3] En `tests/Controller/Auth/LoginControllerTest.php`: decodificar el payload del `accessToken` (segmento base64url) de un login correcto y comprobar `exp - iat === 900` (sin hora simulada: Lexik usa su propio `NativeClock`, research.workflow.md → D4).
+- [X] T018 [P] [US3] En `tests/Controller/Auth/RefreshControllerTest.php`: el `accessToken` de un `POST /auth/refresh` correcto cumple `exp - iat === 900`.
+- [X] T019 [P] [US3] Crear `tests/OpenApi/LoginRequestSchemaTest.php` (`KernelTestCase` con el trait `tests/Support/DumpsOpenApiSpec.php`, como `tests/OpenApi/AuthenticationErrorResponseTest.php`): en el request body de la operación `login`, `rememberMe` es `type: boolean`, `default: false` y no está en `required`; `email` y `password` siguen en `required`; la descripción del 200 menciona ambos modos de cookie.
 
 **Checkpoint**: las tres historias funcionan y se prueban por separado.
 
@@ -130,8 +130,8 @@ Sin tareas: no hay entidades, columnas ni migraciones nuevas (data-model.md) y n
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T020 Comprobar que `doc/authentication.md` y `doc/architecture.md` cubren todo FR-010 / US3-3 (duraciones de ambos modos, token de acceso de 15 minutos —ya prometido en "Tokens", research.workflow.md → S3—, CORS con credenciales solo para orígenes permitidos); si falta algo, proponer el cambio con confirmación separada.
-- [ ] T021 Ejecutar la validación de [quickstart.md](quickstart.md): `php bin/phpunit` (suite completa), `composer phpstan` (nivel 9, sin ignores nuevos) y `vendor/bin/php-cs-fixer fix` (listar los ficheros que toque fuera del alcance, sin revertirlos); después, los escenarios manuales 1–8 con `curl` contra el servidor de desarrollo si está accesible desde el contenedor php, o indicar al usuario que los ejecute desde el host.
+- [X] T020 Comprobar que `doc/authentication.md` y `doc/architecture.md` cubren todo FR-010 / US3-3 (duraciones de ambos modos, token de acceso de 15 minutos —ya prometido en "Tokens", research.workflow.md → S3—, CORS con credenciales solo para orígenes permitidos); si falta algo, proponer el cambio con confirmación separada.
+- [X] T021 Ejecutar la validación de [quickstart.md](quickstart.md): `php bin/phpunit` (suite completa), `composer phpstan` (nivel 9, sin ignores nuevos) y `vendor/bin/php-cs-fixer fix` (listar los ficheros que toque fuera del alcance, sin revertirlos); después, los escenarios manuales 1–8 con `curl` contra el servidor de desarrollo si está accesible desde el contenedor php, o indicar al usuario que los ejecute desde el host.
 
 ---
 
