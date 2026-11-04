@@ -18,8 +18,7 @@ Install new capabilities with `composer require <package>` (e.g. `symfony/lock`,
 `symfony/messenger`, `orm-pack`) and let the Flex recipe register the bundle and
 generate its config. Don't hand-edit `config/bundles.php` or hand-write a bundle's
 base config; that's what the recipe is for. Don't skip a good-fit component just
-because it isn't installed yet; installing it is one command, which the user runs
-(see [doc/workflow.md](doc/workflow.md)).
+because it isn't installed yet; installing it is one command, which the user runs.
 
 ## Conventions
 
@@ -109,12 +108,3 @@ things up in the project instead of relying on memory:
 - Read the installed source and docblocks under `vendor/`.
 - Docs: https://symfony.com/doc/current/ (switch to the version matching
   `composer.json` if it differs).
-
-## Working agreements
-
-How the user wants to work with Claude, imported below. The import only works as
-a bare line, never inside backticks; if `doc/workflow.md`'s content isn't in
-context at session start, Read it before substantive work and tell the user the
-import broke.
-
-@doc/workflow.md
