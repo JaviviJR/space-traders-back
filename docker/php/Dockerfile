@@ -28,7 +28,7 @@ FROM base AS dev
 
 RUN apt-get update -y
 
-RUN apt-get install -y --no-install-recommends sudo python3
+RUN apt-get install -y --no-install-recommends sudo python3 poppler-utils
 
 RUN echo 'developer ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/developer && \
     chmod 0440 /etc/sudoers.d/developer

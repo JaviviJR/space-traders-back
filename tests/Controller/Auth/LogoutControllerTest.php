@@ -6,7 +6,9 @@ namespace App\Tests\Controller\Auth;
 
 use App\Factory\UserFactory;
 use App\Tests\Support\AuthenticatesClient;
+use PHPUnit\Framework\Attributes\TestWith;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\BrowserKit\Cookie;
 use Zenstruck\Browser\Test\HasBrowser;
 use Zenstruck\Foundry\Attribute\ResetDatabase;
 
@@ -46,6 +48,43 @@ final class LogoutControllerTest extends WebTestCase
         $browser->client()->getCookieJar()->clear();
         $browser->client()->getCookieJar()->set($cookieB);
         $browser->post('/auth/refresh')->assertSuccessful();
+    }
+
+    #[TestWith([null], 'default mode')]
+    #[TestWith([true], 'rememberMe')]
+    public function testLogoutRevokesTheSessionAndClearsTheCookieInEitherMode(?bool $rememberMe): void
+    {
+        $email = 'logout-either-mode@example.com';
+        $browser = $this->browser();
+        UserFactory::createOne(['email' => $email]);
+        $this->login($browser, $email, rememberMe: $rememberMe);
+        $cookie = $browser->client()->getCookieJar()->get('refresh_token', '/auth');
+        self::assertNotNull($cookie);
+
+        $browser
+            ->post('/auth/logout')
+            ->assertStatus(204)
+            ->assertHeaderContains('Set-Cookie', 'refresh_token=deleted')
+            ->assertHeaderContains('Set-Cookie', 'Max-Age=0')
+        ;
+
+        // Present the old cookie again: the session itself is revoked server side.
+        $browser->client()->getCookieJar()->set($cookie);
+        $browser->post('/auth/refresh')->assertStatus(401);
+    }
+
+    public function testLogoutWithAnUnknownCookieIsANoOp(): void
+    {
+        $browser = $this->browser();
+        $browser->client()->getCookieJar()->set(new Cookie('refresh_token', 'this-token-was-never-issued', path: '/auth'));
+
+        $browser
+            ->post('/auth/logout')
+            ->assertStatus(204)
+        ;
+
+        // Otherwise this would pass as the no-cookie case.
+        self::assertSame('this-token-was-never-issued', $browser->client()->getRequest()->cookies->get('refresh_token'));
     }
 
     public function testLogoutWithoutACookieIsANoOp(): void

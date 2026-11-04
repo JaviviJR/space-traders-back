@@ -55,6 +55,13 @@ so cross-origin requests need CORS headers. Handled by `NelmioCorsBundle`
 (`config/packages/nelmio_cors.yaml`), not hand-written headers in
 controllers or the kernel.
 
+The back always answers with the concrete requesting origin when it is
+allowed, never a wildcard. Credentials (cookies) are allowed only under
+`/auth/`, so the browser stores and sends the refresh token cookie on login,
+refresh and logout. That scope follows the cookie's `Path`: if one changes,
+the other must change with it. `/api/*` authenticates with a Bearer token and
+gets CORS without credentials.
+
 Allowed origin is `%env(CORS_ALLOW_ORIGIN)%`. The committed `.env` default
 accepts any port on localhost/127.0.0.1, since the front's dev port can
 vary. This is a dev-only default.

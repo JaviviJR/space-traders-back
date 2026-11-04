@@ -11,22 +11,25 @@ use App\Security\Dto\RefreshTokenPair;
 use App\Security\Exception\InvalidRefreshTokenException;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Psr\Clock\ClockInterface;
 
 final class RefreshTokenService
 {
-    private const TOKEN_TTL = '+30 days';
+    private const REMEMBER_ME_TTL = '+30 days';
+    private const DEFAULT_TTL = '+24 hours';
 
     public function __construct(
         private readonly RefreshTokenRepository $refreshTokenRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
+        private readonly ClockInterface $clock,
     ) {
     }
 
-    public function issue(User $user): RefreshTokenPair
+    public function issue(User $user, bool $rememberMe): RefreshTokenPair
     {
         $plaintext = bin2hex(random_bytes(32));
-        $expiresAt = new \DateTimeImmutable(self::TOKEN_TTL);
+        $expiresAt = $this->clock->now()->modify($rememberMe ? self::REMEMBER_ME_TTL : self::DEFAULT_TTL);
 
         $refreshToken = new RefreshToken($user, $this->hash($plaintext), $expiresAt);
 
@@ -43,7 +46,7 @@ final class RefreshTokenService
     {
         $refreshToken = $this->refreshTokenRepository->findByTokenHash($this->hash($plaintext));
 
-        if (null === $refreshToken || !$refreshToken->isValid(new \DateTimeImmutable())) {
+        if (null === $refreshToken || !$refreshToken->isValid($this->clock->now())) {
             throw InvalidRefreshTokenException::becauseNotFoundOrInvalid();
         }
 

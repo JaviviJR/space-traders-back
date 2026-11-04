@@ -12,16 +12,20 @@ final class RefreshTokenCookieFactory
     private const COOKIE_NAME = 'refresh_token';
     private const COOKIE_PATH = '/auth';
 
-    public function create(string $plaintext, \DateTimeImmutable $expiresAt): Cookie
+    /**
+     * @param \DateTimeImmutable|null $expiresAt null issues a session cookie (no Expires, no Max-Age)
+     */
+    public function create(string $plaintext, ?\DateTimeImmutable $expiresAt): Cookie
     {
-        return Cookie::create(self::COOKIE_NAME)
+        $cookie = Cookie::create(self::COOKIE_NAME)
             ->withValue($plaintext)
             ->withPath(self::COOKIE_PATH)
             ->withSecure(true)
             ->withHttpOnly(true)
             ->withSameSite(Cookie::SAMESITE_STRICT)
-            ->withExpires($expiresAt->getTimestamp())
         ;
+
+        return null === $expiresAt ? $cookie : $cookie->withExpires($expiresAt->getTimestamp());
     }
 
     public function clear(): Cookie
