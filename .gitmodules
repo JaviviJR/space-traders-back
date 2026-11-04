@@ -1,0 +1,3 @@
+[submodule "spec-kit-implementation"]
+	path = spec-kit-implementation
+	url = https://github.com/JaviviJR/speckit-implementation.git
