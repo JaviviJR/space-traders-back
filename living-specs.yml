@@ -1,0 +1,25 @@
+# Living specs for this project.
+# Specs go at capabilities/<name>/<name>.spec.md, all under one root.
+# Adopt a code area to add the first capability.
+enabled: true
+layout: central
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: account-registration
+    match: ["src/Controller/Auth/RegisterController.php", "src/Controller/Auth/ConfirmEmailController.php", "src/Controller/Auth/ResendConfirmationController.php", "src/Security/UserRegistrationService.php", "src/Security/EmailConfirmationService.php", "src/Security/Email/**", "src/Security/Dto/RegisterUserDto.php", "src/Security/Dto/RegisterResponseData.php", "src/Security/Dto/ConfirmEmailResponseData.php", "src/Security/Dto/ResendConfirmationDto.php", "src/Security/Dto/EmptyResponseData.php", "src/Entity/User.php", "src/Repository/UserRepository.php"]
+    spec: capabilities/account-registration/account-registration.spec.md
+  - name: session-access
+    match: ["src/Controller/Auth/LoginController.php", "src/Controller/Auth/RefreshController.php", "src/Controller/Auth/LogoutController.php", "src/Security/RefreshToken*.php", "src/Security/Handler/**", "src/Security/Checker/**", "src/Security/EventListener/**", "src/Security/Dto/AccessTokenResponseData.php", "src/Security/Dto/RefreshTokenPair.php", "src/Entity/RefreshToken.php", "src/Repository/RefreshTokenRepository.php", "src/EventListener/JwtAuthenticationFailureListener.php", "config/packages/security.yaml", "config/packages/lexik_jwt_authentication.yaml"]
+    spec: capabilities/session-access/session-access.spec.md
+  - name: spacetraders-proxy
+    match: ["src/Controller/SpaceTraders/**", "src/SpaceTraders/Proxy/**", "src/SpaceTraders/Response/**", "src/SpaceTraders/Exception/**", "src/SpaceTraders/RouteHookInterface.php", "src/Security/AgentTokenCipherInterface.php", "src/Security/SodiumAgentTokenCipher.php"]
+    spec: capabilities/spacetraders-proxy/spacetraders-proxy.spec.md
+  - name: api-error-contract
+    match: ["src/EventListener/**", "src/Http/**", "src/Security/Exception/**", "config/packages/translation.yaml"]
+    spec: capabilities/api-error-contract/api-error-contract.spec.md
+  - name: api-documentation
+    match: ["src/OpenApi/**", "src/SpaceTraders/OpenApi/**", "config/packages/nelmio_api_doc.yaml", "config/routes/nelmio_api_doc.yaml", "resources/spacetraders/openapi.json"]
+    spec: capabilities/api-documentation/api-documentation.spec.md
+  - name: cross-origin-access
+    match: ["config/packages/nelmio_cors.yaml"]
+    spec: capabilities/cross-origin-access/cross-origin-access.spec.md
