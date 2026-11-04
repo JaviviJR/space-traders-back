@@ -8,7 +8,6 @@ parameters:
         - tests/
     excludePaths:
         - config/reference.php # generated
-        - src/SpaceTraders/OpenApi/Generated/* # generated
     symfony:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
     doctrine:

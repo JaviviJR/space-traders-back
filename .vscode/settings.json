@@ -1,7 +1,4 @@
 {
-    "php-cs-fixer.exclude": [
-        "**/OpenApi/Generated/**"
-    ],
     "pgsql.connections": [
         {
             "id": "146FDDE9-C6B3-4589-B379-D61FBF6CCEC0",
