@@ -2,266 +2,33 @@
 
 How the user works with Claude on this project. Applies to every session.
 
-## Confirmations
+## Preferences
 
-- Ask explicit confirmation before writing any file, or running commands that
-  change state. This applies regardless of whether the file is tracked by
-  git.
-- Exception: invoking a `/speckit-*` skill authorizes writing that phase's
-  artifacts in `specs/<NNN-feature>/` and `.specify/feature.json` without
-  asking; the user reviews them with `git diff` before the next phase. Any
-  other file the skill would touch (code, `doc/`, templates, the
-  constitution) still needs confirmation.
-- Option answers are not approval. Approval for one change does not extend to
+- Language: chat with the user in Spanish. Project documentation in English.
+- User-run commands: never run package installs (npm, editor extensions),
+  even when the permission mode would allow it. Give the exact commands as
+  one copy-paste block, with a short note on what each does and a link to the
+  official docs, wait for the user to run them, then verify the result by
+  reading files.
+- Commits carry no `Co-Authored-By` trailer or any other AI attribution line,
+  whatever Claude Code's default says.
+- Subagent model: pass a cheap model when the expected result can be stated
+  as one closed, checkable sentence; use the default model when the subagent
+  has to resolve ambiguity or make a design call.
+
+## Options
+
+Why: the user picks knowing what each choice costs.
+
+- When a decision has several viable approaches, explain each one before the
+  user picks: what it does, and what the official docs recommend about it
+  (check them first) — or say explicitly that they have no stance and it's a
+  project decision.
+- In each option, compare the resulting code: which is simpler and which adds
+  complexity that may be unnecessary (extra state, coordination, files
+  touched). Say under which condition another option would win.
+- When an option clashes with a project rule: rules are defaults, not dogma;
+  say under which condition breaking it would pay off on simplicity grounds.
+- End with a recommendation.
+- Decisions go one at a time: present one, wait for the user's answer, then
   the next.
-- Related changes may be grouped into one proposal, provided each change is
-  listed explicitly so the approval covers each one.
-
-## Proposals
-
-- File changes: never show a diff or pasted content in chat, regardless of
-  whether it's a new file, a small edit or a large rewrite. Explain what
-  changed and why, listing every file affected, so the user knows what to
-  review. The user reviews the actual change with `git diff` in VSCode.
-- Design rationale: when a code change is driven by a design pattern, a SOLID
-  principle, an architecture decision or a code-quality improvement — however
-  small, including a rename or extracting a method — split the explanation in
-  two: what the change does (functional effect) and why this design
-  specifically — what coupling, responsibility or extensibility problem it
-  solves, or which principle it applies, and why a simpler alternative wasn't
-  enough. Always explicit, even for small changes. A proposal without the
-  second part is incomplete.
-  - Not for corrections that involve no design choice (a stale reference, a
-    typo, a fact that doesn't match the code, moving text by applying a rule
-    already written down): one line naming the rule applied is enough.
-- Options: when a decision has several viable approaches, explain each one
-  before settling on a choice, so the user understands the trade-offs and can
-  disagree with informed context; bare option labels aren't enough. For each,
-  cite what the official docs say about it (check them first, per AGENTS.md →
-  "Discover, don't guess"), or say explicitly that they have no stance and
-  it's a project decision.
-- In each option or rule, compare the resulting code: which is simpler and
-  which adds complexity that may be unnecessary (extra state, coordination,
-  files touched). Rules are defaults, not dogma: state the condition that
-  overrides one on simplicity grounds.
-- When a decision comes from an installed skill, say which skill and why it
-  recommends it.
-- Testing: every proposal — the initial one or a later split into sequential
-  blocks — must say what will be tested and how: which PHPUnit test(s) (new
-  or updated, with file path) cover the change, per [testing.md](testing.md),
-  and whether a functional HTTP test (`WebTestCase`) applies or doesn't and
-  why. State this alongside the files-affected list, not as an afterthought
-  once the change is already applied.
-- When a decision is closed, propose where to record it, as
-  [AGENTS.md → Where documentation lives](../AGENTS.md#where-documentation-lives)
-  says, or this file for working agreements. Ask before writing (see
-  "Confirmations"), then reply with a one-line summary.
-- Ask for confirmation on doc/*.md updates separately from the confirmation on
-  the implementation change itself, even when they're part of the same
-  proposal. Implementing something and documenting it are different
-  decisions; bundling them into one yes/no hides the second one.
-
-## Steps and installs
-
-- Design decisions: one at a time, each with its trade-offs and a recommendation.
-- Installation and setup steps: give the commands as one copy-paste block, with
-  a short note on what each does and a link to the official docs. The user runs
-  them.
-- Never run package installs (composer, npm, editor extensions). Give the exact
-  command and wait for the result, then verify it by reading files.
-- When asked to split a plan into sequential blocks, reorder the explanations
-  already given as-is into blocks — don't compress or re-summarize them into
-  shorter bullets. The functional-effect / design-rationale split from
-  "Proposals" above still applies per item once grouped into blocks.
-- Order blocks by real dependency (e.g. install before code, model before
-  service, service before controller), not by an arbitrary partition of the
-  content. If the plan has no valid linear order (independent blocks, a
-  circular dependency, or a block needing decisions from several later blocks
-  at once), say so explicitly and propose how to resolve it (parallel blocks,
-  merging blocks, asking for a decision first) instead of forcing a
-  sequence.
-- Block prompts: only when the user asks for them ("sácame los prompts en
-  doc" or similar) after blocks were presented, never on Claude's own
-  initiative. Write one prompt per block, numbered in order
-  (`01-<block-slug>.md`, …), in `doc/prompts/<branch>/`; if the branch name
-  contains `/`, ask before creating nested folders. Each prompt stands alone,
-  in English, for a fresh session:
-  - points to AGENTS.md and the applicable `doc/*.md` instead of copying chat
-    history;
-  - states the closed decisions the block depends on, with their why and the
-    rejected alternatives, and says not to reopen them;
-  - lists every file to touch and what changes in each;
-  - names the tests covering the block (new or updated, with path) and the
-    checks that must end clean (PHPUnit, PHPStan, php-cs-fixer);
-  - keeps the block's full explanation, not condensed.
-
-  Each block must leave the project compiling and tests green on its own; if
-  the presented split doesn't, regroup the blocks and tell the user what moved
-  and why. `doc/prompts/` is on-request only: don't read, review or link it
-  from any other `.md` unless the user asks. Not for spec-kit features: those
-  use their Sessions table and `/feature-session` ("Spec-kit features").
-
-## Checks and commits
-
-- When `vendor/bin/php-cs-fixer fix` reformats files outside the change's
-  scope, keep those edits: don't revert them to keep the diff scoped and
-  don't ask whether to keep them. List the files it touched so the user knows
-  what to expect in `git diff`.
-- The user makes the commits. Don't ask whether to commit: once a piece of
-  work is done and verified, say so and stop. When the work is split into
-  blocks, say when a block ends so the user can commit there. The only
-  exception is a `/feature-session` (see "Spec-kit features").
-- Commits Claude makes carry no `Co-Authored-By` trailer or other AI
-  attribution line, whatever Claude Code's default says.
-
-## Spec-kit features
-
-- Features are built with spec-kit. Each one goes through `/speckit-specify`,
-  `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks` and `/speckit-analyze`,
-  each reviewed by the user before the next. Its artifacts live in
-  `specs/<NNN-feature>/`.
-- `/speckit-clarify` questions: when any option contradicts or relies on a
-  rule in AGENTS.md or a `doc/*.md`, or a closed decision (e.g. the spec's
-  Assumptions); changes the HTTP contract (status, error code, a field's name
-  or type, what OpenAPI documents); picks a component or mechanism (framework
-  feature vs own code, a library); or changes persisted data or needs a
-  migration, the question follows "Proposals → Options" before the skill's
-  table: per option, what it does, what the official docs say (or that they
-  have no stance), how the resulting code compares and the condition that
-  would make another option win. This replaces the skill's one-line-per-option
-  format for those questions. Pure-behaviour questions (a value, a duration, a
-  text, an on/off) keep the skill's format; when in doubt, use the full one.
-  The table, `**Recommended:**`, answering by letter, the 5-question limit and
-  writing `spec.md` after each answer stay as the skill says.
-- `/speckit-plan` decisions: a decision with several viable approaches is
-  presented in chat following "Proposals" (options, docs, code comparison,
-  recommendation), one at a time per "Steps and installs", before writing
-  the research files (see "Two research files" below), which then record the
-  closed decision.
-- A conflict that surfaces during `/speckit-plan` (a requirement that
-  contradicts a `doc/*.md` rule, AGENTS.md, a closed decision or a
-  constitution gate) is presented to the user per "Proposals → Options",
-  with three routes; the user picks one:
-  1. Change the spec: it goes back through `/speckit-clarify`, which records
-     it in Clarifications, and then `/speckit-plan` resumes. The plan never
-     edits `spec.md` itself.
-  2. Change the project rule (`doc/*.md` or AGENTS.md): a doc change with its
-     own confirmation, then the plan goes on.
-  3. Keep the exception: the plan justifies it in its "Complexity Tracking"
-     section, as the constitution requires, and goes on.
-- Two research files (for now): each `/speckit-plan` writes the same
-  decisions twice in `specs/<NNN-feature>/`, to compare what this project's
-  rules change against spec-kit's default:
-  - `research.md`: as spec-kit writes it, untouched: in English, with its
-    scope (`NEEDS CLARIFICATION` items, dependencies, integrations) and its
-    `Decision` / `Rationale` / `Alternatives considered` format. The
-    `speckit-*` skills read this one, since the scripts look it up by name.
-  - `research.workflow.md`: applying AGENTS.md and this file: content in
-    Spanish (structural keywords in English, see "Language"); it also
-    carries the spec's closed decisions with their rejected alternatives;
-    each `Rationale` cites the official docs or the `vendor/` file it rests
-    on, labelling the latter as a code-derived inference; and each decision
-    says where else it gets recorded (docblock, `//` or `doc/*.md`, per
-    AGENTS.md → "Where documentation lives"). `/feature-session` and
-    AGENTS.md use this one.
-
-  Revisit when the user says the comparison no longer adds anything; then
-  decide whether existing `research.md` files are deleted or kept.
-- Deviations from spec-kit: when a rule in AGENTS.md or this file makes
-  Claude depart from what a `speckit-*` skill says (skip, replace, add or
-  reorder a step), Claude says so at that moment. If a written rule already
-  resolves it, one line naming the skill step, the project rule and which one
-  is followed. If not, the full "Conflicts between sources" procedure in
-  AGENTS.md, waiting for the user's answer before acting.
-- `/speckit-tasks` groups tasks by user story (each story touches every layer
-  it needs), not by layer, and ends with a "Sessions" table (from
-  `.specify/templates/overrides/tasks-template.md`) whose "Command" column
-  holds the exact `/feature-session` line to paste for each row.
-- Implementation: one new Claude Code conversation per row of that table,
-  started with `/feature-session <feature dir> <session id>`. The context
-  comes from the feature's artifacts, not from chat history. Progress is the
-  `[X]` marks in `tasks.md`.
-- Closing a session: apply the changes, run the session's checks and mark its
-  tasks `[X]`, then stop and wait for the user's review. If they ask for
-  changes, apply them and wait again; once they say it's all OK, Claude makes
-  the session's commit.
-- Session commit message: the session in the subject, to read at a glance in
-  `git log --oneline`, and as trailers, to query with
-  `git log --format='%(trailers:key=Session)'`:
-
-  ```
-  <type>(<NNN-feature>): <session id> <summary>
-
-  <optional body: what else the session touched>
-
-  Session: <NNN-feature> <session id>
-  Tasks: <task IDs>
-  ```
-
-  `<type>` is the Conventional Commits type of the main change. The feature
-  goes in the scope because the spec defines it as a section of the codebase;
-  a session isn't one, so it goes in the description.
-- `/speckit-converge` (optional, once every session is done): the
-  `/feature-session` sessions count as the `/speckit-implement` run it
-  requires. If it appends a `## Phase N: Convergence`, Claude ends that same
-  section with its own `### Sessions` table, numbered after the last session
-  and following the template's columns (including "Command") and its grouping
-  and "Close" rules, instead of adding rows to the existing table (converge
-  only appends). The handoff is `/feature-session`, never
-  `/speckit-implement`.
-- Never run `/speckit-implement`: it runs every phase in one go and creates or
-  rewrites ignore files (here, appends to `.gitignore` and creates a
-  `.dockerignore` because of `docker/*/Dockerfile`).
-- Spec-kit's behaviour is changed only through the mechanisms spec-kit
-  provides (template overrides in `.specify/templates/overrides/`, presets,
-  integration options, `.specify/extensions.yml`); files it generates
-  (`.claude/skills/speckit-*`, `.specify/templates/*.md`, `.specify/scripts/`)
-  are never edited by hand, so an upgrade never undoes a project change.
-- Every core `speckit-*` skill is user-invocable only: the Claude
-  integration's `--no-model-invocation` option, stored in
-  `.specify/integration.json` and re-applied by every
-  `specify integration upgrade claude`, writes
-  `disable-model-invocation: true` into them, so Claude can't launch
-  `/speckit-implement` on its own (e.g. when `speckit-analyze` or
-  `speckit-converge` suggest it) and their descriptions stay out of every
-  session's context. The user launches every phase anyway. Check it again
-  when (see the [Claude integration docs](https://github.github.io/spec-kit/integrations/claude.html)):
-  - a preset is installed, removed or updated: it resets the affected skills;
-    re-apply with `specify integration upgrade claude --force`;
-  - an upgrade passes `--integration-options`: it replaces the stored ones,
-    so repeat `--no-model-invocation`;
-  - an extension's mandatory hook runs a core command: the option breaks
-    that hook and has to be dropped.
-
-  Rejected: Claude Code's `skillOverrides` setting (targets only the
-  chosen skills, but lives outside spec-kit); revisit if Claude needs to
-  launch a `speckit-*` skill on its own.
-- The spec-kit CLI isn't installed on the host or in the php container: the
-  user runs it from the repo root on the host with
-  `uvx --from git+https://github.com/github/spec-kit.git@v<version> specify …`,
-  `<version>` being the one in `.specify/integration.json`, so a command like
-  `integration upgrade` doesn't silently pull newer templates and skills.
-  Upgrading spec-kit means raising that version on purpose.
-
-## Language
-
-- Chat with the user in Spanish. Project documentation (`doc/*.md`, `AGENTS.md`)
-  in English.
-- Constitution (`.specify/memory/constitution.md`): English, like the
-  `AGENTS.md` and `doc/` it indexes.
-- Feature artifacts (`specs/**`): content in Spanish, so the user reviews them
-  in their own language, but the section headings of the `.specify/templates/`
-  and the structural keywords the `speckit-*` skills look for (e.g.
-  "Constitution Check", task IDs) stay in English, so the templates and skills
-  work unchanged across spec-kit upgrades.
-  - Revisit: English would save ~2k tokens per `/feature-session`. When the
-    user asks to switch, drop this rule so the `speckit-*` skills generate in
-    English as they do by default, and ask whether existing `specs/**` get
-    translated or stay as they are.
-
-## Context
-
-- Start a new conversation when a topic is closed. Point the new session to
-  `AGENTS.md` and `doc/` instead of carrying the old history.
-- Reference files by path instead of pasting their content into chat.
-- Ask grouped questions when the answers are independent.

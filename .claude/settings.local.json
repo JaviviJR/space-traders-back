@@ -24,7 +24,9 @@
       "Bash(.specify/scripts/bash/setup-plan.sh --json)",
       "Bash(bin/console config:dump-reference lexik_jwt_authentication)",
       "WebFetch(domain:github.github.com)",
-      "WebFetch(domain:github.github.io)"
+      "WebFetch(domain:github.github.io)",
+      "Bash(composer show *)",
+      "WebFetch(domain:fetch.spec.whatwg.org)"
     ]
   }
 }
