@@ -16,3 +16,9 @@ How the user works with Claude on this project. Applies to every session.
   as one closed, checkable sentence; use the default model when the subagent
   has to resolve ambiguity or make a design call.
 
+## Conflicts between sources
+
+When two sources disagree (two skills, a skill and this file, memory and this
+file, or any of them and the official docs), tell the user before acting: name
+both sources, quote what each says, and say which one you will follow and why.
+
