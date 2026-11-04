@@ -20,7 +20,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * DB yet, so this hook persists it as a side effect once SpaceTraders
  * confirms the registration. The response (including the raw agent token)
  * is relayed to the front unchanged for now — redacting it is a known
- * simplification to revisit, see doc/architecture.md.
+ * simplification to revisit.
  *
  * $registeredAgent carries the newly persisted agent from afterForward to
  * augment(), which the proxy service calls right after. Safe to keep as

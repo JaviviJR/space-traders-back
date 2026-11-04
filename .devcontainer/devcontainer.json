@@ -51,8 +51,7 @@
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "symfony-vscode.phpExecutablePath": "/usr/local/bin/php-no-xdebug",
-        "symfony-vscode.shellExecutable": "/bin/bash",
+        "symfonyLsp.phpCommand": ["/usr/local/bin/php-no-xdebug"],
         "phpstan.configFile": "phpstan.dist.neon",
         "phpstan.showTypeOnHover": true,
         "search.exclude": {

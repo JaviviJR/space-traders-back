@@ -27,6 +27,13 @@ use OpenApi\Attributes as OA;
  * Checked by running the Swagger UI bundled with Nelmio (its resolver and
  * sample generator) on the dumped spec: derived from that vendor/ code, not
  * from Swagger UI's docs.
+ *
+ * Don't annotate errors that are inferred: the validation error of a
+ * #[MapRequestPayload] / #[MapQueryString] argument
+ * (ValidationErrorResponseDescriber) and the 401 authentication_required of
+ * any action requiring the JWT (AuthenticationErrorResponseDescriber).
+ * Annotate only what follows from the action's logic, i.e. the exceptions its
+ * service throws.
  */
 #[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class ErrorResponse extends OA\Response

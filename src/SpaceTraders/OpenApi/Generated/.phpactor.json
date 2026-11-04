@@ -1,4 +1,0 @@
-{
-    "$schema": "/opt/phpactor/phpactor.schema.json",
-    "language_server_php_cs_fixer.enabled": false
-}

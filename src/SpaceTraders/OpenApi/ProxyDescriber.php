@@ -19,13 +19,12 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
- * Documents a representative subset of the SpaceTraders-proxied routes (see
- * "Proxy design" in doc/spacetraders-proxy.md) by copying their path/parameters/
- * request/response schema straight out of SpaceTraders' own published spec
- * (vendored at resources/spacetraders/openapi.json, see doc/openapi.md) —
- * the schemas are never hand-transcribed, so the contract-fidelity rule in
- * doc/spacetraders-proxy.md ("the back does not add, remove or rename fields") holds
- * in the docs too. They are deserialized with zircote/swagger-php's own
+ * Documents a representative subset of the SpaceTraders-proxied routes by
+ * copying their path/parameters/request/response schema straight out of
+ * SpaceTraders' own published spec (vendored at
+ * resources/spacetraders/openapi.json) — the schemas are never
+ * hand-transcribed, so the proxy's guarantee that SpaceTraders' own top-level
+ * keys are relayed untouched holds in the docs too. They are deserialized with zircote/swagger-php's own
  * OpenApi\Serializer, into the same annotation objects the #[OA\...]
  * attributes would produce, so Nelmio merges them like any other operation.
  *
@@ -40,9 +39,8 @@ final class ProxyDescriber implements DescriberInterface
     private const string BASE_PATH = '/api/spacetraders';
 
     /**
-     * The representative subset documented in this first pass (see
-     * "Operations in scope" in doc/openapi.md): server status, agent
-     * registration and listing ships, picked to exercise both plain
+     * The representative subset documented in this first pass: server status,
+     * agent registration and listing ships, picked to exercise both plain
      * pass-through operations and one with a hook augmentation. Expand this
      * list to document more operations.
      *

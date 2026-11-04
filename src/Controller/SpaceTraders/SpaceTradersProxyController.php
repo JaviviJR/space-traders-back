@@ -16,8 +16,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * The one catch-all route for every SpaceTraders-proxied endpoint (see
- * "Proxy design" in doc/spacetraders-proxy.md).
+ * The one catch-all route for every SpaceTraders-proxied endpoint.
  *
  * Its route is kept out of the generated OpenAPI document by
  * nelmio_api_doc.yaml's areas.path_patterns: documented by reflection, it
