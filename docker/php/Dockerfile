@@ -78,7 +78,7 @@ RUN git clone --depth 1 https://github.com/phpactor/phpactor.git /opt/phpactor \
 
 RUN mkdir -p /home/developer/.local/share/phpactor \
     && printf '{"/home/developer/app": true}' > /home/developer/.local/share/phpactor/trust.json \
-    && chown -R developer:developer /home/developer/.local/share/phpactor
+    && chown -R developer:developer /home/developer/.local
 
 RUN git config --global --add safe.directory /opt/phpactor
 
